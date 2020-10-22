@@ -1,4 +1,5 @@
 import pandas as pd
+import library.data_processing as process
 
 filePath = '../Datasets/HELOC/'
 fileName = 'heloc_dataset_v1.csv'
@@ -7,11 +8,7 @@ fileName = 'heloc_dataset_v1.csv'
 heloc_df = pd.read_csv(filePath + fileName)
 
 # change column 'RiskPerformance' in Bad = 0 and Good = 1
-if 'RiskPerformance' in heloc_df:
-    heloc_df['RiskPerformance_binary'] = 0
-    heloc_df.loc[heloc_df['RiskPerformance'].isin(['Good']), 'RiskPerformance_binary'] = 1
-    heloc_df['RiskPerformance'] = heloc_df['RiskPerformance_binary']
-    heloc_df.drop('RiskPerformance_binary', axis=1, inplace=True)
+process.categorize_binary(heloc_df, 'RiskPerformance', 'Good')
 
 # Drop rows with value -9 in every column
 label_risk = heloc_df.pop('RiskPerformance')

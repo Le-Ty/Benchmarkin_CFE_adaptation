@@ -26,3 +26,10 @@ for special value -7), we choosed the following default values:
 - Rows which contains only -9 values are dropped
 - All cells with -7 are receiving max values of its column, to avoid the problem mentioned above
 - Cells with -8, -9 are set to average values of its class (good, bad) and column
+
+### Adult
+- Missing information is encoded as '?'. Rows with this value are dropped
+- Binary features 'sex' and 'income' are encoded with:
+  - male: 0; female: 1
+  - <=50K: 0, >50K: 1
+- Categorical features with more than two categories are one-hot-encoded
