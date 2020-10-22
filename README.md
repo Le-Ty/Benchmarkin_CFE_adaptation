@@ -33,3 +33,6 @@ for special value -7), we choosed the following default values:
   - male: 0; female: 1
   - <=50K: 0, >50K: 1
 - Categorical features with more than two categories are one-hot-encoded
+
+### Australian
+- Small dataset, no cleansing necessary
