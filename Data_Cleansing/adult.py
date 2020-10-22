@@ -12,9 +12,8 @@ categorical_features = ['workclass', 'education', 'marital-status', 'occupation'
                         'native-country']
 
 # Read Data from csv
-test_df = pd.read_csv(filePath + testFile, skipinitialspace=True)
-train_df = pd.read_csv(filePath + trainFile, skipinitialspace=True)
-
+test_df = pd.read_csv(filePath + testFile, skipinitialspace=True, header=None)
+train_df = pd.read_csv(filePath + trainFile, skipinitialspace=True, header=None)
 # if data is already cleansed, don't do anything
 if test_df.shape[1] <= len(column_names):
     test_df.columns = column_names
