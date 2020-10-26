@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn import preprocessing
 
 
 def categorize_binary(df, col, true_val):
@@ -15,3 +16,24 @@ def categorize_binary(df, col, true_val):
         df[col] = df['temp']
         df[col].astype('int64')
         df.drop('temp', axis=1, inplace=True)
+
+
+def normalize(df, label=None):
+    """
+    Normalize each column of data between 0 and 1 except the label column
+    :param df: dataframe to normalize
+    :param label: column name of Label
+    :return:
+    """
+    if label is not None:
+        lbl = df.pop(label)
+
+    x = df.values
+    min_max_scaler = preprocessing.MinMaxScaler()
+    x_scaled = min_max_scaler.fit_transform(x)
+    result = pd.DataFrame(x_scaled, columns=df.columns)
+
+    if label is not None:
+        result[label] = lbl
+
+    return result
