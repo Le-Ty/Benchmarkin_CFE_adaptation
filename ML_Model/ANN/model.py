@@ -14,6 +14,9 @@ class ANN(nn.Module):
         """
         super().__init__()
 
+        # number of input neurons
+        self.input_neurons = input_layer
+
         # Layer
         self.input = nn.Linear(input_layer, hidden_layer_1)
         self.hidden_1 = nn.Linear(hidden_layer_1, hidden_layer_2)
@@ -22,7 +25,7 @@ class ANN(nn.Module):
 
         # Activation
         self.relu = nn.LeakyReLU()
-        # self.softmax = nn.Softmax(dim=2)
+        self.sigmoid = nn.Sigmoid()
 
 
     def forward(self, x):
@@ -38,6 +41,8 @@ class ANN(nn.Module):
         output = self.hidden_2(output)
         output = self.relu(output)
         output = self.output(output)
-        # output = self.softmax(output)
+        output = self.sigmoid(output)
 
-        return output.squeeze()
+        output = output.squeeze()
+
+        return output

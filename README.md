@@ -1,6 +1,8 @@
 # Benchmarkin_Counterfactual_Examples  
 
 ## Datasets
+=> Due to problems with already one-hot-encoded data for Counterfactual-Models, one-hot-encoding should only be 
+done shortly before training.
 ### German Credit Score  
 There are two versions of this data. The file german_numeric consists of already transformed data.  
 
@@ -29,10 +31,8 @@ for special value -7), we choosed the following default values:
 
 ### Adult
 - Missing information is encoded as '?'. Rows with this value are dropped
-- Binary features 'sex' and 'income' are encoded with:
-  - male: 0; female: 1
+- Binary features 'income' are encoded with:
   - <=50K: 0, >50K: 1
-- Categorical features with more than two categories are one-hot-encoded
 
 ### Australian
 - Small dataset, no cleansing necessary

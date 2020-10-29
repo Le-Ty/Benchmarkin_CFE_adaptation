@@ -1,4 +1,5 @@
 import torch
+import pickle
 
 import torch.utils.data as data
 import pandas as pd
@@ -6,7 +7,7 @@ import library.data_processing as processing
 
 
 class DataLoader(data.Dataset):
-    def __init__(self, path, label, normalization=False):
+    def __init__(self, path, filename, label, normalization=False, encode=False):
         """
         Load training dataset
         :param path: string with path to training set
@@ -14,8 +15,15 @@ class DataLoader(data.Dataset):
         :return: tensor with trainingdata
         """
         # load dataset
-        self.dataset = pd.read_csv(path)
+        self.dataset = pd.read_csv(path + filename)
         self.target = label
+
+        # load categorical feature names
+        with open(path + 'cat_names.txt', 'rb') as f:
+            self.categorical_features = pickle.load(f)
+
+        if encode:
+            self.dataset = pd.get_dummies(self.dataset, columns=self.categorical_features)
 
         if normalization:
             self.dataset = processing.normalize(self.dataset, label)
@@ -33,3 +41,6 @@ class DataLoader(data.Dataset):
             idx = idx.tolist()
 
         return [self.X.iloc[idx].values, self.y[idx]]
+
+    def get_number_of_features(self):
+        return self.X.shape[1]

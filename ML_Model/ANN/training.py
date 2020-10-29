@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from sklearn import preprocessing
 
 import ML_Model.ANN.model as model
@@ -63,17 +63,23 @@ def training(model, train_loader, test_loader, learning_rate, epochs):
     # save model
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
     torch.save(model.state_dict(),
-               '../Saved_Models/ANN/{}_lr_{}_te_{:.2f}.pt'.format(timestamp, learning_rate, test_error))
+               '../Saved_Models/ANN/{}_input_{}_lr_{}_te_{:.2f}.pt'.format(timestamp, model.input_neurons,
+                                                                           learning_rate, test_error))
 
-
-# Define the model
-model = model.ANN(103, 64, 16, 8, 1)
 
 # Dataloader
-dataset_train = loader.DataLoader('../../Datasets/Adult/adult.csv', 'income', normalization=True)
-dataset_test = loader.DataLoader('../../Datasets/Adult/adult_test.csv', 'income', normalization=True)
+dataset = loader.DataLoader('../../Datasets/Adult/', 'adult_full.csv', 'income', normalization=True, encode=True)
 
-trainloader = DataLoader(dataset_train, batch_size=200, shuffle=True)
-testloader = DataLoader(dataset_test, batch_size=200, shuffle=False)
+# Split into train and test set
+train_size = int(0.8 * len(dataset))
+test_size = len(dataset) - train_size
+dataset_train, dataset_test = random_split(dataset, [train_size, test_size])
 
-training(model, trainloader, testloader, 0.001, 2000)
+# Define the model
+input_size = dataset.get_number_of_features()
+model = model.ANN(input_size, 64, 16, 8, 1)
+
+trainloader = DataLoader(dataset_train, batch_size=100, shuffle=True)
+testloader = DataLoader(dataset_test, batch_size=100, shuffle=False)
+
+training(model, trainloader, testloader, 0.002, 200)
