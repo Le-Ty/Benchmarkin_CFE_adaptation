@@ -207,7 +207,7 @@ class DicePyTorch(ExplainerBase):
 
     def compute_dist(self, x_hat, x1):
         """Compute weighted distance between two vectors."""
-        return torch.sum(torch.mul((torch.abs(x_hat - x1)), self.feature_weights_list), dim=0)
+        return torch.sum(torch.mul((torch.abs(x_hat.double() - x1.double())), self.feature_weights_list.double()).float(), dim=0)
 
     def compute_proximity_loss(self):
         """Compute the second part (distance from x1) of the loss function."""

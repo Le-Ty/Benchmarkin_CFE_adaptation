@@ -20,7 +20,7 @@ class PyTorchModel(BaseModel):
             self.model = torch.load(self.model_path)
 
     def get_output(self, input_tensor):
-        return self.model(input_tensor).float()
+        return self.model(input_tensor).unsqueeze(0).float()
 
     def set_eval_mode(self):
         self.model.eval()
