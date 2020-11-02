@@ -34,6 +34,10 @@ def main():
     print('dist(x; x^F)_3: {}'.format(d3))
     print('dist(x; x^F)_4: {}'.format(d4))
 
+    test_bin_edges, test_norm_cdf = measure.compute_cdf(data.values)
+
+    print('End')
+
 
 if __name__ == "__main__":
     # execute only if run as a script

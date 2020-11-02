@@ -1,5 +1,8 @@
+import hashlib
 import pandas as pd
 import numpy as np
+
+import matplotlib.pyplot as plt
 
 
 def get_delta(instance, cf):
@@ -153,3 +156,42 @@ def distance_d4(instance, cf):
     d4 = np.max(d4)
 
     return d4
+
+
+def transform_feature_to_int(column, n):
+    """
+    Transform Column with String features
+    :param column:
+    :return:
+    """
+    digits = int(np.log10(n)) + 1
+    for i in range(column.size):
+        column[i] = int(hashlib.sha256(column[i].encode('utf-8')).hexdigest(), 16) % 10**digits
+
+    return column
+
+
+
+def compute_cdf(data):
+    # per free feature
+    # relies on computing histogram first
+    # num_bins: # bins in histogram
+    # you can use bin_edges & norm_cdf to plot cdf
+
+    n, p = np.shape(data)
+    # num_bins = n
+    norm_cdf = np.zeros((n, p))
+
+    for j in range(p):
+        column = data[:, j]
+        # Check if feature type is string
+        if type(column[0]) == str:
+            # transform string feature into int
+            column = transform_feature_to_int(column, n)
+        counts, bin_edges = np.histogram(column, bins=n, normed=True)
+        cdf = np.cumsum(counts)
+        norm_cdf[:, j] = cdf / cdf[-1]
+        # plt.plot(bin_edges[1:], norm_cdf)
+        # plt.show()
+
+    return bin_edges[1:], norm_cdf
