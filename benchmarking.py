@@ -34,9 +34,13 @@ def main():
     print('dist(x; x^F)_3: {}'.format(d3))
     print('dist(x; x^F)_4: {}'.format(d4))
 
-    test_bin_edges, test_norm_cdf = measure.compute_cdf(data.values)
+    bin_edges, norm_cdf = measure.compute_cdf(data.values)
 
-    print('End')
+    cost1 = measure.cost_1(test_instance, counterfactual, norm_cdf, bin_edges)
+    cost2 = measure.cost_2(test_instance, counterfactual, norm_cdf, bin_edges)
+
+    print('cost(x^CF; x^F)_1: {}'.format(cost1))
+    print('cost(x^CF; x^F)_2: {}'.format(cost2))
 
 
 if __name__ == "__main__":

@@ -135,7 +135,7 @@ def distance_d3(instance, cf, df):
     # get range of every feature
     range = get_range(df)
 
-    d3 = [(x[0] / x[1])**2 for x in zip(delta, range)]
+    d3 = [(x[0] / x[1]) ** 2 for x in zip(delta, range)]
     d3 = sum(d3)
 
     return d3
@@ -166,10 +166,9 @@ def transform_feature_to_int(column, n):
     """
     digits = int(np.log10(n)) + 1
     for i in range(column.size):
-        column[i] = int(hashlib.sha256(column[i].encode('utf-8')).hexdigest(), 16) % 10**digits
+        column[i] = int(hashlib.sha256(column[i].encode('utf-8')).hexdigest(), 16) % 10 ** digits
 
     return column
-
 
 
 def compute_cdf(data):
@@ -181,6 +180,7 @@ def compute_cdf(data):
     n, p = np.shape(data)
     # num_bins = n
     norm_cdf = np.zeros((n, p))
+    bins = np.zeros((n, p))
 
     for j in range(p):
         column = data[:, j]
@@ -188,10 +188,80 @@ def compute_cdf(data):
         if type(column[0]) == str:
             # transform string feature into int
             column = transform_feature_to_int(column, n)
-        counts, bin_edges = np.histogram(column, bins=n, normed=True)
+        counts, bin_edges = np.histogram(column, bins=n, density=True)
         cdf = np.cumsum(counts)
+        bins[:, j] = bin_edges[1:]
         norm_cdf[:, j] = cdf / cdf[-1]
         # plt.plot(bin_edges[1:], norm_cdf)
         # plt.show()
 
-    return bin_edges[1:], norm_cdf
+    return bins, norm_cdf
+
+
+def get_bin_number(bin_edges, instance):
+    """
+    Find the correct bin for each feature of an instance
+    :param bin_edges: np.array with bin edges
+    :param instance: np.array with instance features
+    :return: np.array with bin for each feature
+    """
+    n, p = np.shape(bin_edges)
+    x = np.zeros((1, p))
+    for i in range(p):
+        value = instance[i]
+
+        if type(value) == str:
+            # hash string feature
+            value = int(transform_feature_to_int(np.array([value]), n)[0])
+
+        # Find the correct bin for a specific feature
+        for j in range(n):
+            if j == 0:
+                if value <= bin_edges[j, i]:
+                    x[:, i] = j
+                    break
+            else:
+                if bin_edges[j, i] >= value > bin_edges[j - 1, i]:
+                    x[:, i] = j
+                    break
+
+    return x
+
+
+def cdf_of_instance(norm_cdf, bin_edges, instance):
+    """
+    Compute the Q_j(instance)
+    :param norm_cdf: np.array with normed cdfs
+    :param bin_edges: np.array with edges of the bins
+    :param instance: np.array with the instance we want to compute the cdf
+    :return:
+    """
+    density_instance = np.zeros(np.shape(instance))
+    binned_instance = get_bin_number(bin_edges, instance)
+
+    for i in range(np.shape(binned_instance)[1]):
+        bin = int(binned_instance[:, i][0])
+        density_value = norm_cdf[bin][i]
+        density_instance[i] = density_value
+
+    return density_instance
+
+
+def cost_1(factual, counterfactual, norm_cdf, bin_edges):
+    norm_cdf_factual = cdf_of_instance(norm_cdf, bin_edges, factual)[:-1]
+    norm_cdf_counterfactual = cdf_of_instance(norm_cdf, bin_edges, counterfactual)[:-1]
+
+    delta = np.abs(norm_cdf_counterfactual - norm_cdf_factual)
+    cost_1 = np.sum(delta)
+
+    return cost_1
+
+
+def cost_2(factual, counterfactual, norm_cdf, bin_edges):
+    norm_cdf_factual = cdf_of_instance(norm_cdf, bin_edges, factual)[:-1]
+    norm_cdf_counterfactual = cdf_of_instance(norm_cdf, bin_edges, counterfactual)[:-1]
+
+    delta = np.abs(norm_cdf_counterfactual - norm_cdf_factual)
+    cost_2 = np.max(delta)
+
+    return cost_2
