@@ -3,6 +3,8 @@ import torch
 import ML_Model.ANN.model as model
 import CF_Examples.DICE.cf_ann_adult as dice_examples
 import library.measure as measure
+import library.data_processing as preprocessing
+import pandas as pd
 
 
 def main():
@@ -10,13 +12,13 @@ def main():
     data_path = 'Datasets/Adult/'
     data_name = 'adult_full.csv'
     target_name = 'income'
-    features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'hours-per-week', 'capital-loss']
+    continuous_features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'hours-per-week', 'capital-loss']
 
     model_path = 'ML_Model/Saved_Models/ANN/2020-10-29_13-13-55_input_104_lr_0.002_te_0.34.pt'
     ann = model.ANN(104, 64, 16, 8, 1)
     ann.load_state_dict(torch.load(model_path))
 
-    dice_adult_cf = dice_examples.get_counterfactual(data_path, data_name, target_name, ann, features, 1)
+    dice_adult_cf = dice_examples.get_counterfactual(data_path, data_name, target_name, ann, continuous_features, 1)
 
     test_instance = dice_adult_cf.org_instance.values.tolist()[0]
     counterfactuals = dice_adult_cf.final_cfs_list_sparse
@@ -41,6 +43,18 @@ def main():
 
     print('cost(x^CF; x^F)_1: {}'.format(cost1))
     print('cost(x^CF; x^F)_2: {}'.format(cost2))
+
+    columns = data.columns.values
+    cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
+    encoded_factual = preprocessing.one_hot_encode_instance(data, pd.DataFrame([test_instance], columns=columns),
+                                                            cat_features, target_name)
+    encoded_counterfactual = preprocessing.one_hot_encode_instance(data,
+                                                                   pd.DataFrame([counterfactual], columns=columns),
+                                                                   cat_features, target_name)
+
+    redundancy = measure.redundancy(encoded_factual.values, encoded_counterfactual.values, ann)
+
+    print('Redundancy: {}'.format(redundancy))
 
 
 if __name__ == "__main__":

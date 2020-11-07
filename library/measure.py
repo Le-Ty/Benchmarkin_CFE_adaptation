@@ -1,4 +1,5 @@
 import hashlib
+import torch
 import pandas as pd
 import numpy as np
 
@@ -248,6 +249,14 @@ def cdf_of_instance(norm_cdf, bin_edges, instance):
 
 
 def cost_1(factual, counterfactual, norm_cdf, bin_edges):
+    """
+    Cost function as absolute difference
+    :param factual: np.array with original instance
+    :param counterfactual: np.array with counterfactual instance
+    :param norm_cdf: np.array matrix with normed cdfs
+    :param bin_edges: np.array matrix withedges of each bin
+    :return: scalar with cost
+    """
     norm_cdf_factual = cdf_of_instance(norm_cdf, bin_edges, factual)[:-1]
     norm_cdf_counterfactual = cdf_of_instance(norm_cdf, bin_edges, counterfactual)[:-1]
 
@@ -258,6 +267,14 @@ def cost_1(factual, counterfactual, norm_cdf, bin_edges):
 
 
 def cost_2(factual, counterfactual, norm_cdf, bin_edges):
+    """
+    Cost function as maximum difference
+    :param factual: np.array with original instance
+    :param counterfactual: np.array with counterfactual instance
+    :param norm_cdf: np.array matrix with normed cdfs
+    :param bin_edges: np.array matrix withedges of each bin
+    :return: scalar with cost
+    """
     norm_cdf_factual = cdf_of_instance(norm_cdf, bin_edges, factual)[:-1]
     norm_cdf_counterfactual = cdf_of_instance(norm_cdf, bin_edges, counterfactual)[:-1]
 
@@ -265,3 +282,37 @@ def cost_2(factual, counterfactual, norm_cdf, bin_edges):
     cost_2 = np.max(delta)
 
     return cost_2
+
+
+def redundancy(factual, counterfactual, model):
+    """
+    Redundency metric which looks for unnecessary changes
+    :param factual: np.array with one-hot-encoded original instance
+    :param counterfactual: np.array with one-hot-encoded counterfactual instance
+    :param model: pytorch model
+    :return: scalar, number of unnecessary changes
+    """
+    red = 0
+
+    # get model prediction and cast it from tensor to float
+    pred_f = model(torch.from_numpy(factual).float()).detach().numpy().reshape(1)[0]
+    pred_cf = model(torch.from_numpy(counterfactual).float()).detach().numpy().reshape(1)[0]
+
+    if pred_f != pred_cf:
+        for i in range(factual.shape[1]):
+            if factual[0][i] != counterfactual[0][i]:
+                temp_cf = np.copy(counterfactual)
+
+                # reverse change in counterfactual and predict new label
+                temp_cf[0][i] = factual[0][i]
+                pred_temp_cf = model(torch.from_numpy(temp_cf).float()).detach().numpy().reshape(1)[0]
+
+                # if new prediction has the same label as the old prediction for cf, increase redundancy
+                if pred_temp_cf == pred_cf:
+                    red += 1
+
+    else:
+        print('Factual and counterfactual are in the same class')
+        return red
+
+    return red
