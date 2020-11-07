@@ -55,7 +55,7 @@ def get_categorical_features(columns, continuous_features, label):
     return cat_features
 
 
-def one_hot_encode_instance(data, instance, categorical_features, target_name):
+def one_hot_encode_instance(data, instance, categorical_features):
     """
     one-hot-encode instance with respect to data to maintain consistency
     :param data: dataframe with whole dataset
@@ -74,7 +74,6 @@ def one_hot_encode_instance(data, instance, categorical_features, target_name):
     encoded_instance['idx'] = n_inst
 
     indexed_data = indexed_data.append(encoded_instance)
-    indexed_data = indexed_data.drop(columns=target_name)
     indexed_data = pd.get_dummies(indexed_data, columns=categorical_features)
 
     encoded_instance = indexed_data.loc[indexed_data['idx'] == n_inst]

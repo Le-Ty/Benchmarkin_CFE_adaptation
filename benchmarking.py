@@ -47,14 +47,20 @@ def main():
     columns = data.columns.values
     cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
     encoded_factual = preprocessing.one_hot_encode_instance(data, pd.DataFrame([test_instance], columns=columns),
-                                                            cat_features, target_name)
+                                                            cat_features)
+    encoded_factual = encoded_factual.drop(columns=target_name)
     encoded_counterfactual = preprocessing.one_hot_encode_instance(data,
                                                                    pd.DataFrame([counterfactual], columns=columns),
-                                                                   cat_features, target_name)
+                                                                   cat_features)
+    encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
 
     redundancy = measure.redundancy(encoded_factual.values, encoded_counterfactual.values, ann)
 
     print('Redundancy: {}'.format(redundancy))
+
+    yNN = measure.yNN(counterfactuals, data, target_name, 5, cat_features, ann)
+
+    print('YNN: {}'.format(yNN))
 
 
 if __name__ == "__main__":
