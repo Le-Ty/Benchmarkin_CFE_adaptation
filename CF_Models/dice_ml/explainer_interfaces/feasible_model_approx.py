@@ -50,7 +50,8 @@ class FeasibleModelApprox(FeasibleBaseVAE, ExplainerBase):
         self.vae_train_dataset, self.vae_val_dataset, self.vae_test_dataset, self.normalise_weights, self.cf_vae, self.cf_vae_optimizer= get_base_gen_cf_initialization( self.data_interface, self.encoded_size, self.cont_minx, self.cont_maxx, self.margin, self.validity_reg, self.epochs, self.wm1, self.wm2, self.wm3, self.learning_rate ) 
         
         #Data paths
-        self.base_model_dir= '../../dice_ml/utils/sample_trained_models/'
+        self.base_model_dir= 'CF_Models/dice_ml/utils/sample_trained_models/'
+        # self.base_model_dir= '../../dice_ml/utils/sample_trained_models/'
         self.save_path=self.base_model_dir+ self.data_interface.data_name +'-margin-' + str(self.margin) + '-validity_reg-'+ str(self.validity_reg) + '-epoch-' + str(self.epochs) + '-' + 'ae-gen' + '.pth'
     
     

@@ -1,5 +1,6 @@
 import torch
 import torch.utils.data
+import numpy as np
 from torch import nn, optim
 from torch.nn import functional as F
 from torchvision import datasets, transforms
@@ -130,7 +131,19 @@ class CF_VAE(nn.Module):
         log_px_z = torch.tensor(0.0)
         
         x_pred= dm
-        return torch.mean(log_px_z), torch.mean(kl_divergence), x, x_pred, torch.argmax( pred_model(x_pred), dim=1 )
+        temp_logits = self.tensor_to_logit(pred_model(x_pred).unsqueeze(0))
+        return torch.mean(log_px_z), torch.mean(kl_divergence), x, x_pred, torch.argmax( temp_logits, dim=1 )
+        # return torch.mean(log_px_z), torch.mean(kl_divergence), x, x_pred, torch.argmax( pred_model(x_pred), dim=1 )
+
+
+    def tensor_to_logit(self, prediction):
+        temp_model_out = prediction.detach().numpy()
+        temp_mod_idx = np.round(temp_model_out)
+        temp_model_logits = np.zeros((prediction.shape[0], 2))
+        for i in range(temp_mod_idx.shape[0]):
+            temp_model_logits[i][int(temp_mod_idx[i])] = temp_model_out[i]
+
+        return torch.from_numpy(temp_model_logits)
 
 class AutoEncoder(nn.Module):
     

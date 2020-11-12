@@ -49,7 +49,8 @@ class FeasibleBaseVAE(ExplainerBase):
         self.vae_train_dataset, self.vae_val_dataset, self.vae_test_dataset, self.normalise_weights, self.cf_vae, self.cf_vae_optimizer= get_base_gen_cf_initialization( self.data_interface, self.encoded_size, self.cont_minx, self.cont_maxx, self.margin, self.validity_reg, self.epochs, self.wm1, self.wm2, self.wm3, self.learning_rate ) 
         
         #Data paths
-        self.base_model_dir= '../../dice_ml/utils/sample_trained_models/'
+        self.base_model_dir= 'CF_Models/dice_ml/utils/sample_trained_models/'
+        # self.base_model_dir= '../../dice_ml/utils/sample_trained_models/'
         self.save_path=self.base_model_dir+ self.data_interface.data_name +'-margin-' + str(self.margin) + '-validity_reg-'+ str(self.validity_reg) + '-epoch-' + str(self.epochs) + '-' + 'base-gen' + '.pth'
 
     
@@ -76,8 +77,9 @@ class FeasibleBaseVAE(ExplainerBase):
             temp = -torch.abs(  1.0-torch.sum( x_pred[:, v[0]:v[-1]+1], axis=1) )
             recon_err += temp
 
-        #Validity         
-        temp_logits = self.pred_model(x_pred)
+        #Validity
+        temp_logits = self.tensor_to_logit(self.pred_model(x_pred).unsqueeze(1))
+        # temp_logits = self.pred_model(x_pred).unsqueeze(1)
         validity_loss= torch.zeros(1)                                       
         temp_1= temp_logits[target_label==1,:]
         temp_0= temp_logits[target_label==0,:]
@@ -97,7 +99,8 @@ class FeasibleBaseVAE(ExplainerBase):
                 recon_err += temp
 
             #Validity
-            temp_logits = self.pred_model(x_pred)
+            temp_logits = self.tensor_to_logit(self.pred_model(x_pred).unsqueeze(1))
+            # temp_logits = self.pred_model(x_pred)
             temp_1= temp_logits[target_label==1,:]
             temp_0= temp_logits[target_label==0,:]
             validity_loss += F.hinge_embedding_loss( F.sigmoid(temp_1[:,1]) - F.sigmoid(temp_1[:,0]), torch.tensor(-1), self.margin, reduction='mean')
@@ -140,7 +143,10 @@ class FeasibleBaseVAE(ExplainerBase):
                 self.cf_vae_optimizer.zero_grad()
                 
                 train_x= train_x[1]
-                train_y= 1.0-torch.argmax( self.pred_model(train_x), dim=1 )
+                # Warum hier 1-argmax? Prediction ist immer Spaltenvektor, damit wäre argmax immer 0!
+                temp_logits = self.tensor_to_logit(self.pred_model(train_x).unsqueeze(1))
+                train_y= 1.0-torch.argmax( temp_logits, dim=1 )
+                # train_y= 1.0-torch.argmax( self.pred_model(train_x).unsqueeze(1), dim=1 )
                 train_size+= train_x.shape[0]
                 
                 out= self.cf_vae(train_x, train_y)
@@ -182,8 +188,10 @@ class FeasibleBaseVAE(ExplainerBase):
         for i in range(len(query_instance)):
             train_x = test_dataset[i]
             train_x= torch.tensor( train_x ).float()
-            train_y = torch.argmax( self.pred_model(train_x), dim=1 )                
-            
+            temp_logits = self.tensor_to_logit(self.pred_model(train_x).unsqueeze(0))
+            train_y = torch.argmax( temp_logits, dim=1 )
+            # train_y = torch.argmax( self.pred_model(train_x), dim=1 )
+
             curr_gen_cf=[]
             curr_cf_pred=[]            
             curr_test_pred= train_y.numpy()
@@ -191,7 +199,7 @@ class FeasibleBaseVAE(ExplainerBase):
             for cf_count in range(total_CFs):                                
                 recon_err, kl_err, x_true, x_pred, cf_label = self.cf_vae.compute_elbo( train_x, 1.0-train_y, self.pred_model )
                 while( cf_label== train_y):
-                    print(cf_label, train_y)
+                    # print(cf_label, train_y)
                     recon_err, kl_err, x_true, x_pred, cf_label = self.cf_vae.compute_elbo( train_x, 1.0-train_y, self.pred_model )
                     
                 x_pred= x_pred.detach().numpy()
@@ -229,3 +237,13 @@ class FeasibleBaseVAE(ExplainerBase):
         
         # Adding empty list for sparse cf gen and pred; adding 'NA' for the posthoc sparsity cofficient
         return exp.CounterfactualExamples(self.data_interface, result['query-instance'], result['test-pred'], result['CF'], result['CF-Pred'],  posthoc_sparsity_param=None)
+
+
+    def tensor_to_logit(self, prediction):
+        temp_model_out = prediction.detach().numpy()
+        temp_mod_idx = np.round(temp_model_out)
+        temp_model_logits = np.zeros((prediction.shape[0], 2))
+        for i in range(temp_mod_idx.shape[0]):
+            temp_model_logits[i][int(temp_mod_idx[i])] = temp_model_out[i]
+
+        return torch.from_numpy(temp_model_logits)
