@@ -322,30 +322,32 @@ def redundancy(factual, counterfactual, model):
     return red
 
 
-def yNN(counterfactuals, data, label, k, cat_features, model):
+def yNN(counterfactuals, data, label, k, cat_features, cont_features, model):
     """
     Compute yNN measure
-    :param counterfactuals: np.array with one-hot-encoded counterfactual instance
+    :param counterfactuals: List wit dataframes of counterfactual instances
     :param data: dataframe with whole dataset
     :param label: string with target class
-    :param k: nummber of nearest neighbours
+    :param k: number of nearest neighbours
     :param cat_features: list with all categorical features
+    :param cat_features: list with all continuous features
     :param model: pytorch model
     :return: scalar
     """
     N = len(counterfactuals)
     number_of_diff_labels = 0
-    columns = data.columns.values
-    enc_data = pd.get_dummies(data, columns=cat_features)
+    norm_data = processing.normalize_instance(data, data, cont_features)
+    enc_data = pd.get_dummies(norm_data, columns=cat_features)
 
-    for cf in counterfactuals:
-        cf_df = pd.DataFrame([cf], columns=columns)
-        enc_cf = processing.one_hot_encode_instance(data, cf_df, cat_features)
+    nbrs = NearestNeighbors(n_neighbors=k).fit(enc_data.values)
 
-        nbrs = NearestNeighbors(n_neighbors=k).fit(enc_data.values)
+    for cf_df in counterfactuals:
+        norm_cf = processing.normalize_instance(data, cf_df, cont_features)
+        enc_cf = processing.one_hot_encode_instance(norm_data, norm_cf, cat_features)
+
         knn = nbrs.kneighbors(enc_cf.values, k, return_distance=False)[0]
 
-        cf_label = cf_df[label].values[0]
+        cf_label = round(cf_df[label].values[0])
         for idx in knn:
             inst = enc_data.iloc[idx]
             inst = inst.drop(index=label)
@@ -357,4 +359,3 @@ def yNN(counterfactuals, data, label, k, cat_features, model):
     number_of_diff_labels = 1 - (1 / (N * k)) * number_of_diff_labels
 
     return number_of_diff_labels
-
