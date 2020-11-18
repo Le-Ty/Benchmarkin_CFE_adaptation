@@ -39,6 +39,25 @@ def normalize(df, label=None):
     return result
 
 
+def normalize_instance(df, instance, features):
+    """
+    Normalize a single instance
+    :param df: Dataframe to fit scaler
+    :param instance: Dataframe to normalize
+    :param features: Continuous features to normalize
+    :return: Dataframe with normalized continuous features
+    """
+    normalized_instance = instance.copy()
+
+    # Define and fit Min-Max-Scaler
+    scaler = preprocessing.MinMaxScaler()
+    scaler.fit(df[features])
+
+    normalized_instance[features] = scaler.transform(normalized_instance[features])
+
+    return normalized_instance
+
+
 def get_categorical_features(columns, continuous_features, label):
     """
     Computes list of categorical features

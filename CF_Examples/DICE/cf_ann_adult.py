@@ -94,7 +94,7 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, target_name, model, f
     exp = dice_ml.Dice(dice_data, dice_model, encoded_size=10, lr=1e-2, batch_size=2048, validity_reg=42.0,
                        margin=0.165, epochs=5, wm1=1e-2, wm2=1e-2, wm3=1e-2)
 
-    exp.train(pre_trained=0)
+    exp.train(pre_trained=1)
 
     # query instance to create examples
     query_instance = dataset.iloc[22].to_dict()

@@ -350,7 +350,7 @@ def yNN(counterfactuals, data, label, k, cat_features, model):
             inst = enc_data.iloc[idx]
             inst = inst.drop(index=label)
             inst = inst.values
-            pred_inst = model(torch.from_numpy(inst).float()).detach().numpy().reshape(1)[0]
+            pred_inst = round(model(torch.from_numpy(inst).float()).detach().numpy().reshape(1)[0])
 
             number_of_diff_labels += np.abs(cf_label - pred_inst)
 
