@@ -145,6 +145,10 @@ def main():
     querry_instances = compute_H_minus(data, ann, continuous_features, cat_features, target_name)
     querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
 
+    """
+        Below we can start to define counterfactual models and start benchmarking
+    """
+
     # Compute DICE counterfactuals
     test_instances, counterfactuals = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
                                                                        target_name, ann, continuous_features, 1)
