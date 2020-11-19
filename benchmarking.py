@@ -1,7 +1,7 @@
 import torch
 
 import ML_Model.ANN.model as model
-import CF_Examples.DICE.cf_ann_adult as dice_examples
+import CF_Examples.DICE.dice_explainer as dice_examples
 import library.measure as measure
 import library.data_processing as preprocessing
 import pandas as pd
@@ -151,16 +151,17 @@ def main():
 
     # Compute measurements
     print('==============================================================================')
-    print('Measurement results for DICE and Adult')
+    print('Measurement results for DICE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
     # DICE with VAE
     test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
-                                                                           target_name, ann, continuous_features, 1, 1)
+                                                                           target_name, ann, continuous_features, 1,
+                                                                           pretrained=1)
 
     # Compute measurements
     print('==============================================================================')
-    print('Measurement results for DICE with VAE and Adult')
+    print('Measurement results for DICE with VAE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
 

@@ -44,7 +44,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
 
 
 def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_name, model, features, number_of_cf,
-                           train):
+                           pretrained):
     """
     Compute counterfactual for DICE with VAE
     :param dataset_path: String; Path to folder of dataset
@@ -54,15 +54,13 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
     :param model: Pytorch model
     :param features: List of continuous feature
     :param number_of_cf: Number of counterfactuals to compute
-    :param train: int; 0 for pretrained and 1 for trained
+    :param pretrained: int; 1 for pretrained and 0 for training
     :return: Counterfactual object
     """
     test_instances, counterfactuals = [], []
 
     # import dataset
-    # path = '../../Datasets/Adult/'
     path = dataset_path
-    # file_name = 'adult_full.csv'
     file_name = dataset_filename
     dataset = pd.read_csv(path + file_name)
 
@@ -74,14 +72,14 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
                'explainer': 'feasible_base_vae.FeasibleBaseVAE'}
 
     dice_data = dice_ml.Data(dataframe=dataset, continuous_features=features, outcome_name=target_name, test_size=0.1,
-                             data_name='adult')
+                             data_name=file_name)
     dice_model = dice_ml.Model(model=ann, backend=backend)
 
     # initiate DiCE
     exp = dice_ml.Dice(dice_data, dice_model, encoded_size=10, lr=1e-2, batch_size=2048, validity_reg=42.0,
                        margin=0.165, epochs=5, wm1=1e-2, wm2=1e-2, wm3=1e-2)
 
-    exp.train(pre_trained=train)
+    exp.train(pre_trained=pretrained)
 
     # query instance to create examples
     query_instances = instances.drop([target_name], axis=1)
