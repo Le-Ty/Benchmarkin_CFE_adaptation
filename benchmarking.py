@@ -2,6 +2,7 @@ import torch
 
 import ML_Model.ANN.model as model
 import CF_Examples.DICE.dice_explainer as dice_examples
+import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
 import library.measure as measure
 import library.data_processing as preprocessing
 import pandas as pd
@@ -166,6 +167,15 @@ def main():
     # Compute measurements
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+
+    # Compute Actionable Recourse Counterfactuals
+    test_instances, counterfactuals = ac_explainer.get_counterfactuals(data_path, data_name, 'adult', ann,
+                                                                       continuous_features, target_name, False,
+                                                                       querry_instances)
+    # Compute measurements
+    print('==============================================================================')
+    print('Measurement results for Actionable Recourse')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
 

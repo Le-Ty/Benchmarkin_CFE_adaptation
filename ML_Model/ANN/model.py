@@ -1,4 +1,7 @@
 import torch
+
+import numpy as np
+
 from torch import nn
 
 
@@ -27,7 +30,6 @@ class ANN(nn.Module):
         self.relu = nn.LeakyReLU()
         self.sigmoid = nn.Sigmoid()
 
-
     def forward(self, x):
         """
         Forwardpass through the network
@@ -46,3 +48,13 @@ class ANN(nn.Module):
         output = output.squeeze()
 
         return output
+
+    def prob_predict(self, data):
+        """
+        Computes probabilistic output for two classes
+        :param data: torch tabular input
+        :return: np.array
+        """
+        class_1 = 1 - self.forward(torch.from_numpy(data).float()).detach().numpy()
+        class_2 = self.forward(torch.from_numpy(data).float()).detach().numpy()
+        return np.array(list(zip(class_1, class_2)))
