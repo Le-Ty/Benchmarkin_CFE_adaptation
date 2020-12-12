@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+
 from sklearn import preprocessing
 
 
@@ -23,15 +25,18 @@ def normalize(df, label=None):
     Normalize each column of data between 0 and 1 except the label column
     :param df: dataframe to normalize
     :param label: column name of Label
+    :param cont_features: list of featueres to normalize
     :return:
     """
+
+    # Get rid of data which should not be normalized
     if label is not None:
         lbl = df.pop(label)
+    num_cols = df.columns[df.dtypes.apply(lambda c: np.issubdtype(c, np.number))]
 
-    x = df.values
+    result = df.copy()
     min_max_scaler = preprocessing.MinMaxScaler()
-    x_scaled = min_max_scaler.fit_transform(x)
-    result = pd.DataFrame(x_scaled, columns=df.columns)
+    result[num_cols] = min_max_scaler.fit_transform(result[num_cols])
 
     if label is not None:
         result[label] = lbl
