@@ -44,3 +44,17 @@ class DataLoader(data.Dataset):
 
     def get_number_of_features(self):
         return self.X.shape[1]
+
+    def drop(self, columns, axis=0):
+        """
+        Similar to pandas method, it drops specific columns for a given axis.
+        :param columns: List with column names to drop
+        :param axis: specific axis to drop
+        :return: No return value
+        """
+
+        self.dataset = self.dataset.drop(columns, axis=axis)
+
+        # Save target and predictors
+        self.X = self.dataset.drop(self.target, axis=1)
+        self.y = self.dataset[self.target]
