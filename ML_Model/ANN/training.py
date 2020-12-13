@@ -9,6 +9,7 @@ from sklearn import preprocessing
 
 import ML_Model.ANN.model as model
 import ML_Model.ANN.data_loader as loader
+import library.data_processing as processing
 
 
 def training(model, train_loader, test_loader, learning_rate, epochs):
@@ -67,19 +68,57 @@ def training(model, train_loader, test_loader, learning_rate, epochs):
                                                                            learning_rate, test_error))
 
 
-# Dataloader
-dataset = loader.DataLoader('../../Datasets/Adult/', 'adult_full.csv', 'income', normalization=True, encode=True)
+# Introducing a small ANN model, trained on few features to test runtime of MACE
+small_model = True
 
-# Split into train and test set
-train_size = int(0.8 * len(dataset))
-test_size = len(dataset) - train_size
-dataset_train, dataset_test = random_split(dataset, [train_size, test_size])
+if not small_model:
+    # Dataloader
+    dataset = loader.DataLoader('../../Datasets/Adult/', 'adult_full.csv', 'income', normalization=True, encode=True)
 
-# Define the model
-input_size = dataset.get_number_of_features()
-model = model.ANN(input_size, 64, 16, 8, 1)
+    # Split into train and test set
+    train_size = int(0.8 * len(dataset))
+    test_size = len(dataset) - train_size
+    dataset_train, dataset_test = random_split(dataset, [train_size, test_size])
 
-trainloader = DataLoader(dataset_train, batch_size=100, shuffle=True)
-testloader = DataLoader(dataset_test, batch_size=100, shuffle=False)
+    # Define the model
+    input_size = dataset.get_number_of_features()
+    model = model.ANN(input_size, 64, 16, 8, 1)
 
-training(model, trainloader, testloader, 0.002, 200)
+    trainloader = DataLoader(dataset_train, batch_size=100, shuffle=True)
+    testloader = DataLoader(dataset_test, batch_size=100, shuffle=False)
+
+    training(model, trainloader, testloader, 0.002, 200)
+else:
+    # Dataloader / Normalization OFF for MACE
+    dataset = loader.DataLoader('../../Datasets/Adult/', 'adult_full.csv', 'income', normalization=False, encode=False)
+
+    # Process dataset to get very few features
+    dataset.drop(['education', 'marital-status', 'workclass', 'occupation', 'relationship'], axis=1)
+    # Get values we want to replace
+    df = dataset.dataset
+    to_replace_in_race = list(dict.fromkeys(df['race'].values.tolist()))
+    to_replace_in_race.remove('White')
+
+    to_replace_in_native_country = list(dict.fromkeys(df['native-country'].values.tolist()))
+    to_replace_in_native_country.remove('United-States')
+
+    # replace values
+    dataset.replace('race', to_replace_in_race, 'non-white')
+    dataset.replace('native-country', to_replace_in_native_country, 'non-US')
+
+    # one-hot-encode dataset
+    dataset.one_hot_encode()
+
+    # Split into train and test set
+    train_size = int(0.8 * len(dataset))
+    test_size = len(dataset) - train_size
+    dataset_train, dataset_test = random_split(dataset, [train_size, test_size])
+
+    # Define the model
+    input_size = dataset.get_number_of_features()
+    model = model.ANN(input_size, 8, 4, 2, 1)
+
+    trainloader = DataLoader(dataset_train, batch_size=100, shuffle=True)
+    testloader = DataLoader(dataset_test, batch_size=100, shuffle=False)
+
+    training(model, trainloader, testloader, 0.002, 200)

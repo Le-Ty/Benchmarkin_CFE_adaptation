@@ -3,6 +3,7 @@ import pickle
 
 import torch.utils.data as data
 import pandas as pd
+import numpy as np
 import library.data_processing as processing
 
 
@@ -54,6 +55,34 @@ class DataLoader(data.Dataset):
         """
 
         self.dataset = self.dataset.drop(columns, axis=axis)
+
+        # Save target and predictors
+        self.X = self.dataset.drop(self.target, axis=1)
+        self.y = self.dataset[self.target]
+
+    def replace(self, column, values_to_replace, new_value):
+        """
+        Changes for dataset specific new_values in column. Every value in values_to_replace will be changed.
+        :param column: String; column name
+        :param values_to_replace: List of Strings to change
+        :param new_value: String; value to replace old values in values_to_replace
+        :return: no return value
+        """
+        self.dataset[column] = self.dataset[column].replace(values_to_replace, new_value)
+
+        # Save target and predictors
+        self.X = self.dataset.drop(self.target, axis=1)
+        self.y = self.dataset[self.target]
+
+    def one_hot_encode(self):
+        """
+        one-hot-encodes dataset. Do this only, if it hasn't already done in the initialisation of DataLoader
+        :return:  no return value
+        """
+        # look for all object columns
+        num_cols = self.dataset.columns[self.dataset.dtypes.apply(lambda c: np.issubdtype(c, np.object))]
+
+        self.dataset = pd.get_dummies(self.dataset, columns=num_cols)
 
         # Save target and predictors
         self.X = self.dataset.drop(self.target, axis=1)
