@@ -73,4 +73,8 @@ NAME_HOUSING_TYPE, OCCUPATION_TYPE, ORGANIZATION_TYPE
 
 ## ML-Models
 ### ANN
-- Neural Network with 2 hidden layers and Relu-Activation-Function
+- Neural Network with 2 hidden layers and Relu-Activation-Function 
+
+## Counterfactual Methods
+### MACE
+- Requirement: With 'pysmt-install --z3' we have to install the z3 solver.

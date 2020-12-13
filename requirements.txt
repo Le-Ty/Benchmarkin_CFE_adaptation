@@ -6,3 +6,5 @@ sklearn
 recourse
 mip
 lime
+pysmt
+pysmt-install --z3
