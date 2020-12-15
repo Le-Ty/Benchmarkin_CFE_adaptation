@@ -132,9 +132,13 @@ def main():
     target_name = 'income'
 
     # Load ANN
-    model_path = 'ML_Model/Saved_Models/ANN/2020-10-29_13-13-55_input_104_lr_0.002_te_0.34.pt'
-    ann = model.ANN(104, 64, 16, 8, 1)
-    ann.load_state_dict(torch.load(model_path))
+    # model_path = 'ML_Model/Saved_Models/ANN/2020-10-29_13-13-55_input_104_lr_0.002_te_0.34.pt'
+    # ann = model.ANN(104, 64, 16, 8, 1)
+    
+    model_path = 'ML_Model/Saved_Models/ANN/2020-12-13_20-43-50_input_20_lr_0.002_te_0.35.pt'
+    ann = model.ANN(20, 18, 9, 3, 1)
+    
+    ann.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
     # Define data with original values
     data = pd.read_csv(data_path + data_name)
