@@ -105,17 +105,35 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     print('==============================================================================\n')
 
 
-def compute_H_minus(data, ml_model, cont_features, cat_features, label):
+def compute_H_minus(data, ml_model, cont_features, cat_features, label, normalize=True):
+    """
+    Computes H^{-} dataset, which contains all samples that are labeled with 0 by a black box classifier f.
+    :param data: Dataframe with original data
+    :param ml_model: Black Box Model f (ANN, SKlearn MLP)
+    :param cont_features: List of Strings with continuous features
+    :param cat_features: List of Strings with categorical features
+    :param label: String, target name
+    :param normalize: Boolean, Should data be normalized or not
+    :return: Dataframe
+    """
     H_minus = data.copy()
     # prepare data
-    norm_data = preprocessing.normalize_instance(data, data, cont_features)
+    if normalize:
+        norm_data = preprocessing.normalize_instance(data, data, cont_features)
+    else:
+        norm_data = data
     enc_data = preprocessing.one_hot_encode_instance(norm_data, norm_data, cat_features)
 
     # loose ground truth label
     enc_data = enc_data.drop(label, axis=1)
 
     # predict labels
-    predictions = np.round(ml_model(torch.from_numpy(enc_data.values).float()).detach().numpy())
+    if isinstance(ml_model, model.ANN):
+        predictions = np.round(ml_model(torch.from_numpy(enc_data.values).float()).detach().numpy())
+    elif isinstance(ml_model, MLPClassifier):
+        predictions = ml_model.predict(enc_data.values)
+    else:
+        raise Exception('Black-Box-Model is not yet implemented')
     H_minus['predictions'] = predictions.tolist()
 
     # get H^-
