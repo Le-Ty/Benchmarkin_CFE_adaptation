@@ -64,16 +64,16 @@ def training(model, train_loader, test_loader, learning_rate, epochs):
     # save model
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
     torch.save(model.state_dict(),
-               '../Saved_Models/ANN/{}_input_{}_lr_{}_te_{:.2f}.pt'.format(timestamp, model.input_neurons,
-                                                                           learning_rate, test_error))
+               '../../Saved_Models/ANN/{}_input_{}_lr_{}_te_{:.2f}.pt'.format(timestamp, model.input_neurons, learning_rate, test_error))
 
 
 # Introducing a small ANN model, trained on few features to test runtime of MACE
-small_model = True
+small_model = False
 
 if not small_model:
     # Dataloader
-    dataset = loader.DataLoader('../../Datasets/Adult/', 'adult_full.csv', 'income', normalization=True, encode=True)
+    dataset = loader.DataLoader('../Datasets/Adult/',
+                                'adult_full.csv', 'income', normalization=True, encode=True)
 
     # Split into train and test set
     train_size = int(0.8 * len(dataset))
@@ -82,25 +82,26 @@ if not small_model:
 
     # Define the model
     input_size = dataset.get_number_of_features()
-    model = model.ANN(input_size, 64, 16, 8, 1)
+    model = model.ANN(input_size, 18, 9, 3, 1)
 
     trainloader = DataLoader(dataset_train, batch_size=100, shuffle=True)
     testloader = DataLoader(dataset_test, batch_size=100, shuffle=False)
 
-    training(model, trainloader, testloader, 0.002, 200)
+    training(model, trainloader, testloader, 0.002, 100)
 else:
     # Dataloader / Normalization OFF for MACE
-    dataset = loader.DataLoader('../../Datasets/Adult/', 'adult_full.csv', 'income', normalization=False, encode=False)
+    dataset = loader.DataLoader('../Datasets/Adult/',
+                                'adult_full.csv', 'income', normalization=False, encode=False)
 
     # Process dataset to get very few features
-    dataset.drop(['education', 'marital-status', 'workclass', 'occupation', 'relationship'], axis=1)
+    dataset.drop(['marital-status', 'workclass', 'occupation', 'relationship'], axis=1)
     # Get values we want to replace
     df = dataset.dataset
     to_replace_in_race = list(dict.fromkeys(df['race'].values.tolist()))
     to_replace_in_race.remove('White')
 
     to_replace_in_native_country = list(dict.fromkeys(df['native-country'].values.tolist()))
-    to_replace_in_native_country.remove('United-States')
+    to_replace_in_native_country.remove('US')
 
     # replace values
     dataset.replace('race', to_replace_in_race, 'non-white')
@@ -108,7 +109,7 @@ else:
 
     # one-hot-encode dataset
     dataset.one_hot_encode()
-
+    
     # Split into train and test set
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
@@ -121,4 +122,4 @@ else:
     trainloader = DataLoader(dataset_train, batch_size=100, shuffle=True)
     testloader = DataLoader(dataset_test, batch_size=100, shuffle=False)
 
-    training(model, trainloader, testloader, 0.002, 200)
+    training(model, trainloader, testloader, 0.002, 100)

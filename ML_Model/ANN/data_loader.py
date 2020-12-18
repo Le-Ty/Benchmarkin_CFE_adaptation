@@ -24,7 +24,7 @@ class DataLoader(data.Dataset):
             self.categorical_features = pickle.load(f)
 
         if encode:
-            self.dataset = pd.get_dummies(self.dataset, columns=self.categorical_features)
+            self.dataset = pd.get_dummies(self.dataset, columns=self.categorical_features, drop_first=True)
 
         if normalization:
             self.dataset = processing.normalize(self.dataset, label)
@@ -79,11 +79,14 @@ class DataLoader(data.Dataset):
         one-hot-encodes dataset. Do this only, if it hasn't already done in the initialisation of DataLoader
         :return:  no return value
         """
-        # look for all object columns
-        num_cols = self.dataset.columns[self.dataset.dtypes.apply(lambda c: np.issubdtype(c, np.object))]
-
+        # look for all numeric columns and return non-numeric columns
+        num_cols = self.dataset.columns[~self.dataset.dtypes.apply(lambda c: np.issubdtype(c, np.number))]
+        
+        # this one did not work: look for all object columns
+        #num_cols = self.dataset.columns[self.dataset.dtypes.apply(lambda c: np.issubdtype(c, np.object))]
+        
         self.dataset = pd.get_dummies(self.dataset, columns=num_cols)
-
+        
         # Save target and predictors
         self.X = self.dataset.drop(self.target, axis=1)
         self.y = self.dataset[self.target]
