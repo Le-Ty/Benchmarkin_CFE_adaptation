@@ -9,6 +9,7 @@ import CF_Examples.DICE.dice_explainer as dice_examples
 import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
 import CF_Examples.CEM.cem_explainer as cem_explainer
 import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
+import CF_Examples.FACE.face_explainer as face_explainer
 from CF_Models.cem_ml.setup_data_model import Data_Tabular, Model_Tabular
 
 # others
@@ -72,7 +73,7 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
 
     for i in range(N):
         test_instance = test_instances[i]
-        counterfactuals = list_of_cfs[i]  # Each list entry could be a Dataframe with more than 1 entry
+        counterfactuals = list_of_cfs[i]  # Each list entry could be a data frame with more than 1 entry
 
         # Normalize factual and counterfactual to normalize measurements
         test_instance = preprocessing.normalize_instance(data, test_instance, continuous_features).values.tolist()[0]
@@ -186,6 +187,11 @@ def main():
     """
         Below we can start to define counterfactual models and start benchmarking
     """
+    
+    
+    # Compute Growing Spheres counterfactuals
+    test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+                                                                       continuous_features, target_name, ann_tf, 'knn')
     
     # Compute Growing Spheres counterfactuals
     test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,

@@ -4,11 +4,16 @@ from numpy import linalg as LA
 
 def hyper_sphere_coordindates(n_search_samples, instance, high, low, p_norm=2):
 	
-	# http://mathworld.wolfram.com/HyperspherePointPicking.html
 	# Implementation follows the Random Point Picking over a sphere
 	# The algorithm's implementation follows: Pawelczyk, Broelemann & Kascneci (2020);
 	# "Learning Counterfactual Explanations for Tabular Data" -- The Web Conference 2020 (WWW)
-	# It ensures that points are sampled uniformly at random
+	# It ensures that points are sampled uniformly at random using insights from:
+	# http://mathworld.wolfram.com/HyperspherePointPicking.html
+	
+	# This one implements the growing spheres method from
+	# Thibaut Laugel et al (2018), "Comparison-based Inverse Classification for
+	# Interpretability in Machine Learning" -- International Conference on Information Processing
+	# and Management of Uncertainty in Knowledge-Based Systems (2018)
 	
 	"""
 	:param n_search_samples: int > 0
@@ -32,7 +37,6 @@ def hyper_sphere_coordindates(n_search_samples, instance, high, low, p_norm=2):
 def growing_spheres_search(instance, keys_mutable, keys_immutable, continuous_cols, binary_cols, model,
 						   n_search_samples=1000, p_norm=2, step=0.2, max_iter=1000):
 	
-	
 	"""
 	:param instance: df
 	:param step: float > 0; step_size for growing spheres
@@ -43,7 +47,7 @@ def growing_spheres_search(instance, keys_mutable, keys_immutable, continuous_co
 	:param keys_mutable: list; list of input names we can search over
 	:param keys_immutable: list; list of input names that may not be searched over
 	:return:
-	"""
+	""" #
 	
 	# correct order of names
 	keys_correct = continuous_cols + binary_cols
@@ -52,8 +56,7 @@ def growing_spheres_search(instance, keys_mutable, keys_immutable, continuous_co
 	keys_mutable_binary = list(set(keys_mutable) - set(continuous_cols))
 	
 	# Divide data in 'mutable' and 'non-mutable'
-	# In particular, divide data in 'mutable & binary' and 'mutable and continous'
-
+	# In particular, divide data in 'mutable & binary' and 'mutable and continuous'
 	instance_immutable_replicated = np.repeat(instance[keys_immutable].values.reshape(1, -1), n_search_samples, axis=0)
 	instance_replicated = np.repeat(instance.values.reshape(1, -1), n_search_samples, axis=0)
 	instance_mutable_replicated_continuous = np.repeat(instance[keys_mutable_continuous].values.reshape(1, -1),
@@ -77,8 +80,7 @@ def growing_spheres_search(instance, keys_mutable, keys_immutable, continuous_co
 			candidate_counterfactual_star[:] = np.nan
 			break
 			
-		# STEP 1
-		# sample points on hyper sphere around instance
+		# STEP 1 -- SAMPLE POINTS on hyper sphere around instance
 		candidate_counterfactuals_continuous, _ = hyper_sphere_coordindates(n_search_samples,
 																 instance_mutable_replicated_continuous,
 																 high, low, p_norm)
@@ -95,8 +97,7 @@ def growing_spheres_search(instance, keys_mutable, keys_immutable, continuous_co
 		# enforce correct order
 		candidate_counterfactuals = candidate_counterfactuals[keys_correct]
 			
-		# STEP 2
-		# compute l_1 distance
+		# STEP 2 -- COMPUTE l_1 DISTANCES
 		if p_norm == 1:
 			distances = np.abs((candidate_counterfactuals.values - instance_replicated)).sum(axis=1)
 		elif p_norm == 2:
