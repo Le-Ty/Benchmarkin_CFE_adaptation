@@ -10,6 +10,8 @@ import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
 import CF_Examples.CEM.cem_explainer as cem_explainer
 import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
 from CF_Models.cem_ml.setup_data_model import Data_Tabular, Model_Tabular
+import CF_Examples.Action_Sequence.action_sequence_explainer as act_seq_examples
+from CF_Examples.Action_Sequence.adult_actions import actions as adult_actions
 
 # others
 import library.measure as measure
@@ -161,14 +163,17 @@ def main():
     # Load ANN
     # model_path = 'ML_Model/Saved_Models/ANN/2020-10-29_13-13-55_input_104_lr_0.002_te_0.34.pt'
     # ann = model.ANN(104, 64, 16, 8, 1)
-    
+
     model_path = 'ML_Model/Saved_Models/ANN/2020-12-13_20-43-50_input_20_lr_0.002_te_0.35.pt'
     ann = model.ANN(20, 18, 9, 3, 1)
 
-    # Load TF ANN (for CEM)
-    model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_13'
-    ann_tf = Model_Tabular(13, 18, 9, 3, 2, restore=model_path_tf, session=None, use_log=False)
-    
+    # # Load TF ANN (for CEM)
+    # model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_13'
+    # ann_tf = Model_Tabular(13, 18, 9, 3, 2, restore=model_path_tf, session=None, use_log=False)
+    # Load TF ANN (for Action Sequence)
+    model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_20'
+    ann_tf = Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, session=None, use_log=False)
+
     ann.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
     # Define data with original values
@@ -177,64 +182,75 @@ def main():
     continuous_features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'hours-per-week', 'capital-loss']
     cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
 
-    
     # Instances we want to explain
     querry_instances = compute_H_minus(data, ann, continuous_features, cat_features, target_name)
     querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
 
-
     """
         Below we can start to define counterfactual models and start benchmarking
     """
-    
-    # Compute Growing Spheres counterfactuals
-    test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
-                                                                       continuous_features, target_name, ann_tf)
-    
 
-    # Compute CEM counterfactuals
-    ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
-    ## TODO: as input: 'ann_tf', 'whether AE should be trained'
-    ## TODO: Compute Metrics; currently outputed as numeric values & COMPUTE MEASUREMENT function cannot cannot deal
-    ## TODO: with numeric binary values yet.
-    test_instances, counterfactuals = cem_explainer.get_counterfactual(data_path, data_name, querry_instances, cat_features,
-                                                                       continuous_features, target_name)
+    # # Compute Growing Spheres counterfactuals
+    # test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances,
+    #                                                                   cat_features,
+    #                                                                   continuous_features, target_name, ann_tf)
+    #
+    # # Compute CEM counterfactuals
+    # ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
+    # ## TODO: as input: 'ann_tf', 'whether AE should be trained'
+    # ## TODO: Compute Metrics; currently outputed as numeric values & COMPUTE MEASUREMENT function cannot cannot deal
+    # ## TODO: with numeric binary values yet.
+    # test_instances, counterfactuals = cem_explainer.get_counterfactual(data_path, data_name, querry_instances,
+    #                                                                    cat_features,
+    #                                                                    continuous_features, target_name)
 
-    # Compute measurements
-    print('==============================================================================')
-    print('Measurement results for CEM on Adult')
-    #compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    # # Compute measurementss
+    # print('==============================================================================')
+    # print('Measurement results for CEM on Adult')
+    # #compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    #
+    #
+    # # Compute DICE counterfactuals
+    # test_instances, counterfactuals = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
+    #                                                                    target_name, ann, continuous_features, 1)
+    #
+    # # Compute measurements
+    # print('==============================================================================')
+    # print('Measurement results for DICE on Adult')
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
+    # # DICE with VAE
+    # ## TODO: add terminating condition in while loop
+    # test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
+    #                                                                        target_name, ann, continuous_features, 1,
+    #                                                                        pretrained=1)
+    #
+    # # Compute measurements
+    # print('==============================================================================')
+    # print('Measurement results for DICE with VAE on Adult')
+    # # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
-    # Compute DICE counterfactuals
-    test_instances, counterfactuals = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
-                                                                       target_name, ann, continuous_features, 1)
+    # # Compute Actionable Recourse Counterfactuals
+    # test_instances, counterfactuals = ac_explainer.get_counterfactuals(data_path, data_name, 'adult', ann,
+    #                                                                    continuous_features, target_name, False,
+    #                                                                    querry_instances)
+    # # Compute measurements
+    # print('==============================================================================')
+    # print('Measurement results for Actionable Recourse')
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
-    # Compute measurements
-    print('==============================================================================')
-    print('Measurement results for DICE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
-
-
-    # DICE with VAE
-    ## TODO: add terminating condition in while loop
-    test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
-                                                                           target_name, ann, continuous_features, 1,
-                                                                          pretrained=1)
-
-    # Compute measurements
-    print('==============================================================================')
-    print('Measurement results for DICE with VAE on Adult')
-    #compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
-
-    # Compute Actionable Recourse Counterfactuals
-    test_instances, counterfactuals = ac_explainer.get_counterfactuals(data_path, data_name, 'adult', ann,
-                                                                       continuous_features, target_name, False,
-                                                                       querry_instances)
-    # Compute measurements
-    print('==============================================================================')
-    print('Measurement results for Actionable Recourse')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    # Compute Action Sequence counterfactuals
+    # Declare options for Action Sequence
+    options = {
+        'model_name': 'adult',
+        'mode': 'vanilla',
+        'length': 4,
+        'actions': adult_actions
+    }
+    test_instances, counterfactuals = act_seq_examples.get_counterfactual(data_path, data_name, querry_instances,
+                                                                          target_name, ann_tf,
+                                                                          continuous_features, 1,
+                                                                          options, [0., 1.])
 
 
 if __name__ == "__main__":
