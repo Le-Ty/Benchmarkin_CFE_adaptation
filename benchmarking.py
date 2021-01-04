@@ -8,6 +8,8 @@ import ML_Model.ANN_TF.model_ann as model_tf
 import CF_Examples.DICE.dice_explainer as dice_examples
 import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
 import CF_Examples.CEM.cem_explainer as cem_explainer
+import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
+import CF_Examples.FACE.face_explainer as face_explainer
 from CF_Models.cem_ml.setup_data_model import Data_Tabular, Model_Tabular
 
 # others
@@ -71,7 +73,7 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
 
     for i in range(N):
         test_instance = test_instances[i]
-        counterfactuals = list_of_cfs[i]  # Each list entry could be a Dataframe with more than 1 entry
+        counterfactuals = list_of_cfs[i]  # Each list entry could be a data frame with more than 1 entry
 
         # Normalize factual and counterfactual to normalize measurements
         test_instance = preprocessing.normalize_instance(data, test_instance, continuous_features).values.tolist()[0]
@@ -181,9 +183,20 @@ def main():
     querry_instances = compute_H_minus(data, ann, continuous_features, cat_features, target_name)
     querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
 
+
     """
         Below we can start to define counterfactual models and start benchmarking
     """
+    
+    
+    # Compute Growing Spheres counterfactuals
+    test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+                                                                       continuous_features, target_name, ann_tf, 'knn')
+    
+    # Compute Growing Spheres counterfactuals
+    test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+                                                                       continuous_features, target_name, ann_tf)
+    
 
     # Compute CEM counterfactuals
     ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
@@ -192,6 +205,11 @@ def main():
     ## TODO: with numeric binary values yet.
     test_instances, counterfactuals = cem_explainer.get_counterfactual(data_path, data_name, querry_instances, cat_features,
                                                                        continuous_features, target_name)
+
+    # Compute measurements
+    print('==============================================================================')
+    print('Measurement results for CEM on Adult')
+    #compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
 
     # Compute DICE counterfactuals
@@ -203,7 +221,9 @@ def main():
     print('Measurement results for DICE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
+
     # DICE with VAE
+    ## TODO: add terminating condition in while loop
     test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
                                                                            target_name, ann, continuous_features, 1,
                                                                           pretrained=1)

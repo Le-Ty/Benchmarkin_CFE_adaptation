@@ -33,12 +33,16 @@ for special value -7), we choosed the following default values:
 - Missing information is encoded as '?'. Rows with this value are dropped
 - Binary features 'income' are encoded with:
   - <=50K: 0, >50K: 1
-  
-- TODO **Require different preprocessing** 
-  1. Have American and Non American [not 80 or columns with different nationalities] - it will be easier for the methods and also for us
-  2. We can drop one of the education columns as the info seems redundant to me
-     - I suggest we keep the 'education num' column and drop the 'education' column
-     - Thus we keep: [age, workclass, fnlwgt, education_num, hours-per-week, captial-loss, capital-gain, martial_status, occupation, race, sex, native_country; income (target)] 
+
+Dropped the Education column as it seems to be redudant
+- Most info should alread by captured by 'Education-num'
+
+The categorical variables are kept as strings and encoded as follows:
+- Nationality: US, Non US
+- Maritial status: Husband, Non-Husband
+- Occupation status: Specialist or Managerial, Non- (Specialist or Managerial)
+- Race: White, Non-White
+- Sex: Femal, Male
 
 ### Australian
 - Small dataset, no cleansing necessary

@@ -71,46 +71,36 @@ def counterfactual_search(dataset_filename, instance, model=None, max_iter=100,
 	return instance, counterfactual[0]
 
 
-def get_counterfactual(data_path, data_name, instances, binary_cols, continuous_features, target_name):
+def get_counterfactual(dataset_path, dataset_filename, instances, binary_cols, continuous_cols, target_name):
 	"""
 	:param dataset_filename: str; Filename (e.g. 'adult_full')
 	:param instances: Dataframe; Instances to generate counterfactuals for
 	:param binary_cols: list; list of features which need to be one_hot_encoded
+	:param continuous_cols: list; list of numeric features
+	:param target_name: str; target corresponding to data set
 	:return: input instances & counterfactual explanations
 	"""  #
 	
 	# drop targets
-	data = pd.read_csv(data_path + data_name)
+	data = pd.read_csv(dataset_path + dataset_filename)
 	data = data.drop(columns=[target_name])
 	instances = instances.drop(columns=[target_name])
-	robust_names = list(instances.columns)
-	
+
 	# normalize instances
-	instances = preprocessing.normalize_instance(data, instances, continuous_features)
-	
-	# robust processing: when binary feature only contains 1s or 0s, pd.get_dummies does neither one-hot encode
-	# properly nor does it binarize properly; thus, we need to make sure that binarization is correct
-	instances = pd.get_dummies(instances, prefix_sep="__", columns=binary_cols, drop_first=True)
-	non_robust_n = list(instances.columns)
-	non_robust_names = []
-	for i in range(len(non_robust_n)):
-		prefix = non_robust_n[i].split('__')[0]
-		non_robust_names.append(prefix)
-	instances.columns = non_robust_names
-		
-	# Add missing columns
-	for col in binary_cols:
-		if col not in non_robust_names:
-			print("Adding missing feature {}".format(col))
-			instances[col] = 1
+	instances = preprocessing.normalize_instance(data, instances, continuous_cols)
+	# binary instances in robust way
+	instances = preprocessing.robust_binarization(instances, binary_cols, continuous_cols)
 
 	counterfactuals = []
 	
 	for i in range(instances.values.shape[0]):
-		_, counterfactual = counterfactual_search(data_name, instances.values[i, :])
+		_, counterfactual = counterfactual_search(dataset_filename, instances.values[i, :])
 		counterfactuals.append(counterfactual)
 	
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))
 	counterfactuals_df.columns = instances.columns
+	
+	# round binary columns
+	counterfactuals_df[binary_cols] = counterfactuals_df[binary_cols].round(0)
 	
 	return instances, counterfactuals_df
