@@ -176,7 +176,7 @@ class AddEducation(Action):
 actions = [
     AddEducation,
     ChangeWorkingHours,
-    ChangeCapitalLoss,
-    IncreaseCapitalGain,
+    # ChangeCapitalLoss,
+    # IncreaseCapitalGain,
     WaitYears
 ]

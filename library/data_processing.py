@@ -28,13 +28,14 @@ def normalize(df, label=None):
     :param cont_features: list of featueres to normalize
     :return:
     """
+    data = df.copy()
 
     # Get rid of data which should not be normalized
     if label is not None:
-        lbl = df.pop(label)
-    num_cols = df.columns[df.dtypes.apply(lambda c: np.issubdtype(c, np.number))]
+        lbl = data.pop(label)
+    num_cols = data.columns[data.dtypes.apply(lambda c: np.issubdtype(c, np.number))]
 
-    result = df.copy()
+    result = data.copy()
     min_max_scaler = preprocessing.MinMaxScaler()
     result[num_cols] = min_max_scaler.fit_transform(result[num_cols])
 
@@ -106,7 +107,6 @@ def one_hot_encode_instance(data, instance, categorical_features):
 
 
 def robust_binarization(instances, binary_cols, continuous_cols):
-    
     """
     robust processing: when binary feature only contains 1s or 0s, pd.get_dummies does neither one-hot encode
     properly nor does it binarize properly; thus, we need to make sure that binarization is correct
@@ -115,9 +115,9 @@ def robust_binarization(instances, binary_cols, continuous_cols):
     :param continuous_cols:
     :return: df including numeric variables + numeric binary variables
     """
-    
+
     robust_names = continuous_cols + binary_cols
-    
+
     instances = pd.get_dummies(instances, prefix_sep="__", columns=binary_cols, drop_first=True)
     non_robust_n = list(instances.columns)
     non_robust_names = []
@@ -125,14 +125,40 @@ def robust_binarization(instances, binary_cols, continuous_cols):
         prefix = non_robust_n[i].split('__')[0]
         non_robust_names.append(prefix)
     instances.columns = non_robust_names
-    
+
     # Add missing columns
     for col in binary_cols:
         if col not in non_robust_names:
             print("Adding missing feature {}".format(col))
             instances[col] = 1
-    
+
     # Make sure cols are in right order (first numeric; then binary)
     instances = instances[robust_names]
-    
+
     return instances
+
+
+def undummify(df, prefix_sep="_"):
+    """
+    Reverses one-hot-encoded data made by get_dummies from pandas
+    :param df: Dataframe
+    :param prefix_sep: String with Separator
+    :return: Dataframe
+    """
+    cols2collapse = {
+        item.split(prefix_sep)[0]: (prefix_sep in item) for item in df.columns
+    }
+    series_list = []
+    for col, needs_to_collapse in cols2collapse.items():
+        if needs_to_collapse:
+            undummified = (
+                df.filter(like=col)
+                    .idxmax(axis=1)
+                    .apply(lambda x: x.split(prefix_sep, maxsplit=1)[1])
+                    .rename(col)
+            )
+            series_list.append(undummified)
+        else:
+            series_list.append(df[col])
+    undummified_df = pd.concat(series_list, axis=1)
+    return undummified_df

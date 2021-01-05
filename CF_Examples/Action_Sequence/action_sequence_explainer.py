@@ -10,6 +10,7 @@ from CF_Models.act_seq.heuristics.loader import load_heuristics
 from CF_Models.act_seq.recourse.search import SequenceSearch, ParamsSearch
 from CF_Models.act_seq.recourse.config import base_config
 from CF_Models.cem_ml.setup_data_model import Data_Tabular, Model_Tabular
+from CF_Models.act_seq.recourse.utils import get_instance_info
 
 
 def get_counterfactual(dataset_path, dataset_filename, instances, target_name, model, cont_features, number_of_cf,
@@ -69,6 +70,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
                 ordered_columns_temp.append(f)
                 last = f
         ordered_columns = ordered_columns_temp
+        old_ordered_columns = dataset.columns
         dataset = dataset[ordered_columns]
 
         # Classification label in Action sequence is encoded in Low and High
@@ -88,14 +90,25 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
         heuristics = load_heuristics(options['mode'], actions, model_wr, options['length'])
         search = SequenceSearch(model_wr, actions, heuristics, config=base_config)
 
-        for instance in instances_oh.values:
+        for idx, instance in enumerate(instances_oh.values):
             if options['model_name'] == 'quickdraw':
                 result = search.find_correction(instance.reshape((1, instance.shape[0], instance.shape[1])),
                                                 np.array([target_prediction]), session)
             else:
                 result = search.find_correction(instance.reshape((1, instance.shape[0])),
                                                 np.array([target_prediction]), session)
+            if result.best_result is not None:
+                inst = processing.undummify(pd.DataFrame(instance.reshape((1, -1)), columns=data.get_feature_order()))
+                inst[target_name] = np.argmax(model.model.predict(instance.reshape((1, -1))))
+                # Get original Feature order for Measurements
+                inst = inst[old_ordered_columns]
+                cf = processing.undummify(pd.DataFrame(result.best_result.final_instance.reshape((1, -1)),
+                                                       columns=data.get_feature_order()))
+                cf[target_name] = np.argmax(model.model.predict(result.best_result.final_instance.reshape((1, -1))))
+                # Get original Feature order for Measurements
+                cf = cf[old_ordered_columns]
 
-                # TODO: result noch debuggen, ob target_prediction hier jetzt stimmt.
+                test_instances.append(inst)
+                counterfactuals.append(cf)
 
-            print(result)
+        return test_instances, counterfactuals
