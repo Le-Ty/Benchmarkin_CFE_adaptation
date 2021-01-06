@@ -10,6 +10,7 @@ import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
 import CF_Examples.CEM.cem_explainer as cem_explainer
 import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
 import CF_Examples.FACE.face_explainer as face_explainer
+import CF_Examples.CLUE.clue_explainer as clue_explainer
 from CF_Models.cem_ml.setup_data_model import Data_Tabular, Model_Tabular
 
 # others
@@ -188,8 +189,11 @@ def main():
         Below we can start to define counterfactual models and start benchmarking
     """
     
+    # Compute CLUE counterfactuals
+    test_instances, counterfactuals = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+                                                                       continuous_features, target_name, ann_tf)
     
-    # Compute Growing Spheres counterfactuals
+    # Compute FACE counterfactuals
     test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf, 'knn')
     
@@ -223,7 +227,7 @@ def main():
 
 
     # DICE with VAE
-    ## TODO: add terminating condition in while loop
+    ## TODO: add terminating condition in VAE while loop
     test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
                                                                            target_name, ann, continuous_features, 1,
                                                                           pretrained=1)

@@ -55,8 +55,9 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 
 	elif dataset_name == 'heloc':
 		print('not considered yet')
-		
-	# drop instances under consideration & reorder
+	
+	# >drop< instances 'under consideration', >reorder< and >add< instances 'under consideration' to top;
+	# necessary in order to use the index
 	cond = data_processed.isin(instances).values
 	data_processed = data_processed.drop(data_processed[cond].index)
 	data_processed_ordered = pd.concat([instances, data_processed], ignore_index=True)

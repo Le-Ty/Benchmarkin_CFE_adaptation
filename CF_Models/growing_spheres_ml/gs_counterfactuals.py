@@ -106,7 +106,6 @@ def growing_spheres_search(instance, keys_mutable, keys_immutable, continuous_co
 			print('Distance not defined yet')
 			
 		# counterfactual labels
-		
 		y_candidate_logits = model.model.predict(candidate_counterfactuals.values)
 		y_candidate = np.argmax(y_candidate_logits, axis=1)
 		indeces = np.where(y_candidate != 1)

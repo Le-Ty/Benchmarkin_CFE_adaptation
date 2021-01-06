@@ -150,7 +150,7 @@ def graph_search(data, index, keys_mutable, keys_immutable, continuous_cols, bin
 		if p_norm == 1:
 			c_dist = np.abs((data.values[index] - candidate_counterfactual_star)).sum(axis=1)
 		elif p_norm == 2:
-			c_dist = np.square((data.values[index] - np.array(candidate_counterfactuals_star))).sum(axis=1)
+			c_dist = np.square((data.values[index] - candidate_counterfactuals_star)).sum(axis=1)
 		else:
 			print('Distance not defined yet')
 		 

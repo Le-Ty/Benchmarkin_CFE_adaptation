@@ -105,20 +105,21 @@ def one_hot_encode_instance(data, instance, categorical_features):
     return encoded_instance.drop(columns='idx')
 
 
-def robust_binarization(instances, binary_cols, continuous_cols):
+def robust_binarization(instances, binary_cols, continuous_cols, drop_first=True):
     
     """
     robust processing: when binary feature only contains 1s or 0s, pd.get_dummies does neither one-hot encode
     properly nor does it binarize properly; thus, we need to make sure that binarization is correct
-    :param instances:
-    :param binary_cols:
-    :param continuous_cols:
+    :param instances: df; data frame
+    :param binary_cols: list; list of binary feature names
+    :param continuous_cols: list; list of continuous feature names
+    :param drop_first: logical; (True, False)
     :return: df including numeric variables + numeric binary variables
-    """
+    """#
     
     robust_names = continuous_cols + binary_cols
     
-    instances = pd.get_dummies(instances, prefix_sep="__", columns=binary_cols, drop_first=True)
+    instances = pd.get_dummies(instances, prefix_sep="__", columns=binary_cols, drop_first=drop_first)
     non_robust_n = list(instances.columns)
     non_robust_names = []
     for i in range(len(non_robust_n)):
