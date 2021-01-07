@@ -1,5 +1,16 @@
 # Benchmarkin_Counterfactual_Examples  
 
+
+## Required Tables & Plots
+- Perhaps the following distinction would make sense (would facilitate making plots?):
+  - Methods assuming independence of inputs (CEM, AR, AR-LIME, GS, Action Sequences, DICE)
+  - Methods assuming dependence of inputs (C-CHVAE, CRUDS, CLUE, FACE, DICE_VAE)
+- Method Performance (Table)
+  - Redundancy Metric | Constraint Violation | YNN Metric | % Counterfactuals Found | Total Run Time
+- Costs (Plots)
+  - Violinplots for distribution of costs
+  - Alternatively, boxplots for distribution of costs
+
 ## Datasets
 => Due to problems with already one-hot-encoded data for Counterfactual-Models, one-hot-encoding should only be 
 done shortly before training.
@@ -82,8 +93,11 @@ NAME_HOUSING_TYPE, OCCUPATION_TYPE, ORGANIZATION_TYPE
   - Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3, Friday: 4, Saturday: 5, Sunday: 6
 
 ## ML-Models
+Let us only look at 2 models: NN & Linear
 ### ANN
 - Neural Network with 2 hidden layers and Relu-Activation-Function 
+###
+- Linear Model (should be NN with no hidden layers and Sigmoid Activation Function)
 
 ## Counterfactual Methods
 ### MACE
