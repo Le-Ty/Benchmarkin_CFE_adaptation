@@ -28,14 +28,11 @@ class AEADEN:
                  binary_search_steps, max_iterations, initial_const, beta, gamma):
 
         '''
-        :param max_iterations:
-        :param beta: coefficient on ell1 regularization
-        :param gamma: coefficient on auto-encoder regularization
-        '''
-
-        # needs to be adjusted for tabular data - no need for channels (& perhaps no need for image size)
-        # image_size, num_channels, nun_classes = model.image_size, model.num_channels, model.num_labels
-        # shape = (batch_size, image_size, image_size, num_channels)
+        :param binary_search_steps: int > 0
+        :param max_iterations: int > 0
+        :param beta: 0 < float < 1; coefficient on ell_1 regularization
+        :param gamma: 0 < float < 1; coefficient on auto-encoder regularization
+        '''#
 
         dimension, nun_classes = model.dim_input, model.num_of_classes
         shape = (batch_size, dimension)
@@ -70,6 +67,7 @@ class AEADEN:
 
         """Fast Iterative Soft Thresholding"""
         """--------------------------------"""
+        # Commented by us:
         # BEGIN: conditions to compute the ell1 regularization
         # this should be the function S_beta(z) in the paper
 

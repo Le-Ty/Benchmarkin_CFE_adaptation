@@ -8,6 +8,7 @@ from CF_Models.clue_ml.AE_models.AE.fc_gauss_cat import VAE_gauss_cat_net
 from sklearn.model_selection import train_test_split
 import library.data_processing as preprocessing
 
+
 from os import path
 
 def get_counterfactual(dataset_path, dataset_filename, dataset_name,
@@ -25,6 +26,9 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	:return: input instances & counterfactual explanations
 	"""  #
 	
+	# indicates whether we use the model with one-hot-encoded features; if False, one-hot encoded features
+	ann_binary = False
+	
 	# Authors say: 'For automatic explainer generation'
 	flat_vae_bools = False
 	
@@ -38,6 +42,7 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	data = data.drop(columns=[target_name])
 	instances = instances.drop(columns=[target_name])
 	
+	
 	# normalize data
 	data_processed = preprocessing.normalize_instance(data, data, continuous_cols)
 	# binarize cat binary instances in robust way: here we >>do not want<< to drop first column
@@ -45,12 +50,13 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	
 	# normalize instances
 	instances = preprocessing.normalize_instance(data, instances, continuous_cols)
-	# binarize cat binary instances in robust way
-	instances = preprocessing.robust_binarization(instances, binary_cols, continuous_cols)
+	if ann_binary:
+		# binarize cat binary instances in robust way
+		instances = preprocessing.robust_binarization(instances, binary_cols, continuous_cols, drop_first=True)
+	else:
+		instances = preprocessing.one_hot_encode_instance(data, instances, binary_cols)
 	
 	if dataset_name == 'adult':
-		
-		counterfactuals = []
 		
 		# choose mutabale vs. immutable
 		keys_correct = continuous_cols + binary_cols
@@ -85,7 +91,7 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	input_dims_binary = list(np.repeat(2, len(binary_cols)))
 	input_dim_vec = input_dims_continuous + input_dims_binary
 	
-	# check directory for file
+	# check directory for VAE-weights file
 	check_dir = 'C:/Users/fred0/Documents/proj/Benchmarkin_Counterfactual_Examples/CF_Models/clue_ml/AE_models/Saved_models/fc_VAE_' + dataset_name + '_models/theta_best.dat'
 	save_dir = 'C:/Users/fred0/Documents/proj/Benchmarkin_Counterfactual_Examples/CF_Models/clue_ml/AE_models/Saved_models/fc_VAE_' + dataset_name
 	
@@ -104,16 +110,13 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 
 	
 	# STEP 2: for every instance 'under consideration', use CLUE to find counterfactual
+	counterfactuals = []
 	
-	'''
 	for index in range(instances.shape[0]):
-		counterfactual = face_ml.graph_search(data_processed_ordered, index, keys_mutable, keys_immutable,
-											  continuous_cols, binary_cols, model, mode=mode)
+		counterfactual = clue_ml.vae_gradient_search(instances.values[index, :], model, VAE)
 		counterfactuals.append(counterfactual)
 	
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))
 	counterfactuals_df.columns = instances.columns
 	
 	return instances, counterfactuals_df
-	'''
-
