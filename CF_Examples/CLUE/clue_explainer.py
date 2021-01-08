@@ -108,7 +108,7 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 							lr=1e-4, cuda=cuda, flatten=flat_vae_bools)
 	VAE.load(save_dir + '_models/theta_best.dat')
 
-	
+
 	# STEP 2: for every instance 'under consideration', use CLUE to find counterfactual
 	counterfactuals = []
 	

@@ -1,6 +1,7 @@
 from __future__ import division, print_function
 from CF_Models.clue_ml.src.utils import *
 import torch
+import numpy as np
 from torch.optim import Adam, SGD
 import torch.nn as nn
 import torch.nn.functional as F
@@ -46,7 +47,6 @@ def vae_gradient_search(instance, model, VAE, lr=0.15, prediction_similarity_wei
 	torch.cuda.empty_cache()
 	
 	dist = Ln_distance(n=1, dim=(1))
-	
 	instance = instance.reshape(1, -1)
 	x_dim = instance.reshape(instance.shape[0], -1).shape[1]
 	# Both weights are set to 1?
@@ -66,7 +66,16 @@ def vae_gradient_search(instance, model, VAE, lr=0.15, prediction_similarity_wei
 	z_vec, counterfactual, uncertainty_vec, epistemic_vec, aleatoric_vec, cost_vec, dist_vec = CLUE_explainer.optimise(
 		min_steps=min_steps, max_steps=max_steps, n_early_stop=n_early_stop)
 	
-	return counterfactual[max_steps, :, :].reshape(-1)
+	# check if explanation indeed produced counterfactual
+	cf_preds = model.prob_predict(counterfactual)
+	
+	if np.argmax(cf_preds[max_steps, :]) != np.argmax(desired_preds):
+		counterfactual = counterfactual[max_steps, :, :]
+	else:
+		counterfactual = counterfactual[max_steps, :, :]
+		counterfactual[:] = np.nan
+		
+	return counterfactual.reshape(-1)
 
 
 class CLUE(BaseNet):

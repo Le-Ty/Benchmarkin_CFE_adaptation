@@ -41,8 +41,6 @@ def counterfactual_search(dataset_filename, data_name, instance, model, max_iter
 		
 		#model = model.model
 		
-		
-		
 		# load the generation model: AE
 		if data_name == 'adult':
 			dataset_filename = dataset_filename.split('.')[0]
@@ -71,8 +69,14 @@ def counterfactual_search(dataset_filename, data_name, instance, model, max_iter
 		INFO = "[kappa:{}, Orig class:{}, Adv class:{}, Delta class: {}, Orig prob:{}, Adv prob:{}, Delta prob:{}".format(
 			kappa, orig_class, adv_class, delta_class, orig_prob_str, adv_prob_str, delta_prob_str)
 		print(INFO)
+		
+		if np.argmax(model.model.predict(instance.reshape(1,-1))) != np.argmax(model.model.predict(counterfactual.reshape(1,-1))):
+			counterfactual = counterfactual
+		else:
+			counterfactual = counterfactual
+			counterfactual[:] = np.nan
 	
-	return instance, counterfactual[0]
+	return instance, counterfactual.reshape(-1)
 
 
 def get_counterfactual(dataset_path, dataset_filename, data_name, instances, binary_cols, continuous_cols, target_name, model):

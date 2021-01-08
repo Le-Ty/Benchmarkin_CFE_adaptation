@@ -56,6 +56,7 @@ def graph_search(data, index, keys_mutable, keys_immutable, continuous_cols, bin
 	# if element in adjacency matrix 0, then it cannot be reached
 	# this ensures that paths only take same sex / same race / ... etc. routes
 	## TODO: CANNOT deal with continuous constraints (e.g. age) yet
+	## TODO: However, authors also do not mention how to go about it
 	for i in range(len(keys_immutable)):
 		epsilon = 0.5  # avoids division by 0
 		immutable_constraint_matrix = np.outer(data[keys_immutable[i]].values + epsilon,

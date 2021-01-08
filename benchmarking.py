@@ -207,16 +207,16 @@ def main():
     """
     
     # Compute CLUE counterfactuals; so far, this one requires pytorch model
-    clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
-                                                                       continuous_features, target_name, ann)
+    #test_instances, counterfactuals = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    #                                                                   continuous_features, target_name, ann)
     
     # Compute FACE counterfactuals
     #test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
     #                                                                   continuous_features, target_name, ann_tf_13, 'knn')
     
     # Compute Growing Spheres counterfactuals
-    test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
-                                                                       continuous_features, target_name, ann_tf_13)
+    #test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    #                                                                   continuous_features, target_name, ann_tf_13)
     
 
     # Compute CEM counterfactuals
