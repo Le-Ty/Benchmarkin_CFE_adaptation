@@ -200,7 +200,7 @@ def main():
     # Instances we want to explain
     querry_instances = compute_H_minus(data, ann, continuous_features, cat_features, target_name)
     # querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
-    querry_instances = querry_instances.head(3)  # Only for testing because of the size of querry_instances
+    querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
 
     """
         Below we can start to define counterfactual models and start benchmarking
@@ -211,8 +211,8 @@ def main():
                                                                        continuous_features, target_name, ann)
     
     # Compute FACE counterfactuals
-    test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
-                                                                       continuous_features, target_name, ann_tf_13, 'knn')
+    #test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    #                                                                   continuous_features, target_name, ann_tf_13, 'knn')
     
     # Compute Growing Spheres counterfactuals
     test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
@@ -224,12 +224,12 @@ def main():
     ## TODO: as input: 'ann_tf', 'whether AE should be trained'
     ## TODO: Compute Metrics; currently outputed as numeric values & COMPUTE MEASUREMENT function cannot cannot deal
     ## TODO: with numeric binary values yet.
-    test_instances, counterfactuals = cem_explainer.get_counterfactual(data_path, data_name, querry_instances, cat_features,
+    test_instances, counterfactuals = cem_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf_13)
 
     # Compute measurements
     print('==============================================================================')
-    print('Measurement results for CEM on Adult')
+    #print('Measurement results for CEM on Adult')
     #compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
     # Compute DICE counterfactuals
@@ -243,14 +243,13 @@ def main():
 
 
     # # DICE with VAE
-    # ## TODO: add terminating condition in while loop
-    # test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
-    #                                                                        target_name, ann, continuous_features, 1,
-    #                                                                        pretrained=1)
+    test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
+                                                                            target_name, ann, continuous_features, 1,
+                                                                            pretrained=1)
     #
     # # Compute measurements
-    # print('==============================================================================')
-    # print('Measurement results for DICE with VAE on Adult')
+    print('==============================================================================')
+    print('Measurement results for DICE with VAE on Adult')
     # # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
 

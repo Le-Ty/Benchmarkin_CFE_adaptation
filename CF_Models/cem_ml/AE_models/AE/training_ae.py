@@ -4,10 +4,6 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import library.data_processing as preprocessing
 
-
-#from library import data_processing as processing
-
-
 def __main__():
 
     # choose data set
@@ -18,7 +14,6 @@ def __main__():
     
     small_model = False
     one_hot = False
-    
     
     if data_name == 'adult_full.csv':
     

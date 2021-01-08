@@ -9,7 +9,7 @@ from CF_Models.cem_ml.aen_cem import AEADEN
 import library.data_processing as preprocessing
 
 
-def counterfactual_search(dataset_filename, instance, model, max_iter=100,
+def counterfactual_search(dataset_filename, data_name, instance, model, max_iter=100,
                        binary_steps=9, init_const=10, mode='PN', kappa=0, beta=1e-1, gamma=0.5):
 	
 	"""
@@ -39,12 +39,14 @@ def counterfactual_search(dataset_filename, instance, model, max_iter=100,
 		random.seed(121)
 		np.random.seed(1211)
 		
-		model = model.model
+		#model = model.model
 		
-		data_name = dataset_filename.split('.')[0]
-	
-		# load the generation model: VAE | AE | AAE
-		AE_model = util.load_AE(data_name)
+		
+		
+		# load the generation model: AE
+		if data_name == 'adult':
+			dataset_filename = dataset_filename.split('.')[0]
+			AE_model = util.load_AE(dataset_filename)
 		
 		# load the classification model
 		model = model_tf.Model_Tabular(dim_input, dim_hidden_layer_1, dim_hidden_layer_2, dim_output_layer, num_of_classes,
@@ -73,9 +75,11 @@ def counterfactual_search(dataset_filename, instance, model, max_iter=100,
 	return instance, counterfactual[0]
 
 
-def get_counterfactual(dataset_path, dataset_filename, instances, binary_cols, continuous_cols, target_name, model):
+def get_counterfactual(dataset_path, dataset_filename, data_name, instances, binary_cols, continuous_cols, target_name, model):
+	
 	"""
 	:param dataset_filename: str; Filename (e.g. 'adult_full')
+	:param data_name: str; Data name (e.g. 'adult')
 	:param instances: Dataframe; Instances to generate counterfactuals for
 	:param binary_cols: list; list of features which need to be one_hot_encoded
 	:param continuous_cols: list; list of numeric features
@@ -96,7 +100,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, binary_cols, c
 	counterfactuals = []
 	
 	for i in range(instances.values.shape[0]):
-		_, counterfactual = counterfactual_search(dataset_filename, instances.values[i, :], model)
+		_, counterfactual = counterfactual_search(dataset_filename, data_name, instances.values[i, :], model)
 		counterfactuals.append(counterfactual)
 	
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))

@@ -22,10 +22,11 @@ from torch.autograd import Variable
 
 class FeasibleBaseVAE(ExplainerBase):
 
-    def __init__(self, data_interface, model_interface, **kwargs):
+    def __init__(self, data_interface, model_interface, max_iter=1000, **kwargs):
         """
         :param data_interface: an interface class to data related params
         :param model_interface: an interface class to access trained ML model
+        :param max_iter: int > 0; max number of search iterations
         """ 
         
         # initiating data related parameters
@@ -44,6 +45,7 @@ class FeasibleBaseVAE(ExplainerBase):
         self.wm1= kwargs['wm1']
         self.wm2= kwargs['wm2']
         self.wm3= kwargs['wm3']
+        self.max_iter = max_iter
         
         #Initializing parameters for the DiceBaseGenCF  
         self.vae_train_dataset, self.vae_val_dataset, self.vae_test_dataset, self.normalise_weights, self.cf_vae, self.cf_vae_optimizer= get_base_gen_cf_initialization( self.data_interface, self.encoded_size, self.cont_minx, self.cont_maxx, self.margin, self.validity_reg, self.epochs, self.wm1, self.wm2, self.wm3, self.learning_rate ) 
@@ -198,28 +200,43 @@ class FeasibleBaseVAE(ExplainerBase):
             
             for cf_count in range(total_CFs):                                
                 recon_err, kl_err, x_true, x_pred, cf_label = self.cf_vae.compute_elbo( train_x, 1.0-train_y, self.pred_model )
-                while( cf_label== train_y):
-                    print(cf_label, train_y)
-                    recon_err, kl_err, x_true, x_pred, cf_label = self.cf_vae.compute_elbo( train_x, 1.0-train_y, self.pred_model )
+                
+                count = 0
+                step = 1
+                max_iter_reached = False
+                
+                while(cf_label==train_y):
+                    #print(cf_label,train_y)
+                    # We added max_iter condition: if run out of max_iter, return >>nan<<
+                    if count > self.max_iter:
+                        max_iter_reached = True
+                        break
+                    else:
+                        count = count + step
+                        recon_err, kl_err, x_true, x_pred, cf_label = self.cf_vae.compute_elbo(train_x, 1.0-train_y, self.pred_model)
                     
-                x_pred= x_pred.detach().numpy()
-                #Converting mixed scores into one hot feature representations
-                for v in self.cf_vae.encoded_categorical_feature_indexes:
-                    curr_max= x_pred[:, v[0]]
-                    curr_max_idx= v[0]
-                    for idx in v:
-                        if curr_max < x_pred[:, idx]:
-                            curr_max= x_pred[:, idx]
-                            curr_max_idx= idx
-                    for idx in v:
-                        if idx==curr_max_idx:
-                            x_pred[:, idx]=1
-                        else:
-                            x_pred[:, idx]=0
-                        
+                if not max_iter_reached:
+                    x_pred= x_pred.detach().numpy()
+                    #Converting mixed scores into one hot feature representations
+                    for v in self.cf_vae.encoded_categorical_feature_indexes:
+                        curr_max= x_pred[:, v[0]]
+                        curr_max_idx= v[0]
+                        for idx in v:
+                            if curr_max < x_pred[:, idx]:
+                                curr_max= x_pred[:, idx]
+                                curr_max_idx= idx
+                        for idx in v:
+                            if idx==curr_max_idx:
+                                x_pred[:, idx]=1
+                            else:
+                                x_pred[:, idx]=0
+                else:
+                    x_pred = x_pred.detach().numpy()
+                    x_pred[:] = np.nan  # assign np.nans
+                    x_pred = x_pred.reshape(1,-1)
                     
                 cf_label= cf_label.detach().numpy()
-                cf_label= np.reshape( cf_label, (cf_label.shape[0],1) )
+                cf_label= np.reshape(cf_label, (cf_label.shape[0],1))
                 
                 curr_gen_cf.append( x_pred )
                 curr_cf_pred.append( cf_label )

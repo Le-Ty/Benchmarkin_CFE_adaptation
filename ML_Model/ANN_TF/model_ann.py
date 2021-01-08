@@ -12,14 +12,14 @@ class Train_ANN():
 				 epochs=10, learning_rate=0.002, batch_size=64):
 		"""
 		Defines the structure of the neural network
-		:param dim_input: int > 0, number of neurons for this layer (for Adult: 104)
-		:param dim_hidden_layer_1: int > 0, number of neurons for this layer (for Adult: 30)
-		:param dim_hidden_layer_2: int > 0, number of neurons for this layer (for Adult: 15)
-		:param dim_output_layer: int > 0, number of neurons for this layer (for Adult: 5)
-		:param num_of_classes: int > 0, number of classes (for Adult: 2)
-		:param learning_rate: int > 0, learning rate (for Adult: 0.002)
-		:param epochs: int > 0; number of epochs (for Adult: 10)
-		:param batch_size: int > 0; batch_size (for Adult: 64)
+		:param dim_input: int > 0, number of neurons for this layer
+		:param dim_hidden_layer_1: int > 0, number of neurons for this layer
+		:param dim_hidden_layer_2: int > 0, number of neurons for this layer
+		:param dim_output_layer: int > 0, number of neurons for this layer
+		:param num_of_classes: int > 0, number of classes (e.g. for Adult: 2)
+		:param learning_rate: int > 0, learning rate (e.g. for Adult: 0.002)
+		:param epochs: int > 0; number of epochs (e.g. for Adult: 10)
+		:param batch_size: int > 0; batch_size (e.g. for Adult: 64)
 
 		"""
 		self.dim_input = dim_input
