@@ -295,9 +295,8 @@ def main():
     # Compute AS measurements
     print('==============================================================================')
     print('Measurement results for Action Sequence on Adult')
-    # TODO: yNN Calculation does not work for tf models yet
-    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
-    #                      normalized=True)
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
+                         normalized=True)
 
 
 if __name__ == "__main__":
