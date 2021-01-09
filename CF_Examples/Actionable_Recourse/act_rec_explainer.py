@@ -61,8 +61,8 @@ def build_lime(data, cat_feat, label):
 
 def get_lime_coefficients(data, lime_expl, model, instance, categorical_features, continuous_features, label):
     """
-    Actionable Recourse is not implemented for non binary categorical data. Therefore we have to use lime to compute
-    coefficients for our Black Box Model.
+    Actionable Recourse is not implemented for non-linear models and non binary categorical data.
+    To mitigate the second issue, we have to use LIME to compute coefficients for our Black Box Model.
     :param data:
     :param lime_expl:
     :param model:

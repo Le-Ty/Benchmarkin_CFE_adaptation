@@ -96,8 +96,11 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
         distances_temp = get_distances(norm_data, test_instance, counterfactual).reshape((-1, 1))
         distances += distances_temp
 
+        # Distances are ok for now
+        '''
         costs_temp = get_cost(norm_data, test_instance, counterfactual).reshape((-1, 1))
         costs += costs_temp
+        '''
 
         # Preprocessing for redundancy
         encoded_factual = preprocessing.one_hot_encode_instance(norm_data, pd.DataFrame([test_instance], columns=columns),
@@ -118,9 +121,10 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     print('dist(x; x^F)_2: {}'.format(distances[1]))
     print('dist(x; x^F)_3: {}'.format(distances[2]))
     print('dist(x; x^F)_4: {}'.format(distances[3]))
-    print('cost(x^CF; x^F)_1: {}'.format(costs[0]))
-    print('cost(x^CF; x^F)_2: {}'.format(costs[1]))
     print('Redundancy: {}'.format(redundancy))
+    # Distancea are ok for now
+    # print('cost(x^CF; x^F)_1: {}'.format(costs[0]))
+    # print('cost(x^CF; x^F)_2: {}'.format(costs[1]))
 
     yNN = measure.yNN(list_of_cfs, data, target_name, 5, cat_features, continuous_features, model)
 
@@ -181,14 +185,13 @@ def main():
     model_path = 'ML_Model/Saved_Models/ANN/2020-12-13_20-43-50_input_20_lr_0.002_te_0.35.pt'
     ann = model.ANN(20, 18, 9, 3, 1)
 
-    # # Load TF ANN (for CEM)
+    # Load TF ANN (for CEM)
     model_path_tf_13 = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_13'
     ann_tf_13 = model_tf.Model_Tabular(13, 18, 9, 3, 2, restore=model_path_tf_13, session=None, use_prob=True)
     # Load TF ANN (for Action Sequence)
     model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_20'
     ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, session=None, use_prob=False)
-    
-
+    # Load Pytorch ANN
     ann.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
     # Define data with original values
@@ -200,64 +203,78 @@ def main():
     # Instances we want to explain
     querry_instances = compute_H_minus(data, ann, continuous_features, cat_features, target_name)
     # querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
-    querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
+    querry_instances = querry_instances.head(3)  # Only for testing because of the size of querry_instances
 
     """
         Below we can start to define counterfactual models and start benchmarking
     """
     
+    '''
     # Compute CLUE counterfactuals; so far, this one requires pytorch model
-    #test_instances, counterfactuals = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
-    #                                                                   continuous_features, target_name, ann)
-    
+    test_instances, counterfactuals = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+                                                                       continuous_features, target_name, ann)
+    '''
     # Compute FACE counterfactuals
-    #test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
-    #                                                                   continuous_features, target_name, ann_tf_13, 'knn')
+    test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+                                                                       continuous_features, target_name, ann_tf_13, 'knn')
+    
+    # Compute FACE measurements
+    print('==============================================================================')
+    print('Measurement results for FACE on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    
+    
     
     # Compute Growing Spheres counterfactuals
-    #test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
-    #                                                                   continuous_features, target_name, ann_tf_13)
+    test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+                                                                       continuous_features, target_name, ann_tf_13)
+    
+    # Compute GS measurements
+    print('==============================================================================')
+    print('Measurement results for GS on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
     
 
     # Compute CEM counterfactuals
     ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
     ## TODO: as input: 'ann_tf', 'whether AE should be trained'
-    ## TODO: Compute Metrics; currently outputed as numeric values & COMPUTE MEASUREMENT function cannot cannot deal
-    ## TODO: with numeric binary values yet.
     test_instances, counterfactuals = cem_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf_13)
 
-    # Compute measurements
+    # Compute CEM measurements
     print('==============================================================================')
-    #print('Measurement results for CEM on Adult')
-    #compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    print('Measurement results for CEM on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+
+    '''
 
     # Compute DICE counterfactuals
     test_instances, counterfactuals = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
                                                                        target_name, ann, continuous_features, 1)
 
-    # Compute measurements
+    # Compute DICE measurements
     print('==============================================================================')
     print('Measurement results for DICE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
 
-    # # DICE with VAE
+    # Compute DICE with VAE
     test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
                                                                             target_name, ann, continuous_features, 1,
                                                                             pretrained=1)
-    #
-    # # Compute measurements
+    
+    # Compute DICE VAE measurements
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')
-    # # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
+  '''
 
     # Compute Actionable Recourse Counterfactuals
     test_instances, counterfactuals = ac_explainer.get_counterfactuals(data_path, data_name, 'adult', ann,
                                                                        continuous_features, target_name, False,
                                                                        querry_instances)
-    # Compute measurements
+    # Compute AR measurements
     print('==============================================================================')
     print('Measurement results for Actionable Recourse')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
@@ -275,7 +292,7 @@ def main():
                                                                           continuous_features, 1,
                                                                           options, [0., 1.])
 
-    # Compute measurements
+    # Compute AS measurements
     print('==============================================================================')
     print('Measurement results for Action Sequence on Adult')
     # TODO: yNN Calculation does not work for tf models yet
