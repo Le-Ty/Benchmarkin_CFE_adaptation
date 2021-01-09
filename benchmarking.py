@@ -66,8 +66,8 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     :param model: ML model we want to analyze
     :param normalized: Boolean, indicates if test_instances and counterfactuals are already normalized
     :return:
-    """ #
-    
+    """  #
+
     N = len(test_instances)
     distances = np.zeros((4, 1))
     costs = np.zeros((2, 1))
@@ -86,8 +86,10 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
 
         # Normalize factual and counterfactual to normalize measurements
         if not normalized:
-            test_instance = preprocessing.normalize_instance(data, test_instance, continuous_features).values.tolist()[0]
-            counterfactuals = preprocessing.normalize_instance(data, counterfactuals, continuous_features).values.tolist()
+            test_instance = preprocessing.normalize_instance(data, test_instance, continuous_features).values.tolist()[
+                0]
+            counterfactuals = preprocessing.normalize_instance(data, counterfactuals,
+                                                               continuous_features).values.tolist()
             counterfactual = counterfactuals[0]  # First compute measurements for only one instance with one cf
         else:
             test_instance = test_instance.values.tolist()[0]
@@ -100,7 +102,8 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
         costs += costs_temp
 
         # Preprocessing for redundancy
-        encoded_factual = preprocessing.one_hot_encode_instance(norm_data, pd.DataFrame([test_instance], columns=columns),
+        encoded_factual = preprocessing.one_hot_encode_instance(norm_data,
+                                                                pd.DataFrame([test_instance], columns=columns),
                                                                 cat_features)
         encoded_factual = encoded_factual.drop(columns=target_name)
         encoded_counterfactual = preprocessing.one_hot_encode_instance(norm_data,
@@ -128,35 +131,26 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     print('==============================================================================\n')
 
 
-def compute_H_minus(data, ml_model, cont_features, cat_features, label, normalize=True):
-    
+def compute_H_minus(data, ml_model, label):
     """
     Computes H^{-} dataset, which contains all samples that are labeled with 0 by a black box classifier f.
-    :param data: Dataframe with original data
+    :param data: Dataframe with normalized and encoded data
     :param ml_model: Black Box Model f (ANN, SKlearn MLP)
-    :param cont_features: List of Strings with continuous features
-    :param cat_features: List of Strings with categorical features
     :param label: String, target name
-    :param normalize: Boolean, Should data be normalized or not
     :return: Dataframe
-    """ #
-    
+    """
+
     H_minus = data.copy()
-    # prepare data
-    if normalize:
-        norm_data = preprocessing.normalize_instance(data, data, cont_features)
-    else:
-        norm_data = data
-    enc_data = preprocessing.one_hot_encode_instance(norm_data, norm_data, cat_features)
 
     # loose ground truth label
-    enc_data = enc_data.drop(label, axis=1)
+    enc_data = data.drop(label, axis=1)
 
     # predict labels
     if isinstance(ml_model, model.ANN):
         predictions = np.round(ml_model(torch.from_numpy(enc_data.values).float()).detach().numpy())
-    elif isinstance(ml_model, MLPClassifier):
-        predictions = ml_model.predict(enc_data.values)
+    elif isinstance(ml_model, model_tf.Model_Tabular):
+        predictions = ml_model.model.predict(enc_data.values)
+        predictions = np.argmax(predictions, axis=1)
     else:
         raise Exception('Black-Box-Model is not yet implemented')
     H_minus['predictions'] = predictions.tolist()
@@ -187,7 +181,6 @@ def main():
     # Load TF ANN (for Action Sequence)
     model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_20'
     ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, session=None, use_prob=False)
-    
 
     ann.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
@@ -196,41 +189,50 @@ def main():
     columns = data.columns
     continuous_features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'hours-per-week', 'capital-loss']
     cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
-    
+
+    # Process data (normalize and encode)
+    norm_data = preprocessing.normalize_instance(data, data, continuous_features)
+    label_data = norm_data[target_name]
+    enc_data = preprocessing.robust_binarization(norm_data, cat_features, continuous_features)
+    enc_data[target_name] = label_data
+    oh_data = preprocessing.one_hot_encode_instance(norm_data, norm_data, cat_features)
+    oh_data[target_name] = label_data
+
     # Instances we want to explain
-    querry_instances = compute_H_minus(data, ann, continuous_features, cat_features, target_name)
+    querry_instances_tf13 = compute_H_minus(enc_data, ann_tf_13, target_name)
+    querry_instances = compute_H_minus(oh_data, ann, target_name)
     # querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
     querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
 
     """
         Below we can start to define counterfactual models and start benchmarking
     """
-    
+
     # Compute CLUE counterfactuals; so far, this one requires pytorch model
-    #test_instances, counterfactuals = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    # test_instances, counterfactuals = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
     #                                                                   continuous_features, target_name, ann)
-    
+
     # Compute FACE counterfactuals
-    #test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    # test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
     #                                                                   continuous_features, target_name, ann_tf_13, 'knn')
-    
+
     # Compute Growing Spheres counterfactuals
-    #test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    # test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
     #                                                                   continuous_features, target_name, ann_tf_13)
-    
 
     # Compute CEM counterfactuals
     ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
     ## TODO: as input: 'ann_tf', 'whether AE should be trained'
     ## TODO: Compute Metrics; currently outputed as numeric values & COMPUTE MEASUREMENT function cannot cannot deal
     ## TODO: with numeric binary values yet.
-    test_instances, counterfactuals = cem_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    test_instances, counterfactuals = cem_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances,
+                                                                       cat_features,
                                                                        continuous_features, target_name, ann_tf_13)
 
     # Compute measurements
     print('==============================================================================')
-    #print('Measurement results for CEM on Adult')
-    #compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    # print('Measurement results for CEM on Adult')
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
     # Compute DICE counterfactuals
     test_instances, counterfactuals = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
@@ -241,17 +243,15 @@ def main():
     print('Measurement results for DICE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
-
     # # DICE with VAE
     test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
-                                                                            target_name, ann, continuous_features, 1,
-                                                                            pretrained=1)
+                                                                           target_name, ann, continuous_features, 1,
+                                                                           pretrained=1)
     #
     # # Compute measurements
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')
     # # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
-
 
     # Compute Actionable Recourse Counterfactuals
     test_instances, counterfactuals = ac_explainer.get_counterfactuals(data_path, data_name, 'adult', ann,
