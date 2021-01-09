@@ -71,5 +71,37 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))
 	counterfactuals_df.columns = instances.columns
 	
-	return instances, counterfactuals_df
+	# Obtain labels
+	instance_label = np.argmax(model.model.predict(instances.values), axis=1)
+	counterfactual_label = np.argmax(model.model.predict(counterfactuals_df.values), axis=1)
+	
+	# Round binary columns to integer
+	counterfactuals_df[binary_cols] = counterfactuals_df[binary_cols].round(0).astype(int)
+	
+	# Order counterfactuals and instances in original data order
+	counterfactuals_df = counterfactuals_df[data.columns]
+	instances = instances[data.columns]
+	
+	# Convert binary cols of counterfactuals and instances into strings: Required for >>Measurement<< in script
+	counterfactuals_df[binary_cols] = counterfactuals_df[binary_cols].astype("string")
+	instances[binary_cols] = instances[binary_cols].astype("string")
+	
+	# Convert binary cols back to original string encoding
+	counterfactuals_df = preprocessing.map_binary_backto_string(data, counterfactuals_df, binary_cols)
+	instances = preprocessing.map_binary_backto_string(data, instances, binary_cols)
+	
+	# Add labels
+	counterfactuals_df[target_name] = counterfactual_label
+	instances[target_name] = instance_label
+	
+	# Collect in list making use of pandas
+	instances_list = []
+	counterfactuals_list = []
+	
+	for i in range(counterfactuals_df.shape[0]):
+		counterfactuals_list.append(
+			pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
+		instances_list.append(pd.DataFrame(instances.iloc[i].values.reshape((1, -1)), columns=instances.columns))
+	
+	return instances_list, counterfactuals_list
 

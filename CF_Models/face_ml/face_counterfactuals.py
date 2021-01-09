@@ -11,7 +11,7 @@ from scipy.sparse import csgraph
 
 
 def graph_search(data, index, keys_mutable, keys_immutable, continuous_cols, binary_cols, model,
-				 n_neighbors=50, p_norm=2, mode='knn', frac=0.5, radius=0.25):
+				 n_neighbors=50, p_norm=2, mode='knn', frac=0.4, radius=0.25):
 	
 	# This is our own implementation of these methods since the authors did not provide implementations online,
 	# neither did they respond to our emails
@@ -61,10 +61,13 @@ def graph_search(data, index, keys_mutable, keys_immutable, continuous_cols, bin
 		epsilon = 0.5  # avoids division by 0
 		immutable_constraint_matrix = np.outer(data[keys_immutable[i]].values + epsilon,
 											   data[keys_immutable[i]].values + epsilon)
-		immutable_constraint_matrix = immutable_constraint_matrix / (
-				(data[keys_immutable[i]].values + epsilon) ** 2).reshape((data[keys_immutable[i]].shape[0], 1))
-		immutable_constraint_matrix = (immutable_constraint_matrix == 1) * 1
-	
+		
+		immutable_constraint_matrix1 = immutable_constraint_matrix / ((1 + epsilon) ** 2)
+		immutable_constraint_matrix1 = ((immutable_constraint_matrix1 == 1) * 1).astype(float)
+		
+		immutable_constraint_matrix2 = immutable_constraint_matrix / (epsilon ** 2)
+		immutable_constraint_matrix2 = ((immutable_constraint_matrix2 == 1) * 1).astype(float)
+		
 	# POSITIVE PREDICTIONS
 	y_predicted_logits = model.model.predict(data.values)
 	y_predicted = np.argmax(y_predicted_logits, axis=1)
@@ -86,7 +89,7 @@ def graph_search(data, index, keys_mutable, keys_immutable, continuous_cols, bin
 			# STEP 1 -- BUILD NETWORK GRAPH
 			graph = kneighbors_graph(data.values, n_neighbors=n, n_jobs=-1)
 			adjacency_matrix = graph.toarray()
-			adjacency_matrix = np.multiply(adjacency_matrix, immutable_constraint_matrix)  # element wise multiplication
+			adjacency_matrix = np.multiply(adjacency_matrix, immutable_constraint_matrix1, immutable_constraint_matrix2)  # element wise multiplication
 			graph = csr_matrix(adjacency_matrix)
 
 			# STEP 2 -- APPLY SHORTEST PATH ALGORITHM  ## indeces=index (corresponds to x^F)

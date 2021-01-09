@@ -119,4 +119,12 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))
 	counterfactuals_df.columns = instances.columns
 	
+	# order counterfactuals and instances in original data order
+	counterfactuals_df = counterfactuals_df[data.columns]
+	instances = instances[data.columns]
+	
+	# convert binary cols of counterfactuals and instances into strings
+	counterfactuals_df[binary_cols] = counterfactuals_df[binary_cols].astype("string")
+	instances[binary_cols] = instances[binary_cols].astype("string")
+	
 	return instances, counterfactuals_df

@@ -163,3 +163,36 @@ def undummify(df, prefix_sep="_"):
             series_list.append(df[col])
     undummified_df = pd.concat(series_list, axis=1)
     return undummified_df
+
+
+def map_binary_backto_string(data, instances, binary_cols):
+    """
+	This maps binary instances back to their string values;
+	Requires that binary values in instances are encoded as strings
+	:param data: df
+	:param instances: df
+	:param binary_cols: list
+	:return: returns
+	"""
+    
+    def chunks(lst, n):
+        """Yield successive n-sized chunks from lst."""
+        for i in range(0, len(lst), n):
+            yield lst[i:i + n]
+    
+    temp = pd.get_dummies(data[binary_cols], prefix_sep="__")
+    extended_binary_cols = list(temp.columns)
+    
+    chunked_list = list(chunks(extended_binary_cols, 2))
+    
+    for i in range(len(binary_cols)):
+        names = chunked_list[i]
+        name1 = names[0].split('__')[1]
+        name2 = names[1].split('__')[1]
+        mapping = {
+            '0': name1,
+            '1': name2}
+        
+        instances[binary_cols[i]] = instances[binary_cols[i]].map(mapping)
+    
+    return instances

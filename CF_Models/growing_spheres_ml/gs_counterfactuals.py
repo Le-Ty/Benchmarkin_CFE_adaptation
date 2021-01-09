@@ -71,6 +71,9 @@ def growing_spheres_search(instance, keys_mutable, keys_immutable, continuous_co
 	# counter
 	count = 0
 	counter_step = 1
+	
+	# get predicted label of instance
+	instance_label = np.argmax(model.model.predict(instance.values.reshape(1, -1)))
 		
 	while True:
 		count = count + counter_step
@@ -108,7 +111,7 @@ def growing_spheres_search(instance, keys_mutable, keys_immutable, continuous_co
 		# counterfactual labels
 		y_candidate_logits = model.model.predict(candidate_counterfactuals.values)
 		y_candidate = np.argmax(y_candidate_logits, axis=1)
-		indeces = np.where(y_candidate != 1)
+		indeces = np.where(y_candidate != instance_label)
 		candidate_counterfactuals = candidate_counterfactuals.values[indeces]
 		candidate_dist = distances[indeces]
 			

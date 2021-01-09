@@ -2,8 +2,6 @@
 Module to generate diverse counterfactual explanations based on tensorflow 1.x
 """
 from CF_Models.dice_ml.explainer_interfaces.explainer_base import ExplainerBase
-import tensorflow as tf
-
 import numpy as np
 import random
 import collections
@@ -11,6 +9,9 @@ import timeit
 import copy
 
 from CF_Models.dice_ml import diverse_counterfactuals as exp
+
+import tensorflow as tf
+
 
 class DiceTensorFlow1(ExplainerBase):
 
