@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from recourse.builder import RecourseBuilder
 from recourse.builder import ActionSet
+import timeit
 from mip import cbc
 
 
@@ -112,11 +113,14 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
 
     # Actionable recourse is only defined on linear models
     # To use more complex models, they propose to use local approximation models like LIME
+
     if not is_linear:
+        times_list = []
         lime_explainer = build_lime(dataset, categorical_features, label)
         # create coefficients for each instance
         for i in range(instances.shape[0]):
             instance = instances.iloc[i]
+            start = timeit.default_timer()
             top_10_coeff = get_lime_coefficients(dataset, lime_explainer, model, instance, categorical_features,
                                                  continuous_features, label)
             # Match LIME Coefficients with actionable recourse data
@@ -156,6 +160,11 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
             counterfactual.loc[counterfactual['sex'] == 0, 'sex'] = 'Male'
             counterfactual = counterfactual[
                 instances.columns]  # Arrange instance and counterfactual in same column order
+            
+            # Record time
+            stop = timeit.default_timer()
+            time_taken = stop-start
+            times_list.append(time_taken)
 
             # Prepare counterfactual for prediction
             # y_test = counterfactual['income']  # For test to compare label of original and counterfactual
@@ -174,6 +183,9 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
                 test_instances.append(instance)
 
     else:
+        start = timeit.default_timer()
         raise Exception('Linear models are not yet implemented')
+        stop = timeit.default_timer()
+        time_taken = stop - start
 
-    return test_instances, counterfactuals
+    return test_instances, counterfactuals, times_list

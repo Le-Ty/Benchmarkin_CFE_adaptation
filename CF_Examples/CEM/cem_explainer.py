@@ -7,6 +7,7 @@ from keras import backend as K
 import CF_Models.cem_ml.utils as util
 from CF_Models.cem_ml.aen_cem import AEADEN
 import library.data_processing as preprocessing
+import timeit
 
 
 def counterfactual_search(dataset_filename, data_name, instance, model, max_iter=100,
@@ -102,10 +103,16 @@ def get_counterfactual(dataset_path, dataset_filename, data_name, instances, bin
 	instances = preprocessing.robust_binarization(instances, binary_cols, continuous_cols)
 
 	counterfactuals = []
+	times_list = []
 	
 	for i in range(instances.values.shape[0]):
+		start = timeit.default_timer()
 		_, counterfactual = counterfactual_search(dataset_filename, data_name, instances.values[i, :], model)
+		stop = timeit.default_timer()
+		time_taken = stop - start
+		
 		counterfactuals.append(counterfactual)
+		times_list.append(time_taken)
 	
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))
 	counterfactuals_df.columns = instances.columns
@@ -142,4 +149,4 @@ def get_counterfactual(dataset_path, dataset_filename, data_name, instances, bin
 			pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
 		instances_list.append(pd.DataFrame(instances.iloc[i].values.reshape((1, -1)), columns=instances.columns))
 	
-	return instances_list, counterfactuals_list
+	return instances_list, counterfactuals_list, times_list

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import CF_Models.face_ml.face_counterfactuals as face_ml
 import library.data_processing as preprocessing
+import timeit
 
 
 def get_counterfactual(dataset_path, dataset_filename, dataset_name,
@@ -30,16 +31,12 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	# binarize cat binary instances in robust way
 	data_processed = preprocessing.robust_binarization(data_processed, binary_cols, continuous_cols)
 	
-	print(data_processed.shape)
-	
 	# normalize instances
 	instances = preprocessing.normalize_instance(data, instances, continuous_cols)
 	# binarize cat binary instances in robust way
 	instances = preprocessing.robust_binarization(instances, binary_cols, continuous_cols)
 	
 	if dataset_name == 'adult':
-		
-		counterfactuals = []
 		
 		# choose mutabale vs. immutable
 		keys_correct = continuous_cols + binary_cols
@@ -62,10 +59,21 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	data_processed = data_processed.drop(data_processed[cond].index)
 	data_processed_ordered = pd.concat([instances, data_processed], ignore_index=True)
 	
+	# place holders
+	counterfactuals = []
+	times = []
+	
+	counterfactuals = []
+	times_list = []
+
 	for index in range(instances.shape[0]):
-		
+		start = timeit.default_timer()
 		counterfactual = face_ml.graph_search(data_processed_ordered, index, keys_mutable, keys_immutable,
 											  continuous_cols, binary_cols, model, mode=mode)
+		stop = timeit.default_timer()
+		time_taken = stop - start
+		
+		times_list.append(time_taken)
 		counterfactuals.append(counterfactual)
 		
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))
@@ -103,5 +111,5 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 			pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
 		instances_list.append(pd.DataFrame(instances.iloc[i].values.reshape((1, -1)), columns=instances.columns))
 	
-	return instances_list, counterfactuals_list
+	return instances_list, counterfactuals_list, times_list
 

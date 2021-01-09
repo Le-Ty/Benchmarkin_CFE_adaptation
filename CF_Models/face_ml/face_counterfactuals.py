@@ -121,7 +121,7 @@ def graph_search(data, index, keys_mutable, keys_immutable, continuous_cols, bin
 			# STEP 1 -- BUILD NETWORK GRAPH
 			graph = radius_neighbors_graph(data.values, radius=r, n_jobs=-1)
 			adjacency_matrix = graph.toarray()
-			adjacency_matrix = np.multiply(adjacency_matrix, immutable_constraint_matrix)  # element wise multiplication
+			adjacency_matrix = np.multiply(adjacency_matrix, immutable_constraint_matrix1, immutable_constraint_matrix2)  # element wise multiplication
 			graph = csr_matrix(adjacency_matrix)
 			
 			# STEP 2 -- APPLY SHORTEST PATH ALGORITHM  ## indeces=index (corresponds to x^F)

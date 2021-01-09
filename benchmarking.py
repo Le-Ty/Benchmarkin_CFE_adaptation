@@ -190,7 +190,7 @@ def main():
     ann_tf_13 = model_tf.Model_Tabular(13, 18, 9, 3, 2, restore=model_path_tf_13, session=None, use_prob=True)
     # Load TF ANN (for Action Sequence)
     model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_20'
-    ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, session=None, use_prob=False)
+    ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, session=None, use_prob=True)
     # Load Pytorch ANN
     ann.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
@@ -199,6 +199,19 @@ def main():
     columns = data.columns
     continuous_features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'hours-per-week', 'capital-loss']
     cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
+
+    data = preprocessing.normalize_instance(data, data, continuous_features)
+    
+    a = pd.get_dummies(data)
+    a = a.drop(columns=[target_name])
+    
+    b = pd.get_dummies(data, drop_first=True)
+    b = b.drop(columns=[target_name])
+    
+    a_ = ann_tf.model.predict(a.values)
+    b_ = ann_tf_13.model.predict(b.values)
+    
+    frac = (np.argmax(a_, axis=1) == np.argmax(b_, axis=1)).sum()/np.shape(a_)[0]
     
     # Instances we want to explain
     querry_instances = compute_H_minus(data, ann, continuous_features, cat_features, target_name)
@@ -215,7 +228,7 @@ def main():
                                                                        continuous_features, target_name, ann)
     '''
     # Compute FACE counterfactuals
-    test_instances, counterfactuals = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    test_instances, counterfactuals, times = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf_13, 'knn')
     
     # Compute FACE measurements
@@ -226,7 +239,7 @@ def main():
     
     
     # Compute Growing Spheres counterfactuals
-    test_instances, counterfactuals = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    test_instances, counterfactuals, times = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf_13)
     
     # Compute GS measurements
@@ -238,7 +251,7 @@ def main():
     # Compute CEM counterfactuals
     ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
     ## TODO: as input: 'ann_tf', 'whether AE should be trained'
-    test_instances, counterfactuals = cem_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    test_instances, counterfactuals, times = cem_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf_13)
 
     # Compute CEM measurements
@@ -271,7 +284,7 @@ def main():
   '''
 
     # Compute Actionable Recourse Counterfactuals
-    test_instances, counterfactuals = ac_explainer.get_counterfactuals(data_path, data_name, 'adult', ann,
+    test_instances, counterfactuals, times = ac_explainer.get_counterfactuals(data_path, data_name, 'adult', ann,
                                                                        continuous_features, target_name, False,
                                                                        querry_instances)
     # Compute AR measurements
