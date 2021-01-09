@@ -132,10 +132,11 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     print('==============================================================================\n')
 
 
-def compute_H_minus(data, ml_model, label):
+def compute_H_minus(data, enc_norm_data,  ml_model, label):
     """
     Computes H^{-} dataset, which contains all samples that are labeled with 0 by a black box classifier f.
-    :param data: Dataframe with normalized and encoded data
+    :param data: Dataframe with plain unchanged data
+    :param enc_norm_data: Dataframe with normalized and encoded data
     :param ml_model: Black Box Model f (ANN, SKlearn MLP)
     :param label: String, target name
     :return: Dataframe
@@ -144,7 +145,7 @@ def compute_H_minus(data, ml_model, label):
     H_minus = data.copy()
 
     # loose ground truth label
-    enc_data = data.drop(label, axis=1)
+    enc_data = enc_norm_data.drop(label, axis=1)
 
     # predict labels
     if isinstance(ml_model, model.ANN):
@@ -200,8 +201,8 @@ def main():
     oh_data[target_name] = label_data
 
     # Instances we want to explain
-    querry_instances_tf13 = compute_H_minus(enc_data, ann_tf_13, target_name)
-    querry_instances = compute_H_minus(oh_data, ann, target_name)
+    querry_instances_tf13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
+    querry_instances = compute_H_minus(data, oh_data, ann, target_name)
     # querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
     querry_instances = querry_instances.head(3)  # Only for testing because of the size of querry_instances
 
@@ -278,7 +279,6 @@ def main():
     print('==============================================================================')
     print('Measurement results for Actionable Recourse')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
-
     # Compute Action Sequence counterfactuals
     # Declare options for Action Sequence
     options = {
