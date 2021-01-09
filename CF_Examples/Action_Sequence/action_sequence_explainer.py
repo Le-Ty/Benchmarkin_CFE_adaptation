@@ -4,6 +4,7 @@ import numpy as np
 import CF_Examples.Action_Sequence.feature_wrapper as fw
 import library.data_processing as processing
 import CF_Examples.Action_Sequence.model_wrapper as model_wrapper
+import timeit
 
 from CF_Examples.Action_Sequence.data_wrapper import Data_wrapper
 from CF_Models.act_seq.heuristics.loader import load_heuristics
@@ -36,7 +37,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     :return: Counterfactual object
     """#
     
-    test_instances, counterfactuals = [], []
+    test_instances, counterfactuals, times_list = [], [], []
     # import dataset
     path = dataset_path
     file_name = dataset_filename

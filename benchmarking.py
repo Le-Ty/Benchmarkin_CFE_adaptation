@@ -66,8 +66,8 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     :param model: ML model we want to analyze
     :param normalized: Boolean, indicates if test_instances and counterfactuals are already normalized
     :return:
-    """ #
-    
+    """  #
+
     N = len(test_instances)
     distances = np.zeros((4, 1))
     costs = np.zeros((2, 1))
@@ -132,35 +132,27 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     print('==============================================================================\n')
 
 
-def compute_H_minus(data, ml_model, cont_features, cat_features, label, normalize=True):
-    
+def compute_H_minus(data, enc_norm_data,  ml_model, label):
     """
     Computes H^{-} dataset, which contains all samples that are labeled with 0 by a black box classifier f.
-    :param data: Dataframe with original data
+    :param data: Dataframe with plain unchanged data
+    :param enc_norm_data: Dataframe with normalized and encoded data
     :param ml_model: Black Box Model f (ANN, SKlearn MLP)
-    :param cont_features: List of Strings with continuous features
-    :param cat_features: List of Strings with categorical features
     :param label: String, target name
-    :param normalize: Boolean, Should data be normalized or not
     :return: Dataframe
-    """ #
-    
+    """
+
     H_minus = data.copy()
-    # prepare data
-    if normalize:
-        norm_data = preprocessing.normalize_instance(data, data, cont_features)
-    else:
-        norm_data = data
-    enc_data = preprocessing.one_hot_encode_instance(norm_data, norm_data, cat_features)
 
     # loose ground truth label
-    enc_data = enc_data.drop(label, axis=1)
+    enc_data = enc_norm_data.drop(label, axis=1)
 
     # predict labels
     if isinstance(ml_model, model.ANN):
         predictions = np.round(ml_model(torch.from_numpy(enc_data.values).float()).detach().numpy())
-    elif isinstance(ml_model, MLPClassifier):
-        predictions = ml_model.predict(enc_data.values)
+    elif isinstance(ml_model, model_tf.Model_Tabular):
+        predictions = ml_model.model.predict(enc_data.values)
+        predictions = np.argmax(predictions, axis=1)
     else:
         raise Exception('Black-Box-Model is not yet implemented')
     H_minus['predictions'] = predictions.tolist()
@@ -200,21 +192,17 @@ def main():
     continuous_features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'hours-per-week', 'capital-loss']
     cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
 
-    data = preprocessing.normalize_instance(data, data, continuous_features)
-    
-    a = pd.get_dummies(data)
-    a = a.drop(columns=[target_name])
-    
-    b = pd.get_dummies(data, drop_first=True)
-    b = b.drop(columns=[target_name])
-    
-    a_ = ann_tf.model.predict(a.values)
-    b_ = ann_tf_13.model.predict(b.values)
-    
-    frac = (np.argmax(a_, axis=1) == np.argmax(b_, axis=1)).sum()/np.shape(a_)[0]
-    
+    # Process data (normalize and encode)
+    norm_data = preprocessing.normalize_instance(data, data, continuous_features)
+    label_data = norm_data[target_name]
+    enc_data = preprocessing.robust_binarization(norm_data, cat_features, continuous_features)
+    enc_data[target_name] = label_data
+    oh_data = preprocessing.one_hot_encode_instance(norm_data, norm_data, cat_features)
+    oh_data[target_name] = label_data
+
     # Instances we want to explain
-    querry_instances = compute_H_minus(data, ann, continuous_features, cat_features, target_name)
+    querry_instances_tf13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
+    querry_instances = compute_H_minus(data, oh_data, ann, target_name)
     # querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
     querry_instances = querry_instances.head(3)  # Only for testing because of the size of querry_instances
 
@@ -224,7 +212,7 @@ def main():
     
     '''
     # Compute CLUE counterfactuals; so far, this one requires pytorch model
-    test_instances, counterfactuals = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    test_instances, counterfactuals, times = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann)
     '''
     # Compute FACE counterfactuals
@@ -262,7 +250,7 @@ def main():
     '''
 
     # Compute DICE counterfactuals
-    test_instances, counterfactuals = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
+    test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
                                                                        target_name, ann, continuous_features, 1)
 
     # Compute DICE measurements
@@ -272,7 +260,7 @@ def main():
 
 
     # Compute DICE with VAE
-    test_instances, counterfactuals = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
+    test_instances, counterfactuals, times = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
                                                                             target_name, ann, continuous_features, 1,
                                                                             pretrained=1)
     
@@ -291,7 +279,6 @@ def main():
     print('==============================================================================')
     print('Measurement results for Actionable Recourse')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
-
     # Compute Action Sequence counterfactuals
     # Declare options for Action Sequence
     options = {
@@ -308,9 +295,8 @@ def main():
     # Compute AS measurements
     print('==============================================================================')
     print('Measurement results for Action Sequence on Adult')
-    # TODO: yNN Calculation does not work for tf models yet
-    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
-    #                      normalized=True)
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
+                         normalized=True)
 
 
 if __name__ == "__main__":

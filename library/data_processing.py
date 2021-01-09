@@ -107,7 +107,6 @@ def one_hot_encode_instance(data, instance, categorical_features):
 
 
 def robust_binarization(instances, binary_cols, continuous_cols, drop_first=True):
-    
     """
     robust processing: when binary feature only contains 1s or 0s, pd.get_dummies does neither one-hot encode
     properly nor does it binarize properly; thus, we need to make sure that binarization is correct
@@ -116,7 +115,7 @@ def robust_binarization(instances, binary_cols, continuous_cols, drop_first=True
     :param continuous_cols: list
     :param drop_first: boolean; whether redundant column should be dropped
     :return: df including numeric variables + numeric binary variables
-    """#
+    """
 
     robust_names = continuous_cols + binary_cols
 

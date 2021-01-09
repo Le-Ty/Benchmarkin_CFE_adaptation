@@ -1,7 +1,6 @@
 import pandas as pd
-
 import CF_Models.dice_ml as dice_ml
-
+import timeit
 
 def get_counterfactual(dataset_path, dataset_filename, instances, target_name, model, features, number_of_cf):
     """
@@ -15,7 +14,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     :param number_of_cf: Number of counterfactuals to compute
     :return: Counterfactual object
     """
-    test_instances, counterfactuals = [], []
+    test_instances, counterfactuals, times_list = [], [], []
     # import dataset
     path = dataset_path
     file_name = dataset_filename
@@ -34,13 +33,17 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     # generate counterfactuals
     for i in range(query_instances.shape[0]):
         query_instance = query_instances.iloc[i].to_dict()
+        start = timeit.timeit.default_timer()
         dice_exp = exp.generate_counterfactuals(query_instance, total_CFs=number_of_cf, desired_class="opposite")
-
+        stop = timeit.default_timer()
+        time_taken = stop - start
+        
+        times_list.append(time_taken)
         # Define factual and counterfactual
         test_instances.append(dice_exp.org_instance)
         counterfactuals.append(dice_exp.final_cfs_df_sparse)
 
-    return test_instances, counterfactuals
+    return test_instances, counterfactuals, times_list
 
 
 def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_name, model, features, number_of_cf,
@@ -57,7 +60,7 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
     :param pretrained: int; 1 for pretrained and 0 for training
     :return: Counterfactual object
     """
-    test_instances, counterfactuals = [], []
+    test_instances, counterfactuals, times_list = [], [], []
 
     # import dataset
     path = dataset_path
@@ -87,10 +90,14 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
     # generate counterfactuals
     for i in range(query_instances.shape[0]):
         query_instance = query_instances.iloc[i].to_dict()
+        start = timeit.default_timer()
         dice_exp = exp.generate_counterfactuals(query_instance, total_CFs=number_of_cf, desired_class="opposite")
-
+        stop = timeit.default_timer()
+        time_taken = stop - start
+        times_list.append(time_taken)
+        
         # Define factual and counterfactual
         test_instances.append(dice_exp.org_instance)
         counterfactuals.append(dice_exp.final_cfs_df)
 
-    return test_instances, counterfactuals
+    return test_instances, counterfactuals, times_list

@@ -7,7 +7,7 @@ from CF_Models.clue_ml.AE_models.AE.fc_gauss_cat import VAE_gauss_cat_net
 
 from sklearn.model_selection import train_test_split
 import library.data_processing as preprocessing
-
+import timeit
 
 from os import path
 
@@ -111,9 +111,15 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 
 	# STEP 2: for every instance 'under consideration', use CLUE to find counterfactual
 	counterfactuals = []
+	times_list = []
 	
 	for index in range(instances.shape[0]):
+		start = timeit.default_timer()
 		counterfactual = clue_ml.vae_gradient_search(instances.values[index, :], model, VAE)
+		stop = timeit.default_timer()
+		time_taken = stop - start
+		
+		times_list.append(time_taken)
 		counterfactuals.append(counterfactual)
 	
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))
@@ -127,4 +133,4 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	counterfactuals_df[binary_cols] = counterfactuals_df[binary_cols].astype("string")
 	instances[binary_cols] = instances[binary_cols].astype("string")
 	
-	return instances, counterfactuals_df
+	return instances, counterfactuals_df, times_list
