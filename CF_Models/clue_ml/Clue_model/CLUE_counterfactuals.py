@@ -15,9 +15,9 @@ have a look at: https://openreview.net/forum?id=XSLF1XFq5h for more details
 '''
 
 
-def vae_gradient_search(instance, model, VAE, lr=0.15, prediction_similarity_weight=0,
+def vae_gradient_search(instance, model, VAE, lr=0.50, prediction_similarity_weight=0,
                         aleatoric_weight=0, epistemic_weight=0, uncertainty_weight=1, lambda_param=2,
-                        prior_weight=0, latent_L2_weight=0, min_steps=3, max_steps=100, n_early_stop=3):
+                        prior_weight=0, latent_L2_weight=0, min_steps=3, max_steps=400, n_early_stop=3):
 	
 	# Most default hyper parameters are chosen to match those from the paper
 	# Data set specific hyper parameters are set as follows:
@@ -66,20 +66,33 @@ def vae_gradient_search(instance, model, VAE, lr=0.15, prediction_similarity_wei
 	z_vec, counterfactual, uncertainty_vec, epistemic_vec, aleatoric_vec, cost_vec, dist_vec = CLUE_explainer.optimise(
 		min_steps=min_steps, max_steps=max_steps, n_early_stop=n_early_stop)
 	
-	# check if explanation indeed produced counterfactual
-	cf_preds = model.prob_predict(counterfactual)
+	'''
+	Check if explanation indeed produced counterfactual:
+	We accept, if CLUE produced any counterfactual within these max_steps.
+	Otherwise we would very often find no counterfactual.
+	This issue is also known by the authors who show in the Appendix that CLUE
+	produced counterfactuals not more than 20% percent of the time. E.g. running optimization to end
+	leads to 16% of successfuly generated counterfactuals for their LSAT data set.
+	'''
 	
-	if np.argmax(cf_preds[max_steps, :]) != np.argmax(desired_preds):
-		counterfactual = counterfactual[max_steps, :, :]
-	else:
+	cf_preds = model.prob_predict(counterfactual)
+	indeces_counterfactual = np.where(np.argmax(cf_preds, axis=1) != np.argmax(desired_preds, axis=1))[0]
+
+	# Return np.nan if none found & otherwise return l_1 cost counterfactual
+	if not len(indeces_counterfactual):
 		counterfactual = counterfactual[max_steps, :, :]
 		counterfactual[:] = np.nan
+	else:
+		distance = np.abs(instance - counterfactual[indeces_counterfactual, :, :]).sum(axis=2)
+		a = np.argmin(distance)
+		index_min = indeces_counterfactual[np.argmin(distance)]
+		counterfactual = counterfactual[index_min, :, :]
 		
 	return counterfactual.reshape(-1)
 
 
 class CLUE(BaseNet):
-	"""This will be a general class for CLUE, etc.
+	"""CLUE authors: This will be a general class for CLUE, etc.
 	A propper optimiser will be used instead of my manually designed one."""
 	
 	def __init__(self, VAE, BNN, original_x, uncertainty_weight, aleatoric_weight, epistemic_weight, prior_weight,

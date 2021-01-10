@@ -7,6 +7,7 @@ from CF_Models.clue_ml.AE_models.AE.fc_gauss_cat import VAE_gauss_cat_net
 
 from sklearn.model_selection import train_test_split
 import library.data_processing as preprocessing
+import library.measure as measure
 import timeit
 
 from os import path
@@ -125,12 +126,32 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))
 	counterfactuals_df.columns = instances.columns
 	
-	# order counterfactuals and instances in original data order
+	# Success rate & drop not successful counterfactuals & process remainder
+	success_rate, counterfactuals_indeces = measure.success_rate_and_indices(counterfactuals_df)
+	counterfactuals_df = counterfactuals_df.iloc[counterfactuals_indeces]
+	instances = instances.iloc[counterfactuals_indeces]
+	
+	# Obtain labels
+	instance_label = np.argmax(model.prob_predict(instances.values), axis=1)
+	counterfactual_label = np.argmax(model.prob_predict(counterfactuals_df.values), axis=1)
+
+	instances = preprocessing.undummify(instances, prefix_sep="_")
+	counterfactuals_df = preprocessing.undummify(counterfactuals_df, prefix_sep="_")
+	
+	# Order counterfactuals and instances in original data order
 	counterfactuals_df = counterfactuals_df[data.columns]
 	instances = instances[data.columns]
 	
-	# convert binary cols of counterfactuals and instances into strings
-	counterfactuals_df[binary_cols] = counterfactuals_df[binary_cols].astype("string")
-	instances[binary_cols] = instances[binary_cols].astype("string")
+	# Add labels
+	counterfactuals_df[target_name] = counterfactual_label
+	instances[target_name] = instance_label
 	
-	return instances, counterfactuals_df, times_list
+	# Collect in list making use of pandas
+	instances_list = []
+	counterfactuals_list = []
+	for i in range(counterfactuals_df.shape[0]):
+		counterfactuals_list.append(
+			pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
+		instances_list.append(pd.DataFrame(instances.iloc[i].values.reshape((1, -1)), columns=instances.columns))
+	
+	return instances_list, counterfactuals_list, times_list, success_rate

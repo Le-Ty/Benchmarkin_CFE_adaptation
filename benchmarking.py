@@ -204,19 +204,25 @@ def main():
     querry_instances_tf13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
     querry_instances = compute_H_minus(data, oh_data, ann, target_name)
     # querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
-    querry_instances = querry_instances.head(3)  # Only for testing because of the size of querry_instances
+    querry_instances = querry_instances.head(5)  # Only for testing because of the size of querry_instances
 
     """
         Below we can start to define counterfactual models and start benchmarking
     """
+    '''
     
-    '''
-    # Compute CLUE counterfactuals; so far, this one requires pytorch model
-    test_instances, counterfactuals, times = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    # Compute CLUE counterfactuals; This one requires the pytorch model
+    test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann)
-    '''
+    
+    # Compute CLUE measurements
+    print('==============================================================================')
+    print('Measurement results for CLUE on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    
+    
     # Compute FACE counterfactuals
-    test_instances, counterfactuals, times = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf_13, 'knn')
     
     # Compute FACE measurements
@@ -224,10 +230,10 @@ def main():
     print('Measurement results for FACE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
     
+    '''
     
-    
-    # Compute Growing Spheres counterfactuals
-    test_instances, counterfactuals, times = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    # Compute GS counterfactuals
+    test_instances, counterfactuals, times, success_rate = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf_13)
     
     # Compute GS measurements
@@ -239,15 +245,13 @@ def main():
     # Compute CEM counterfactuals
     ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
     ## TODO: as input: 'ann_tf', 'whether AE should be trained'
-    test_instances, counterfactuals, times = cem_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
+    test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf_13)
 
     # Compute CEM measurements
     print('==============================================================================')
     print('Measurement results for CEM on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
-
-    '''
 
     # Compute DICE counterfactuals
     test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
@@ -269,7 +273,6 @@ def main():
     print('Measurement results for DICE with VAE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
-  '''
 
     # Compute Actionable Recourse Counterfactuals
     test_instances, counterfactuals, times = ac_explainer.get_counterfactuals(data_path, data_name, 'adult', ann,

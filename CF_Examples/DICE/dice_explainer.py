@@ -33,7 +33,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     # generate counterfactuals
     for i in range(query_instances.shape[0]):
         query_instance = query_instances.iloc[i].to_dict()
-        start = timeit.timeit.default_timer()
+        start = timeit.default_timer()
         dice_exp = exp.generate_counterfactuals(query_instance, total_CFs=number_of_cf, desired_class="opposite")
         stop = timeit.default_timer()
         time_taken = stop - start

@@ -12,6 +12,20 @@ from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
 
 
+def success_rate_and_indices(counterfactuals_df):
+    """
+    Used to indicate which counterfactuals should be dropped (due to lack of success indicated by NaN).
+    Also computes percent of successfully found counterfactuals
+    :param counterfactuals_df: pd df, where NaNs indicate 'no counterfactual found'
+    :return: success_rate, indices
+    """
+    
+    # Success rate & drop not successful counterfactuals & process remainder
+    success_rate = (counterfactuals_df.dropna().shape[0]) / counterfactuals_df.shape[0]
+    counterfactual_indeces = np.where(np.any(np.isnan(counterfactuals_df.values) == True, axis=1) == False)[0]
+    
+    return success_rate, counterfactual_indeces
+
 def get_delta(instance, cf):
     """
     Compute difference between original instance and counterfactual

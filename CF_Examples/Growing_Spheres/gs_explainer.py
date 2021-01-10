@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import CF_Models.growing_spheres_ml.gs_counterfactuals as gs_ml
 import library.data_processing as preprocessing
+import library.measure as measure
 import timeit
 
 
@@ -58,7 +59,12 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	
 	counterfactuals_df = pd.DataFrame(np.array(counterfactuals))
 	counterfactuals_df.columns = instances.columns
-		
+	
+	# Success rate & drop not successful counterfactuals & process remainder
+	success_rate, counterfactuals_indeces = measure.success_rate_and_indices(counterfactuals_df)
+	counterfactuals_df = counterfactuals_df.iloc[counterfactuals_indeces]
+	instances = instances.iloc[counterfactuals_indeces]
+	
 	# Obtain labels
 	instance_label = np.argmax(model.model.predict(instances.values), axis=1)
 	counterfactual_label = np.argmax(model.model.predict(counterfactuals_df.values), axis=1)
@@ -89,5 +95,5 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 		counterfactuals_list.append(pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
 		instances_list.append(pd.DataFrame(instances.iloc[i].values.reshape((1, -1)), columns=instances.columns))
 			
-	return instances_list, counterfactuals_list, times_list
+	return instances_list, counterfactuals_list, times_list, success_rate
 	
