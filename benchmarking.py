@@ -257,8 +257,12 @@ def main():
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
     # Compute DICE counterfactuals
+    # test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
+    #                                                                           target_name, ann, continuous_features, 1,
+    #                                                                           'PYT')
     test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
-                                                                       target_name, ann, continuous_features, 1)
+                                                                              target_name, ann_tf, continuous_features,
+                                                                              1, 'TF1', model_path_tf)
 
     # Compute DICE measurements
     print('==============================================================================')
@@ -267,10 +271,13 @@ def main():
 
 
     # Compute DICE with VAE
-    test_instances, counterfactuals, times = dice_examples.get_counterfactual_VAE(data_path, data_name, querry_instances,
-                                                                            target_name, ann, continuous_features, 1,
-                                                                            pretrained=1)
-    
+    test_instances, counterfactuals, times = dice_examples.get_counterfactual_VAE(data_path, data_name,
+                                                                                  querry_instances,
+                                                                                  target_name, ann,
+                                                                                  continuous_features,
+                                                                                  1, pretrained=1,
+                                                                                  backend='PYT')
+
     # Compute DICE VAE measurements
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')

@@ -1,8 +1,13 @@
 import pandas as pd
-import CF_Models.dice_ml as dice_ml
+import CF_Models.dice_ml as dice_ml_git
+import dice_ml
 import timeit
 
-def get_counterfactual(dataset_path, dataset_filename, instances, target_name, model, features, number_of_cf):
+from dice_ml.utils import helpers
+
+
+def get_counterfactual(dataset_path, dataset_filename, instances, target_name, model, features, number_of_cf, backend,
+                       model_path=None):
     """
     Compute counterfactual for DICE
     :param dataset_path: String; Path to folder of dataset
@@ -12,6 +17,9 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     :param model: Pytorch model
     :param features: List of continuous feature
     :param number_of_cf: Number of counterfactuals to compute
+    :param backend: String, Decides to use Tensorflow or Pytorch model ['PYT' for Pytorch, 'TF1' for Tensorflow 1,
+                    'TF2' for Tensorflow 2
+    :param model_path: String, Path to Tensorflow model
     :return: Counterfactual object
     """
     test_instances, counterfactuals, times_list = [], [], []
@@ -22,7 +30,13 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
 
     # build dice model
     dice_data = dice_ml.Data(dataframe=dataset, continuous_features=features, outcome_name=target_name)
-    dice_model = dice_ml.Model(model=model, backend='PYT')
+    if backend == 'TF1':
+        dice_model = dice_ml.Model(model_path=model_path,
+                                   backend=backend)
+    elif backend == 'TF2':
+        raise NotImplementedError()
+    else:
+        dice_model = dice_ml.Model(model=model, backend=backend)
 
     # initiate DICE
     exp = dice_ml.Dice(dice_data, dice_model)
@@ -37,7 +51,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
         dice_exp = exp.generate_counterfactuals(query_instance, total_CFs=number_of_cf, desired_class="opposite")
         stop = timeit.default_timer()
         time_taken = stop - start
-        
+
         times_list.append(time_taken)
         # Define factual and counterfactual
         test_instances.append(dice_exp.org_instance)
@@ -47,7 +61,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
 
 
 def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_name, model, features, number_of_cf,
-                           pretrained):
+                           pretrained, backend, model_path=None):
     """
     Compute counterfactual for DICE with VAE
     :param dataset_path: String; Path to folder of dataset
@@ -58,6 +72,9 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
     :param features: List of continuous feature
     :param number_of_cf: Number of counterfactuals to compute
     :param pretrained: int; 1 for pretrained and 0 for training
+    :param backend: String, Decides to use Tensorflow or Pytorch model ['PYT' for Pytorch, 'TF1' for Tensorflow 1,
+                    'TF2' for Tensorflow 2
+    :param model_path: String, Path to Tensorflow model
     :return: Counterfactual object
     """
     test_instances, counterfactuals, times_list = [], [], []
@@ -70,17 +87,30 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
     # load ML model
     ann = model
 
-    # build dice model
-    backend = {'model': 'pytorch_model.PyTorchModel',
-               'explainer': 'feasible_base_vae.FeasibleBaseVAE'}
-
-    dice_data = dice_ml.Data(dataframe=dataset, continuous_features=features, outcome_name=target_name, test_size=0.1,
+    dice_data = dice_ml_git.Data(dataframe=dataset, continuous_features=features, outcome_name=target_name, test_size=0.1,
                              data_name=file_name)
-    dice_model = dice_ml.Model(model=ann, backend=backend)
+
+    # build dice model
+    if backend == 'PYT':
+        backend = {'model': 'pytorch_model.PyTorchModel',
+                   'explainer': 'feasible_base_vae.FeasibleBaseVAE'}
+
+        dice_model = dice_ml_git.Model(model=ann, backend=backend)
+    elif backend == 'TF1':
+        backend = {'model': 'keras_tensorflow_model.KerasTensorFlowModel',
+                   'explainer': 'feasible_base_vae.FeasibleBaseVAE'}
+
+        dice_model = dice_ml_git.Model(model_path=model_path, backend=backend)
+        dice_model.load_model()
+    else:
+        raise NotImplementedError()
+
+
+
 
     # initiate DiCE
-    exp = dice_ml.Dice(dice_data, dice_model, encoded_size=10, lr=1e-2, batch_size=2048, validity_reg=42.0,
-                       margin=0.165, epochs=1, wm1=1e-2, wm2=1e-2, wm3=1e-2)
+    exp = dice_ml_git.Dice(dice_data, dice_model, encoded_size=10, lr=1e-2, batch_size=2048, validity_reg=42.0,
+                       margin=0.165, epochs=50, wm1=1e-2, wm2=1e-2, wm3=1e-2)
 
     exp.train(pre_trained=pretrained)
 
@@ -95,7 +125,7 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
         stop = timeit.default_timer()
         time_taken = stop - start
         times_list.append(time_taken)
-        
+
         # Define factual and counterfactual
         test_instances.append(dice_exp.org_instance)
         counterfactuals.append(dice_exp.final_cfs_df)
