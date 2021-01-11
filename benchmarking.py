@@ -86,8 +86,10 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
 
         # Normalize factual and counterfactual to normalize measurements
         if not normalized:
-            test_instance = preprocessing.normalize_instance(data, test_instance, continuous_features).values.tolist()[0]
-            counterfactuals = preprocessing.normalize_instance(data, counterfactuals, continuous_features).values.tolist()
+            test_instance = preprocessing.normalize_instance(data, test_instance, continuous_features).values.tolist()[
+                0]
+            counterfactuals = preprocessing.normalize_instance(data, counterfactuals,
+                                                               continuous_features).values.tolist()
             counterfactual = counterfactuals[0]  # First compute measurements for only one instance with one cf
         else:
             test_instance = test_instance.values.tolist()[0]
@@ -103,7 +105,8 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
         '''
 
         # Preprocessing for redundancy
-        encoded_factual = preprocessing.one_hot_encode_instance(norm_data, pd.DataFrame([test_instance], columns=columns),
+        encoded_factual = preprocessing.one_hot_encode_instance(norm_data,
+                                                                pd.DataFrame([test_instance], columns=columns),
                                                                 cat_features)
         encoded_factual = encoded_factual.drop(columns=target_name)
         encoded_counterfactual = preprocessing.one_hot_encode_instance(norm_data,
@@ -132,7 +135,7 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     print('==============================================================================\n')
 
 
-def compute_H_minus(data, enc_norm_data,  ml_model, label):
+def compute_H_minus(data, enc_norm_data, ml_model, label):
     """
     Computes H^{-} dataset, which contains all samples that are labeled with 0 by a black box classifier f.
     :param data: Dataframe with plain unchanged data
@@ -149,7 +152,7 @@ def compute_H_minus(data, enc_norm_data,  ml_model, label):
 
     # predict labels
     if isinstance(ml_model, model.ANN):
-        predictions = np.round(ml_model(torch.from_numpy(enc_data.values).float()).detach().numpy())
+        predictions = np.round(ml_model(torch.from_numpy(enc_data.values).float()).detach().numpy()).squeeze()
     elif isinstance(ml_model, model_tf.Model_Tabular):
         predictions = ml_model.model.predict(enc_data.values)
         predictions = np.argmax(predictions, axis=1)

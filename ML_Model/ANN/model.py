@@ -47,7 +47,7 @@ class ANN(nn.Module):
         output = self.output(output)
         output = self.sigmoid(output)
 
-        output = output.squeeze()
+        # output = output.squeeze()
 
         return output
 
@@ -63,8 +63,8 @@ class ANN(nn.Module):
         else:
             input = torch.squeeze(data)
 
-        class_1 = 1 - self.forward(input).detach().numpy()
-        class_2 = self.forward(input).detach().numpy()
+        class_1 = 1 - self.forward(input).detach().numpy().squeeze()
+        class_2 = self.forward(input).detach().numpy().squeeze()
 
         # For single prob prediction it happens, that class_1 is casted into float after 1 - prediction
         # Additionally class_1 and class_2 have to be at least shape 1

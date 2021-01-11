@@ -316,8 +316,8 @@ def redundancy(factual, counterfactual, model):
 
     # get model prediction and cast it from tensor to float
     if isinstance(model, model_pytorch.ANN):
-        pred_f = round(model(torch.from_numpy(factual).float()).detach().numpy().reshape(1)[0])
-        pred_cf = round(model(torch.from_numpy(counterfactual).float()).detach().numpy().reshape(1)[0])
+        pred_f = round(model(torch.from_numpy(factual).float()).detach().numpy().squeeze().reshape(1)[0])
+        pred_cf = round(model(torch.from_numpy(counterfactual).float()).detach().numpy().squeeze().reshape(1)[0])
     elif isinstance(model, model_tf.Model_Tabular):
         pred_f = model.model.predict(factual)
         pred_f = np.argmax(pred_f, axis=1)
@@ -334,7 +334,7 @@ def redundancy(factual, counterfactual, model):
                 # reverse change in counterfactual and predict new label
                 temp_cf[0][i] = factual[0][i]
                 if isinstance(model, model_pytorch.ANN):
-                    pred_temp_cf = round(model(torch.from_numpy(temp_cf).float()).detach().numpy().reshape(1)[0])
+                    pred_temp_cf = round(model(torch.from_numpy(temp_cf).float()).detach().numpy().squeeze().reshape(1)[0])
                 elif isinstance(model, model_tf.Model_Tabular):
                     pred_temp_cf = model.model.predict(temp_cf)
                     pred_temp_cf = np.argmax(pred_temp_cf, axis=1)
@@ -383,7 +383,7 @@ def yNN(counterfactuals, data, label, k, cat_features, cont_features, model):
             inst = inst.drop(index=label)
             inst = inst.values
             if isinstance(model, model_pytorch.ANN):
-                pred_inst = round(model(torch.from_numpy(inst).float()).detach().numpy().reshape(1)[0])
+                pred_inst = round(model(torch.from_numpy(inst).float()).detach().numpy().squeeze().reshape(1)[0])
             elif isinstance(model, model_tf.Model_Tabular):
                 pred_inst = model.model.predict(inst.reshape((1, -1)))
                 pred_inst = np.argmax(pred_inst, axis=1)[0]

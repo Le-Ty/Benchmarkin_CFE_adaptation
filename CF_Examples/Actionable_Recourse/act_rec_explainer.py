@@ -160,10 +160,10 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
             counterfactual.loc[counterfactual['sex'] == 0, 'sex'] = 'Male'
             counterfactual = counterfactual[
                 instances.columns]  # Arrange instance and counterfactual in same column order
-            
+
             # Record time
             stop = timeit.default_timer()
-            time_taken = stop-start
+            time_taken = stop - start
             times_list.append(time_taken)
 
             # Prepare counterfactual for prediction
@@ -174,10 +174,11 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
 
             # Test output of counterfactual
             groundtruth = instance[label]
-            prediction = np.round(model(torch.from_numpy(counterfactual_pred.values[0]).float()).detach().numpy())
+            prediction = np.round(
+                model(torch.from_numpy(counterfactual_pred.values[0]).float()).detach().numpy()).squeeze()
             counterfactual['income'] = prediction
 
-            if(groundtruth != prediction):
+            if (groundtruth != prediction):
                 counterfactuals.append(counterfactual)
                 instance = pd.DataFrame(instance.values.reshape((1, -1)), columns=instances.columns)
                 test_instances.append(instance)
