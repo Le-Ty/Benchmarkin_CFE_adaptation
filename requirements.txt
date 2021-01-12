@@ -10,3 +10,4 @@ recourse
 sklearn
 tensorflow==1.14.0
 torch
+dice-ml
