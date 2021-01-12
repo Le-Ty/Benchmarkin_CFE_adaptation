@@ -55,7 +55,7 @@ def get_cost(data, factual, counterfactual):
 
 
 def compute_measurements(data, test_instances, list_of_cfs, continuous_features, target_name, model,
-                         normalized=False, one_hot=True):
+                         normalized=False, one_hot=True, encoded=False):
     """
     Compute all measurements together and print them on the console
     :param data: Dataframe of whole data
@@ -66,6 +66,7 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     :param model: ML model we want to analyze
     :param normalized: Boolean, indicates if test_instances and counterfactuals are already normalized
     :param one_hot: Boolean, indicates whether test_instances & counterfactual instances should become one-hot or binarized
+    :param encoded: Boolean, indicates whether test_instances & counterfactual are already encoded
     :return:
     """  #
 
@@ -106,21 +107,28 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
         '''
 
         # Preprocessing for redundancy & yNN
-        
-        if one_hot:
-            encoded_factual = preprocessing.one_hot_encode_instance(norm_data,
-                                                                    pd.DataFrame([test_instance], columns=columns),
-                                                                    cat_features)
-            encoded_factual = encoded_factual.drop(columns=target_name)
-            encoded_counterfactual = preprocessing.one_hot_encode_instance(norm_data,
-                                                                           pd.DataFrame([counterfactual], columns=columns),
-                                                                           cat_features)
-            encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
+        if not encoded:
+            if one_hot:
+                encoded_factual = preprocessing.one_hot_encode_instance(norm_data,
+                                                                        pd.DataFrame([test_instance], columns=columns),
+                                                                        cat_features)
+                encoded_factual = encoded_factual.drop(columns=target_name)
+                encoded_counterfactual = preprocessing.one_hot_encode_instance(norm_data,
+                                                                               pd.DataFrame([counterfactual],
+                                                                                            columns=columns),
+                                                                               cat_features)
+                encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
+            else:
+                encoded_factual = preprocessing.robust_binarization_2(pd.DataFrame([test_instance], columns=columns),
+                                                                      data)
+                encoded_factual = encoded_factual.drop(columns=target_name)
+                encoded_counterfactual = preprocessing.robust_binarization_2(pd.DataFrame([counterfactual],
+                                                                                          columns=columns), data)
+                encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
         else:
-            encoded_factual = preprocessing.robust_binarization_2(pd.DataFrame([test_instance], columns=columns), data)
+            encoded_factual = pd.DataFrame([test_instance], columns=columns)
             encoded_factual = encoded_factual.drop(columns=target_name)
-            encoded_counterfactual = preprocessing.robust_binarization_2(pd.DataFrame([counterfactual],
-                                                                                      columns=columns), data)
+            encoded_counterfactual = pd.DataFrame([counterfactual], columns=columns)
             encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
 
         redundancy += measure.redundancy(encoded_factual.values, encoded_counterfactual.values, model)
@@ -138,7 +146,8 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     # print('cost(x^CF; x^F)_1: {}'.format(costs[0]))
     # print('cost(x^CF; x^F)_2: {}'.format(costs[1]))
 
-    yNN = measure.yNN(list_of_cfs, data, target_name, 5, cat_features, continuous_features, model, one_hot, normalized)
+    yNN = measure.yNN(list_of_cfs, data, target_name, 5, cat_features, continuous_features, model, one_hot, normalized,
+                      encoded)
 
     print('YNN: {}'.format(yNN))
     print('==============================================================================\n')
@@ -219,46 +228,57 @@ def main():
     """
         Below we can start to define counterfactual models and start benchmarking
     """
-    
-    '''
+
     # Compute CLUE counterfactuals; This one requires the pytorch model
-    test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
-                                                                       continuous_features, target_name, ann)
-    
-    
+    test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
+                                                                                             'adult', querry_instances,
+                                                                                             cat_features,
+                                                                                             continuous_features,
+                                                                                             target_name, ann)
+
     # Compute CLUE measurements
     print('==============================================================================')
     print('Measurement results for CLUE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann, normalized=True)
-    
-    
+
     # Compute FACE counterfactuals
-    test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances_tf13, cat_features,
-                                                                       continuous_features, target_name, ann_tf_13, 'knn')
-    
+    test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name,
+                                                                                             'adult',
+                                                                                             querry_instances_tf13,
+                                                                                             cat_features,
+                                                                                             continuous_features,
+                                                                                             target_name, ann_tf_13,
+                                                                                             'knn')
+
     # Compute FACE measurements
     print('==============================================================================')
     print('Measurement results for FACE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                          normalized=True, one_hot=False)
-    
-    
+
     # Compute GS counterfactuals
-    test_instances, counterfactuals, times, success_rate = gs_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances_tf13, cat_features,
-                                                                       continuous_features, target_name, ann_tf_13)
-    
+    test_instances, counterfactuals, times, success_rate = gs_explainer.get_counterfactual(data_path, data_name,
+                                                                                           'adult',
+                                                                                           querry_instances_tf13,
+                                                                                           cat_features,
+                                                                                           continuous_features,
+                                                                                           target_name, ann_tf_13)
+
     # Compute GS measurements
     print('==============================================================================')
     print('Measurement results for GS on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                          normalized=True, one_hot=False)
-    
 
     # Compute CEM counterfactuals
     ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
     ## TODO: as input: 'ann_tf', 'whether AE should be trained'
-    test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances_tf13, cat_features,
-                                                                       continuous_features, target_name, ann_tf_13)
+    test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path, data_name,
+                                                                                            'adult',
+                                                                                            querry_instances_tf13,
+                                                                                            cat_features,
+                                                                                            continuous_features,
+                                                                                            target_name, ann_tf_13)
 
     # Compute CEM measurements
     print('==============================================================================')
@@ -266,16 +286,12 @@ def main():
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                          normalized=True, one_hot=False)
 
-    '''
-    
-    '''
-
     # Compute DICE counterfactuals
     # test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
-    #                                                                           target_name, ann, continuous_features, 1,
+    #                                                                           target_name, ann, continuous_features,
+    #                                                                           1,
     #                                                                           'PYT')
-    
-    '''
+
     test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
                                                                               target_name, ann_tf, continuous_features,
                                                                               1, 'TF1', model_path_tf)
@@ -285,8 +301,7 @@ def main():
     print('Measurement results for DICE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf, one_hot=True)
 
-    
-
+    '''
     # Compute DICE with VAE
     test_instances, counterfactuals, times = dice_examples.get_counterfactual_VAE(data_path, data_name,
                                                                                   querry_instances,
@@ -299,7 +314,7 @@ def main():
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
-
+    '''
 
     # Compute Actionable Recourse Counterfactuals
     test_instances, counterfactuals, times = ac_explainer.get_counterfactuals(data_path, data_name, 'adult_tf13',
@@ -307,11 +322,12 @@ def main():
                                                                               continuous_features, target_name, False,
                                                                               querry_instances_tf13)
 
-
     # Compute AR measurements
     print('==============================================================================')
     print('Measurement results for Actionable Recourse')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf13)
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+                         normalized=False, one_hot=False, encoded=True)
+
     # Compute Action Sequence counterfactuals
     # Declare options for Action Sequence
     options = {
