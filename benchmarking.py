@@ -212,7 +212,7 @@ def main():
     """
         Below we can start to define counterfactual models and start benchmarking
     """
-    '''
+    
     
     # Compute CLUE counterfactuals; This one requires the pytorch model
     test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
@@ -223,7 +223,7 @@ def main():
     print('Measurement results for CLUE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
     
-    
+    '''
     # Compute FACE counterfactuals
     test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name, 'adult', querry_instances, cat_features,
                                                                        continuous_features, target_name, ann_tf_13, 'knn')
