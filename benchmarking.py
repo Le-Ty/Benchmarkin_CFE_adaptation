@@ -205,6 +205,7 @@ def main():
 
     # Instances we want to explain
     querry_instances_tf13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
+    querry_instances_tf13 = querry_instances_tf13.head(10)
     querry_instances = compute_H_minus(data, oh_data, ann, target_name)
     # querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
     querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
@@ -283,15 +284,16 @@ def main():
     print('Measurement results for DICE with VAE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
 
+    '''
+    test_instances, counterfactuals, times = ac_explainer.get_counterfactuals(data_path, data_name, 'adult_tf13',
+                                                                              ann_tf_13,
+                                                                              continuous_features, target_name, False,
+                                                                              querry_instances_tf13)
 
-    # Compute Actionable Recourse Counterfactuals
-    test_instances, counterfactuals, times = ac_explainer.get_counterfactuals(data_path, data_name, 'adult', ann,
-                                                                       continuous_features, target_name, False,
-                                                                       querry_instances)
     # Compute AR measurements
     print('==============================================================================')
     print('Measurement results for Actionable Recourse')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13)
     # Compute Action Sequence counterfactuals
     # Declare options for Action Sequence
     options = {

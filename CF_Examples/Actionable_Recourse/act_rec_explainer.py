@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import library.data_processing as processing
 import matplotlib.pyplot as plt
+import ML_Model.ANN.model as mod
+import ML_Model.ANN_TF.model_ann as mod_tf
 
 from recourse.builder import RecourseBuilder
 from recourse.builder import ActionSet
@@ -36,19 +38,45 @@ def prepare_adult(data, continuous_features, label):
     return adult_df
 
 
-def build_lime(data, cat_feat, label):
+def prepare_adult_tf13(data, continuous_features, label):
+    """
+    Prepare data according to https://github.com/ustunb/actionable-recourse/blob/master/examples/ex_01_quickstart.ipynb
+    Non binary categorical data is not yet supported for actionable recourse
+    :param data: Dataframe with original data
+    :param continuous_features: List, with continuous features
+    :param label: String, with label name
+    :return: Dataframe
+    """
+    # Get categorical features
+    columns = data.columns
+    cat_features = processing.get_categorical_features(columns, continuous_features, label)
+
+    # Actionable Recourse is yet not able to support non binary categorical data
+    adult_df13 = data.copy()
+    label_data = adult_df13[label]
+    adult_df13 = processing.robust_binarization(adult_df13, cat_features, continuous_features)
+    adult_df13[label] = label_data
+    return adult_df13
+
+
+def build_lime(data, cat_feat, cont_feat, label, dataset_name):
     """
     Define a LIME explainer on dataset
     :param data: Dataframe with original data
     :param cat_feat: List with categorical data
+    :param cont_feat: List with continuous data
     :param label: String with label name
+    :param dataset_name: String, Given the dataset_name we decide which preprocessing we use
     :return: LimeExplainer
     """
     # Data preparation
     y = data[label]
     X = data.drop(label, axis=1)
 
-    X = processing.one_hot_encode_instance(X, X, cat_feat)
+    if dataset_name == 'adult':
+        X = processing.one_hot_encode_instance(X, X, cat_feat)
+    elif dataset_name == 'adult_tf13':
+        X = processing.robust_binarization(X, cat_feat, cont_feat)
     X = processing.normalize(X)
 
     lime_exp = lime.lime_tabular.LimeTabularExplainer(training_data=X.values,
@@ -60,26 +88,37 @@ def build_lime(data, cat_feat, label):
     return lime_exp
 
 
-def get_lime_coefficients(data, lime_expl, model, instance, categorical_features, continuous_features, label):
+def get_lime_coefficients(data, lime_expl, model, instance, categorical_features, continuous_features, label,
+                          dataset_name):
     """
     Actionable Recourse is not implemented for non-linear models and non binary categorical data.
     To mitigate the second issue, we have to use LIME to compute coefficients for our Black Box Model.
-    :param data:
-    :param lime_expl:
-    :param model:
-    :param instance:
-    :param categorical_features:
-    :param continuous_features:
-    :param label:
-    :return:
+    :param data: Dataframe with original data
+    :param lime_expl: LimeExplainer
+    :param model: Black Box Model
+    :param instance: Dataframe
+    :param categorical_features: List with categorical data
+    :param continuous_features: List with continuous data
+    :param label: String with label name
+    :param dataset_name: String, Given the dataset_name we decide which preprocessing we use
+    :return: List of LIME-Explanations
     """
     # Prepare instance
-    inst_to_expl = processing.one_hot_encode_instance(data, instance, categorical_features)
+    if dataset_name == 'adult':
+        inst_to_expl = processing.one_hot_encode_instance(data, instance, categorical_features)
+    elif dataset_name == 'adult_tf13':
+        inst_to_expl = pd.DataFrame(instance.values.reshape((1, -1)), columns=instance.index.values)
+
     inst_to_expl = processing.normalize_instance(data, inst_to_expl, continuous_features)
     inst_to_expl = inst_to_expl.drop(label, axis=1)
 
     # Make model prediction an convert it for lime to prob class prediction
-    explanations = lime_expl.explain_instance(np.squeeze(inst_to_expl.values), model.prob_predict)
+    if isinstance(model, mod.ANN):
+        explanations = lime_expl.explain_instance(np.squeeze(inst_to_expl.values), model.prob_predict)
+    elif isinstance(model, mod_tf.Model_Tabular):
+        explanations = lime_expl.explain_instance(np.squeeze(inst_to_expl.values), model.model.predict)
+    else:
+        raise Exception('Model not yet implemented')
 
     return explanations.as_list()
 
@@ -97,6 +136,8 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
     # select the correct data preparation
     if dataset_name == 'adult':
         prep_data = prepare_adult(dataset, continuous_features, label)
+    elif dataset_name == 'adult_tf13':
+        prep_data = prepare_adult_tf13(dataset, continuous_features, label)
     else:
         print('Not yet implemented')
         prep_data = dataset
@@ -116,13 +157,18 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
 
     if not is_linear:
         times_list = []
-        lime_explainer = build_lime(dataset, categorical_features, label)
+        lime_explainer = build_lime(dataset, categorical_features, continuous_features, label, dataset_name)
         # create coefficients for each instance
+        if dataset_name == 'adult_tf13':
+            label_data = instances[label]
+            instances = processing.robust_binarization(instances, categorical_features, continuous_features)
+            instances[label] = label_data
+
         for i in range(instances.shape[0]):
             instance = instances.iloc[i]
             start = timeit.default_timer()
             top_10_coeff = get_lime_coefficients(dataset, lime_explainer, model, instance, categorical_features,
-                                                 continuous_features, label)
+                                                 continuous_features, label, dataset_name)
             # Match LIME Coefficients with actionable recourse data
             # if LIME coef. is in ac_columns then use coefficient else 0
             ac_columns = X.columns
@@ -141,8 +187,9 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
             rest_df = pd.DataFrame(rest_df, columns=rest_columns)
             inst_for_ac = instance[ac_columns].values.reshape((1, -1))
             inst_for_ac = pd.DataFrame(inst_for_ac, columns=ac_columns)
-            inst_for_ac.loc[inst_for_ac['sex'] == 'Female', 'sex'] = 1
-            inst_for_ac.loc[inst_for_ac['sex'] == 'Male', 'sex'] = 0
+            if dataset_name == 'adult':
+                inst_for_ac.loc[inst_for_ac['sex'] == 'Female', 'sex'] = 1
+                inst_for_ac.loc[inst_for_ac['sex'] == 'Male', 'sex'] = 0
             rb = RecourseBuilder(
                 optimizer='cbc',
                 coefficients=coefficients,
@@ -156,8 +203,9 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
             counterfactual = inst_for_ac.values + actions
             counterfactual = pd.DataFrame(counterfactual, columns=ac_columns)
             counterfactual[rest_columns] = rest_df[rest_columns]
-            counterfactual.loc[counterfactual['sex'] == 1, 'sex'] = 'Female'
-            counterfactual.loc[counterfactual['sex'] == 0, 'sex'] = 'Male'
+            if dataset_name == 'adult':
+                counterfactual.loc[counterfactual['sex'] == 1, 'sex'] = 'Female'
+                counterfactual.loc[counterfactual['sex'] == 0, 'sex'] = 'Male'
             counterfactual = counterfactual[
                 instances.columns]  # Arrange instance and counterfactual in same column order
 
@@ -168,14 +216,26 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
 
             # Prepare counterfactual for prediction
             # y_test = counterfactual['income']  # For test to compare label of original and counterfactual
-            counterfactual_pred = processing.one_hot_encode_instance(dataset, counterfactual, categorical_features)
-            counterfactual_pred = processing.normalize_instance(dataset, counterfactual_pred, continuous_features)
-            counterfactual_pred = counterfactual_pred.drop(label, axis=1)
+            if isinstance(model, mod.ANN):
+                counterfactual_pred = processing.one_hot_encode_instance(dataset, counterfactual, categorical_features)
+                counterfactual_pred = processing.normalize_instance(dataset, counterfactual_pred, continuous_features)
+                counterfactual_pred = counterfactual_pred.drop(label, axis=1)
 
-            # Test output of counterfactual
-            groundtruth = instance[label]
-            prediction = np.round(
-                model(torch.from_numpy(counterfactual_pred.values[0]).float()).detach().numpy()).squeeze()
+                # Test output of counterfactual
+                groundtruth = instance[label]
+                prediction = np.round(
+                    model(torch.from_numpy(counterfactual_pred.values[0]).float()).detach().numpy()).squeeze()
+            elif isinstance(model, mod_tf.Model_Tabular):
+                counterfactual_pred = processing.normalize_instance(dataset, counterfactual, continuous_features)
+                counterfactual_pred = counterfactual_pred.drop(label, axis=1)
+
+                # Test output of counterfactual
+                groundtruth = instance[label]
+                prediction = model.model.predict(counterfactual_pred.values)
+                prediction = np.argmax(prediction, axis=1)
+            else:
+                raise Exception('Model not yet implemented')
+
             counterfactual['income'] = prediction
 
             if (groundtruth != prediction):
