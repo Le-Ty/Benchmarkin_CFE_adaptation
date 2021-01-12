@@ -179,8 +179,9 @@ def compute_H_minus(data, enc_norm_data, ml_model, label):
     H_minus['predictions'] = predictions.tolist()
 
     # get H^-
-    H_minus = H_minus.loc[H_minus['predictions'] == 0]
-    H_minus = H_minus.drop(['predictions'], axis=1)
+    H_minus["predictions"] = H_minus["predictions"].astype(int)
+    H_minus = H_minus.loc[H_minus["predictions"] == 0]
+    H_minus = H_minus.drop(["predictions"], axis=1)
 
     return H_minus
 
