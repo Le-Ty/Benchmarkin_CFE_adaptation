@@ -138,6 +138,19 @@ def robust_binarization(instances, binary_cols, continuous_cols, drop_first=True
 
     return instances
 
+def robust_binarization_2(instances, data):
+    """
+    :param instances: pd df
+    :param data: pd df
+    :return: returns robust binarized instances
+    """
+    
+    robust_instances = instances.append(data, ignore_index=True)
+    robust_instances = pd.get_dummies(robust_instances, drop_first=True)
+    robust_instances = robust_instances.iloc[:instances.values.shape[0]]
+    
+    return robust_instances
+
 
 def undummify(df, prefix_sep="_"):
     """

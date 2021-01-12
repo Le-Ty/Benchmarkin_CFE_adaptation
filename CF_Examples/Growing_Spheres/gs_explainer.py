@@ -25,8 +25,6 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	data = data.drop(columns=[target_name])
 	instances = instances.drop(columns=[target_name])
 	
-	instances_a = instances
-	
 	# normalize instances
 	instances = preprocessing.normalize_instance(data, instances, continuous_cols)
 	

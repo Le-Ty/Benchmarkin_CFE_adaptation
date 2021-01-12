@@ -306,7 +306,7 @@ def cost_2(factual, counterfactual, norm_cdf, bin_edges):
 
 def redundancy(factual, counterfactual, model):
     """
-    Redundency metric which looks for unnecessary changes
+    Redundency metric which looks for 'none-essential' changes
     :param factual: np.array with one-hot-encoded original instance
     :param counterfactual: np.array with one-hot-encoded counterfactual instance
     :param model: pytorch model
@@ -352,7 +352,7 @@ def redundancy(factual, counterfactual, model):
     return red
 
 
-def yNN(counterfactuals, data, label, k, cat_features, cont_features, model):
+def yNN(counterfactuals, data, label, k, cat_features, cont_features, model, one_hot, normalized):
     """
     Compute yNN measure
     :param counterfactuals: List wit dataframes of counterfactual instances
@@ -362,18 +362,40 @@ def yNN(counterfactuals, data, label, k, cat_features, cont_features, model):
     :param cat_features: list with all categorical features
     :param cat_features: list with all continuous features
     :param model: pytorch model
+    :param one_hot: Boolean; whether data should be one_hot encoded or binarzized
+    :param normalized: Boolean, indicates if test_instances and counterfactuals are already normalized
     :return: scalar
     """
     N = len(counterfactuals)
     number_of_diff_labels = 0
     norm_data = processing.normalize_instance(data, data, cont_features)
-    enc_data = pd.get_dummies(norm_data, columns=cat_features)
+    
+    if one_hot:
+        enc_data = pd.get_dummies(norm_data, columns=cat_features)
+    else:
+        enc_data = pd.get_dummies(norm_data, columns=cat_features, drop_first=True)
 
     nbrs = NearestNeighbors(n_neighbors=k).fit(enc_data.values)
 
     for cf_df in counterfactuals:
-        norm_cf = processing.normalize_instance(data, cf_df, cont_features)
-        enc_cf = processing.one_hot_encode_instance(norm_data, norm_cf, cat_features)
+        
+        if normalized:
+            norm_cf = cf_df
+            if one_hot:
+                enc_cf = processing.one_hot_encode_instance(norm_data, norm_cf, cat_features)
+            else:
+                norm_cf = norm_cf.values.tolist()[0]
+                norm_cf = pd.DataFrame([norm_cf], columns=data.columns)
+                enc_cf = processing.robust_binarization_2(norm_cf, data)
+        else:
+            if one_hot:
+                norm_cf = processing.normalize_instance(data, cf_df, cont_features)
+                enc_cf = processing.one_hot_encode_instance(norm_data, norm_cf, cat_features)
+            else:
+                cf_df = cf_df.values.tolist()[0]
+                cf_df = pd.DataFrame([cf_df], columns=data.columns)
+                norm_cf = processing.normalize_instance(data, cf_df, cont_features)
+                enc_cf = processing.robust_binarization_2(norm_cf, data)
 
         knn = nbrs.kneighbors(enc_cf.values, k, return_distance=False)[0]
 
