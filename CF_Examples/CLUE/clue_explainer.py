@@ -93,8 +93,8 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	input_dim_vec = input_dims_continuous + input_dims_binary
 	
 	# check directory for VAE-weights file
-	check_dir = 'C:/Users/fred0/Documents/proj/Benchmarkin_Counterfactual_Examples/CF_Models/clue_ml/AE_models/Saved_models/fc_VAE_' + dataset_name + '_models/theta_best.dat'
-	save_dir = 'C:/Users/fred0/Documents/proj/Benchmarkin_Counterfactual_Examples/CF_Models/clue_ml/AE_models/Saved_models/fc_VAE_' + dataset_name
+	check_dir = 'CF_Models/clue_ml/AE_models/Saved_models/fc_VAE_' + dataset_name + '_models/theta_best.dat'
+	save_dir = 'CF_Models/clue_ml/AE_models/Saved_models/fc_VAE_' + dataset_name
 	
 	if path.isfile(check_dir):
 		if train_vae:
@@ -130,6 +130,8 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	success_rate, counterfactuals_indeces = measure.success_rate_and_indices(counterfactuals_df)
 	counterfactuals_df = counterfactuals_df.iloc[counterfactuals_indeces]
 	instances = instances.iloc[counterfactuals_indeces]
+	
+	a = model.prob_predict(instances.values)
 	
 	# Obtain labels
 	instance_label = np.argmax(model.prob_predict(instances.values), axis=1)

@@ -207,7 +207,7 @@ def main():
     querry_instances_tf13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
     querry_instances = compute_H_minus(data, oh_data, ann, target_name)
     # querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
-    querry_instances = querry_instances.head(5)  # Only for testing because of the size of querry_instances
+    querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
 
     """
         Below we can start to define counterfactual models and start benchmarking
