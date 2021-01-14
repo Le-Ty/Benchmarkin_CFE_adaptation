@@ -6,10 +6,54 @@ import numpy as np
 import library.data_processing as processing
 import ML_Model.ANN.model as model_pytorch
 import ML_Model.ANN_TF.model_ann as model_tf
-
+import tensorflow as tf
 from sklearn.neighbors import NearestNeighbors
 
 import matplotlib.pyplot as plt
+
+
+def repeated_elements(x):
+    _size = len(x)
+    repeated = []
+    for i in range(_size):
+        k = i + 1
+        for j in range(k, _size):
+            if x[i] == x[j] and x[i] not in repeated:
+                repeated.append(x[i])
+    return repeated
+
+
+def constraint_violation(counterfactual, instance, immutable_list):
+    """
+    :param counterfactual:
+    :param instance:
+    :param immutable_list:
+    :return: # number of constraint violations
+    """
+    names = counterfactual.columns.tolist()
+    clean_names = []
+    for i in names:
+        clean_names.append(i.split('_')[0])
+
+    doubled_elements = repeated_elements(clean_names)  # if features are one-hot, names appear twice & we need to account
+    accounting_factor = list(set(immutable_list) & set(doubled_elements))
+    
+    counterfactual.columns = clean_names
+    instance.columns = clean_names
+
+    logical = np.round(counterfactual[immutable_list].values, decimals=2) != np.round(instance[immutable_list].values, decimals=2)
+    violations = (1 * logical).sum()
+    
+    if violations == 0:
+        return violations
+    else:
+        if doubled_elements is None:
+            return violations
+        else:
+            return violations - len(accounting_factor)
+            
+    
+    
 
 
 def success_rate_and_indices(counterfactuals_df):
@@ -304,24 +348,24 @@ def cost_2(factual, counterfactual, norm_cdf, bin_edges):
     return cost_2
 
 
-def redundancy(factual, counterfactual, model):
+def redundancy(factual, counterfactual, ml_model):
     """
     Redundency metric which looks for 'none-essential' changes
-    :param factual: np.array with one-hot-encoded original instance
-    :param counterfactual: np.array with one-hot-encoded counterfactual instance
+    :param factual: np.array with original instance
+    :param counterfactual: np.array with counterfactual instance
     :param model: pytorch model
     :return: scalar, number of unnecessary changes
     """
     red = 0
 
     # get model prediction and cast it from tensor to float
-    if isinstance(model, model_pytorch.ANN):
-        pred_f = round(model(torch.from_numpy(factual).float()).detach().numpy().squeeze().reshape(1)[0])
-        pred_cf = round(model(torch.from_numpy(counterfactual).float()).detach().numpy().squeeze().reshape(1)[0])
-    elif isinstance(model, model_tf.Model_Tabular):
-        pred_f = model.model.predict(factual)
+    if isinstance(ml_model, model_pytorch.ANN):
+        pred_f = round(ml_model(torch.from_numpy(factual).float()).detach().numpy().squeeze().reshape(1)[0])
+        pred_cf = round(ml_model(torch.from_numpy(counterfactual).float()).detach().numpy().squeeze().reshape(1)[0])
+    elif isinstance(ml_model, model_tf.Model_Tabular):
+        pred_f = ml_model.model.predict(factual)
         pred_f = np.argmax(pred_f, axis=1)
-        pred_cf = model.model.predict(counterfactual)
+        pred_cf = ml_model.model.predict(counterfactual)
         pred_cf = np.argmax(pred_cf, axis=1)
     else:
         raise NotImplementedError()
@@ -333,10 +377,10 @@ def redundancy(factual, counterfactual, model):
 
                 # reverse change in counterfactual and predict new label
                 temp_cf[0][i] = factual[0][i]
-                if isinstance(model, model_pytorch.ANN):
-                    pred_temp_cf = round(model(torch.from_numpy(temp_cf).float()).detach().numpy().squeeze().reshape(1)[0])
-                elif isinstance(model, model_tf.Model_Tabular):
-                    pred_temp_cf = model.model.predict(temp_cf)
+                if isinstance(ml_model, model_pytorch.ANN):
+                    pred_temp_cf = round(ml_model(torch.from_numpy(temp_cf).float()).detach().numpy().squeeze().reshape(1)[0])
+                elif isinstance(ml_model, model_tf.Model_Tabular):
+                    pred_temp_cf = ml_model.model.predict(temp_cf)
                     pred_temp_cf = np.argmax(pred_temp_cf, axis=1)
                 else:
                     raise NotImplementedError()
