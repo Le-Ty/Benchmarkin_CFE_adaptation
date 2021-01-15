@@ -2,6 +2,15 @@ import pandas as pd
 import CF_Models.dice_ml as dice_ml_git
 import dice_ml
 import timeit
+import torch
+
+import ML_Model.ANN.model as mod
+import ML_Model.ANN_TF.model_ann as mod_tf
+import numpy as np
+import library.measure as measure
+import library.data_processing as preprocessing
+
+import tensorflow as tf
 
 from dice_ml.utils import helpers
 
@@ -55,9 +64,47 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
         times_list.append(time_taken)
         # Define factual and counterfactual
         test_instances.append(dice_exp.org_instance)
-        counterfactuals.append(dice_exp.final_cfs_df_sparse)
+        # Check if CEs are really counterfactual, if not set CE as nan
+        ce = np.array(dice_exp.final_cfs_sparse)
+        inst = dice_exp.test_instance
+        if isinstance(model, mod.ANN):
+            pred_inst = np.round(
+                model(torch.from_numpy(inst).float()).detach().numpy()).squeeze()
+            pred_ce = np.round(
+                model(torch.from_numpy(ce).float()).detach().numpy()).squeeze()
+        elif isinstance(model, mod_tf.Model_Tabular):
+            # TODO: Test if DICE works correct with TF
+            pred_inst = model.model.predict(inst)
+            pred_inst = np.argmax(pred_inst, axis=1)
+            pred_ce = model.model.predict(ce)
+            pred_ce = np.argmax(pred_ce, axis=1)
 
-    return test_instances, counterfactuals, times_list
+        if pred_inst != pred_ce:
+            counterfactuals.append(dice_exp.final_cfs_df_sparse)
+        else:
+            ce = dice_exp.final_cfs_df_sparse
+            ce[:] = np.nan
+            counterfactuals.append(ce)
+
+    counterfactuals_df = pd.DataFrame(np.array(counterfactuals).squeeze(), columns=instances.columns)
+    instances_df = pd.DataFrame(np.array(test_instances).squeeze(), columns=instances.columns)
+
+    # Success rate & drop not successful counterfactuals & process remainder
+    success_rate, counterfactuals_indeces = measure.success_rate_and_indices(
+        counterfactuals_df[features].astype('float64'))
+    counterfactuals_df = counterfactuals_df.iloc[counterfactuals_indeces]
+    instances_df = instances_df.iloc[counterfactuals_indeces]
+
+    # Collect in list making use of pandas
+    instances_list = []
+    counterfactuals_list = []
+
+    for i in range(counterfactuals_df.shape[0]):
+        counterfactuals_list.append(
+            pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
+        instances_list.append(pd.DataFrame(instances_df.iloc[i].values.reshape((1, -1)), columns=instances_df.columns))
+
+    return instances_list, counterfactuals_list, times_list, success_rate
 
 
 def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_name, model, features, number_of_cf,
@@ -87,8 +134,9 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
     # load ML model
     ann = model
 
-    dice_data = dice_ml_git.Data(dataframe=dataset, continuous_features=features, outcome_name=target_name, test_size=0.1,
-                             data_name=file_name)
+    dice_data = dice_ml_git.Data(dataframe=dataset, continuous_features=features, outcome_name=target_name,
+                                 test_size=0.1,
+                                 data_name=file_name)
 
     # build dice model
     if backend == 'PYT':
@@ -105,12 +153,9 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
     else:
         raise NotImplementedError()
 
-
-
-
     # initiate DiCE
     exp = dice_ml_git.Dice(dice_data, dice_model, encoded_size=10, lr=1e-2, batch_size=2048, validity_reg=42.0,
-                       margin=0.165, epochs=50, wm1=1e-2, wm2=1e-2, wm3=1e-2)
+                           margin=0.165, epochs=50, wm1=1e-2, wm2=1e-2, wm3=1e-2)
 
     exp.train(pre_trained=pretrained)
 

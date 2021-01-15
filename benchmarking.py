@@ -285,16 +285,19 @@ def main():
     print('Measurement results for CEM on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                          normalized=True, one_hot=False)
-
+    '''
     # Compute DICE counterfactuals
-    # test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
-    #                                                                           target_name, ann, continuous_features,
-    #                                                                           1,
-    #                                                                           'PYT')
+    test_instances, counterfactuals, times, success_rate = dice_examples.get_counterfactual(data_path, data_name,
+                                                                                            querry_instances,
+                                                                                            target_name, ann,
+                                                                                            continuous_features,
+                                                                                            1,
+                                                                                            'PYT')
 
-    test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
-                                                                              target_name, ann_tf, continuous_features,
-                                                                              1, 'TF1', model_path_tf)
+    # test_instances, counterfactuals, times, success_rate = dice_examples.get_counterfactual(data_path, data_name,
+    #                                                                           querry_instances,
+    #                                                                           target_name, ann_tf, continuous_features,
+    #                                                                           1, 'TF1', model_path_tf)
 
     # Compute DICE measurements
     print('==============================================================================')

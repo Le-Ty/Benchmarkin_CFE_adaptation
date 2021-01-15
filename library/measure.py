@@ -16,7 +16,7 @@ def success_rate_and_indices(counterfactuals_df):
     """
     Used to indicate which counterfactuals should be dropped (due to lack of success indicated by NaN).
     Also computes percent of successfully found counterfactuals
-    :param counterfactuals_df: pd df, where NaNs indicate 'no counterfactual found'
+    :param counterfactuals_df: pd df, where NaNs indicate 'no counterfactual found' [df should contain no object values)
     :return: success_rate, indices
     """
     
