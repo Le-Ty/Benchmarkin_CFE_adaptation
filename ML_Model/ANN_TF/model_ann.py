@@ -1,5 +1,6 @@
 import time
 
+import tensorflow as tf
 from keras.utils import to_categorical
 from keras.layers import Input, Dense, Lambda, Layer, Multiply, Activation
 from keras.models import Model, Sequential

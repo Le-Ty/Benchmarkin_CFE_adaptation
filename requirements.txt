@@ -1,4 +1,5 @@
-Keras==2.3.1
+Keras==2.2.4
+dice-ml
 h5py==2.10.0
 lime
 matplotlib
@@ -9,5 +10,5 @@ pysmt
 recourse
 sklearn
 tensorflow==1.14.0
-torch
-dice-ml
+torch==1.7.0
+torchvision==0.8.1
