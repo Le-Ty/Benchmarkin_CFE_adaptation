@@ -339,10 +339,12 @@ def main():
     
 
     # Compute Actionable Recourse Counterfactuals
-    test_instances, counterfactuals, times = ac_explainer.get_counterfactuals(data_path, data_name, 'adult_tf13',
-                                                                              ann_tf_13,
-                                                                              continuous_features, target_name, False,
-                                                                              querry_instances_tf13)
+    test_instances, counterfactuals, times, success_rate = ac_explainer.get_counterfactuals(data_path, data_name,
+                                                                                            'adult_tf13',
+                                                                                            ann_tf_13,
+                                                                                            continuous_features,
+                                                                                            target_name, False,
+                                                                                            querry_instances_tf13)
 
     # Compute AR measurements
     print('==============================================================================')

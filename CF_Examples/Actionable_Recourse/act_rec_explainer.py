@@ -8,8 +8,10 @@ import library.data_processing as processing
 import matplotlib.pyplot as plt
 import ML_Model.ANN.model as mod
 import ML_Model.ANN_TF.model_ann as mod_tf
+import library.measure as measure
 
 from recourse.builder import RecourseBuilder
+from recourse.flipset import Flipset
 from recourse.builder import ActionSet
 import timeit
 from mip import cbc
@@ -101,7 +103,7 @@ def get_lime_coefficients(data, lime_expl, model, instance, categorical_features
     :param continuous_features: List with continuous data
     :param label: String with label name
     :param dataset_name: String, Given the dataset_name we decide which preprocessing we use
-    :return: List of LIME-Explanations
+    :return: List of LIME-Explanations, interception
     """
     # Prepare instance
     if dataset_name == 'adult':
@@ -120,7 +122,7 @@ def get_lime_coefficients(data, lime_expl, model, instance, categorical_features
     else:
         raise Exception('Model not yet implemented')
 
-    return explanations.as_list()
+    return explanations.as_list(), explanations.intercept[1]
 
 
 def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, continuous_features, label, is_linear,
@@ -151,6 +153,9 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
     action_set['age'].actionable = False
     action_set['sex'].mutable = False
     action_set['sex'].actionable = False
+    if dataset_name == 'adult_tf13':
+        action_set['race'].mutable = False
+        action_set['race'].actionable = False
 
     # Actionable recourse is only defined on linear models
     # To use more complex models, they propose to use local approximation models like LIME
@@ -167,8 +172,9 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
         for i in range(instances.shape[0]):
             instance = instances.iloc[i]
             start = timeit.default_timer()
-            top_10_coeff = get_lime_coefficients(dataset, lime_explainer, model, instance, categorical_features,
-                                                 continuous_features, label, dataset_name)
+            top_10_coeff, intercept = get_lime_coefficients(dataset, lime_explainer, model, instance,
+                                                            categorical_features,
+                                                            continuous_features, label, dataset_name)
             # Match LIME Coefficients with actionable recourse data
             # if LIME coef. is in ac_columns then use coefficient else 0
             ac_columns = X.columns
@@ -187,61 +193,103 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
             rest_df = pd.DataFrame(rest_df, columns=rest_columns)
             inst_for_ac = instance[ac_columns].values.reshape((1, -1))
             inst_for_ac = pd.DataFrame(inst_for_ac, columns=ac_columns)
+
             if dataset_name == 'adult':
                 inst_for_ac.loc[inst_for_ac['sex'] == 'Female', 'sex'] = 1
                 inst_for_ac.loc[inst_for_ac['sex'] == 'Male', 'sex'] = 0
-            rb = RecourseBuilder(
-                optimizer='cbc',
-                coefficients=coefficients,
+
+            fb = Flipset(
+                x=inst_for_ac.values,
                 action_set=action_set,
-                x=inst_for_ac.values
+                coefficients=coefficients,
+                intercept=intercept
             )
 
             # Fit AC and build counterfactual
-            ac_fit = rb.fit()
-            actions = ac_fit['actions']
-            counterfactual = inst_for_ac.values + actions
-            counterfactual = pd.DataFrame(counterfactual, columns=ac_columns)
-            counterfactual[rest_columns] = rest_df[rest_columns]
-            if dataset_name == 'adult':
-                counterfactual.loc[counterfactual['sex'] == 1, 'sex'] = 'Female'
-                counterfactual.loc[counterfactual['sex'] == 0, 'sex'] = 'Male'
-            counterfactual = counterfactual[
-                instances.columns]  # Arrange instance and counterfactual in same column order
+            fb_set = fb.populate(enumeration_type='distinct_subsets', total_items=100, cost_type='total')
+            actions_flipset = fb_set.actions
+            last_object = len(actions_flipset) - 1
+            for idx, action in enumerate(actions_flipset):
+                # counterfactual = inst_for_ac.values + actions_flipset
+                counterfactual = inst_for_ac.values + action
+                counterfactual = pd.DataFrame(counterfactual, columns=ac_columns)
+                counterfactual[rest_columns] = rest_df[rest_columns]
+                if dataset_name == 'adult':
+                    counterfactual.loc[counterfactual['sex'] == 1, 'sex'] = 'Female'
+                    counterfactual.loc[counterfactual['sex'] == 0, 'sex'] = 'Male'
+                counterfactual = counterfactual[
+                    instances.columns]  # Arrange instance and counterfactual in same column order
+
+                # Prepare counterfactual for prediction
+                # y_test = counterfactual['income']  # For test to compare label of original and counterfactual
+                if isinstance(model, mod.ANN):
+                    counterfactual_pred = processing.one_hot_encode_instance(dataset, counterfactual,
+                                                                             categorical_features)
+                    counterfactual_pred = processing.normalize_instance(dataset, counterfactual_pred,
+                                                                        continuous_features)
+                    counterfactual_pred = counterfactual_pred.drop(label, axis=1)
+                    inst = pd.DataFrame(instance.values.reshape((1, -1)), columns=instances.columns)
+                    inst = processing.normalize_instance(dataset, inst, continuous_features)
+                    inst_pred = processing.one_hot_encode_instance(dataset, inst, categorical_features)
+                    inst_pred = processing.normalize_instance(dataset, inst_pred, continuous_features)
+                    inst_pred = inst_pred.drop(label, axis=1)
+
+                    # Test output of counterfactual
+                    prediction_inst = np.round(
+                        model(torch.from_numpy(inst_pred.values[0]).float()).detach().numpy()).squeeze()
+                    prediction = np.round(
+                        model(torch.from_numpy(counterfactual_pred.values[0]).float()).detach().numpy()).squeeze()
+                elif isinstance(model, mod_tf.Model_Tabular):
+                    counterfactual_pred = processing.normalize_instance(dataset, counterfactual, continuous_features)
+                    counterfactual_pred = counterfactual_pred.drop(label, axis=1)
+                    inst = pd.DataFrame(instance.values.reshape((1, -1)), columns=instances.columns)
+                    inst = processing.normalize_instance(dataset, inst, continuous_features)
+                    inst = inst.drop(label, axis=1)
+
+                    # Test output of counterfactual
+                    prediction_inst = model.model.predict(inst.values)
+                    prediction_inst = np.argmax(prediction_inst, axis=1)
+
+                    prediction = model.model.predict(counterfactual_pred.values)
+                    prediction = np.argmax(prediction, axis=1)
+                else:
+                    raise Exception('Model not yet implemented')
+
+                counterfactual['income'] = prediction
+                instance = pd.DataFrame(instance.values.reshape((1, -1)), columns=instances.columns)
+                test_instances.append(instance)
+
+                if (prediction_inst != prediction):
+                    counterfactuals.append(counterfactual)
+                    break
+                elif idx == last_object:
+                    counterfactual[:] = np.nan
+                    counterfactuals.append(counterfactual)
 
             # Record time
             stop = timeit.default_timer()
             time_taken = stop - start
             times_list.append(time_taken)
 
-            # Prepare counterfactual for prediction
-            # y_test = counterfactual['income']  # For test to compare label of original and counterfactual
-            if isinstance(model, mod.ANN):
-                counterfactual_pred = processing.one_hot_encode_instance(dataset, counterfactual, categorical_features)
-                counterfactual_pred = processing.normalize_instance(dataset, counterfactual_pred, continuous_features)
-                counterfactual_pred = counterfactual_pred.drop(label, axis=1)
+        counterfactuals_df = pd.DataFrame(np.array(counterfactuals).squeeze(), columns=instances.columns)
+        instances_df = pd.DataFrame(np.array(test_instances).squeeze(), columns=instances.columns)
 
-                # Test output of counterfactual
-                groundtruth = instance[label]
-                prediction = np.round(
-                    model(torch.from_numpy(counterfactual_pred.values[0]).float()).detach().numpy()).squeeze()
-            elif isinstance(model, mod_tf.Model_Tabular):
-                counterfactual_pred = processing.normalize_instance(dataset, counterfactual, continuous_features)
-                counterfactual_pred = counterfactual_pred.drop(label, axis=1)
+        # Success rate & drop not successful counterfactuals & process remainder
+        success_rate, counterfactuals_indeces = measure.success_rate_and_indices(
+            counterfactuals_df[continuous_features].astype('float64'))
+        counterfactuals_df = counterfactuals_df.iloc[counterfactuals_indeces]
+        instances_df = instances_df.iloc[counterfactuals_indeces]
 
-                # Test output of counterfactual
-                groundtruth = instance[label]
-                prediction = model.model.predict(counterfactual_pred.values)
-                prediction = np.argmax(prediction, axis=1)
-            else:
-                raise Exception('Model not yet implemented')
+        # Collect in list making use of pandas
+        instances_list = []
+        counterfactuals_list = []
 
-            counterfactual['income'] = prediction
+        for i in range(counterfactuals_df.shape[0]):
+            counterfactuals_list.append(
+                pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
+            instances_list.append(
+                pd.DataFrame(instances_df.iloc[i].values.reshape((1, -1)), columns=instances_df.columns))
 
-            if (groundtruth != prediction):
-                counterfactuals.append(counterfactual)
-                instance = pd.DataFrame(instance.values.reshape((1, -1)), columns=instances.columns)
-                test_instances.append(instance)
 
     else:
         start = timeit.default_timer()
@@ -249,4 +297,4 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
         stop = timeit.default_timer()
         time_taken = stop - start
 
-    return test_instances, counterfactuals, times_list
+    return instances_list, counterfactuals_list, times_list, success_rate
