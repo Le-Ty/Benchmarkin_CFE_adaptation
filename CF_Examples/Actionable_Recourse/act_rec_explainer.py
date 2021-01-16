@@ -127,6 +127,18 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
                         instances):
     test_instances, counterfactuals = [], []
 
+    # model_path = 'ML_Model/Saved_Models/ANN/2020-12-13_20-43-50_input_20_lr_0.002_te_0.35.pt'
+    # model = model.ANN(20, 18, 9, 3, 1)
+
+    # Load TF ANN (for CEM)
+    # model_path_tf_13 = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_13'
+    # model = model_tf.Model_Tabular(13, 18, 9, 3, 2, restore=model_path_tf_13, session=None, use_prob=True)
+    # Load TF ANN (for Action Sequence)
+    # model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_20'
+    # ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, session=None, use_prob=True)
+    # Load Pytorch ANN
+    # model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+
     # import dataset
     path = dataset_path
     file_name = dataset_filename
@@ -241,6 +253,7 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
             if (groundtruth != prediction):
                 counterfactuals.append(counterfactual)
                 instance = pd.DataFrame(instance.values.reshape((1, -1)), columns=instances.columns)
+                print(instance)
                 test_instances.append(instance)
 
     else:
@@ -248,5 +261,8 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
         raise Exception('Linear models are not yet implemented')
         stop = timeit.default_timer()
         time_taken = stop - start
+
+    print(test_instances)
+    print(counterfactuals)
 
     return test_instances, counterfactuals, times_list

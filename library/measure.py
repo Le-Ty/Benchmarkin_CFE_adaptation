@@ -19,11 +19,11 @@ def success_rate_and_indices(counterfactuals_df):
     :param counterfactuals_df: pd df, where NaNs indicate 'no counterfactual found'
     :return: success_rate, indices
     """
-    
+
     # Success rate & drop not successful counterfactuals & process remainder
     success_rate = (counterfactuals_df.dropna().shape[0]) / counterfactuals_df.shape[0]
     counterfactual_indeces = np.where(np.any(np.isnan(counterfactuals_df.values) == True, axis=1) == False)[0]
-    
+
     return success_rate, counterfactual_indeces
 
 def get_delta(instance, cf):
@@ -34,6 +34,8 @@ def get_delta(instance, cf):
     :return: List of differences between cf and original instance
     """
     delta = []
+    print(instance)
+    print(cf)
     for i, original in enumerate(instance):
         counterfactual = cf[i]
 
@@ -312,6 +314,8 @@ def redundancy(factual, counterfactual, model):
     :param model: pytorch model
     :return: scalar, number of unnecessary changes
     """
+    model_path_tf_13 = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_13'
+    model = model_tf.Model_Tabular(13, 18, 9, 3, 2, restore=model_path_tf_13, session=None, use_prob=True)
     red = 0
 
     # get model prediction and cast it from tensor to float
@@ -367,10 +371,12 @@ def yNN(counterfactuals, data, label, k, cat_features, cont_features, model, one
     :param encoded: Boolean, indicates whether test_instances & counterfactual are already encoded
     :return: scalar
     """
+    model_path_tf_13 = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_13'
+    model = model_tf.Model_Tabular(13, 18, 9, 3, 2, restore=model_path_tf_13, session=None, use_prob=True)
     N = len(counterfactuals)
     number_of_diff_labels = 0
     norm_data = processing.normalize_instance(data, data, cont_features)
-    
+
     if one_hot:
         enc_data = pd.get_dummies(norm_data, columns=cat_features)
     else:
@@ -379,7 +385,7 @@ def yNN(counterfactuals, data, label, k, cat_features, cont_features, model, one
     nbrs = NearestNeighbors(n_neighbors=k).fit(enc_data.values)
 
     for cf_df in counterfactuals:
-        
+
         if normalized:
             norm_cf = cf_df
             if not encoded:
@@ -414,6 +420,7 @@ def yNN(counterfactuals, data, label, k, cat_features, cont_features, model, one
             if isinstance(model, model_pytorch.ANN):
                 pred_inst = round(model(torch.from_numpy(inst).float()).detach().numpy().squeeze().reshape(1)[0])
             elif isinstance(model, model_tf.Model_Tabular):
+                print(inst)
                 pred_inst = model.model.predict(inst.reshape((1, -1)))
                 pred_inst = np.argmax(pred_inst, axis=1)[0]
             else:

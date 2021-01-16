@@ -7,6 +7,7 @@ import ML_Model.ANN_TF.model_ann as model_tf
 # CE models
 import CF_Examples.DICE.dice_explainer as dice_examples
 import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
+import CF_Examples.counterfact_expl.CE.experiments.run_synthetic as ce_explainer
 import CF_Examples.CEM.cem_explainer as cem_explainer
 import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
 import CF_Examples.FACE.face_explainer as face_explainer
@@ -226,22 +227,26 @@ def main():
     querry_instances_tf13 = querry_instances_tf13.head(5)
     querry_instances_tf = querry_instances_tf.head(3)
 
+    print(querry_instances_tf13)
+
     """
         Below we can start to define counterfactual models and start benchmarking
     """
 
-    # Compute CLUE counterfactuals; This one requires the pytorch model
-    test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
-                                                                                             'adult', querry_instances,
-                                                                                             cat_features,
-                                                                                             continuous_features,
-                                                                                             target_name, ann)
 
-    # Compute CLUE measurements
-    print('==============================================================================')
-    print('Measurement results for CLUE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann, normalized=True)
 
+    # # Compute CLUE counterfactuals; This one requires the pytorch model
+    # test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
+    #                                                                                          'adult', querry_instances,
+    #                                                                                          cat_features,
+    #                                                                                          continuous_features,
+    #                                                                                          target_name, ann)
+    #
+    # # Compute CLUE measurements
+    # print('==============================================================================')
+    # print('Measurement results for CLUE on Adult')
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann, normalized=True)
+    #
     # Compute FACE counterfactuals
     test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name,
                                                                                              'adult',
@@ -322,6 +327,13 @@ def main():
                                                                               ann_tf_13,
                                                                               continuous_features, target_name, False,
                                                                               querry_instances_tf13)
+    print("out")
+    with pd.option_context('display.max_rows', 20, 'display.max_columns', 20):
+        print(len(test_instances)) # 5x14
+        print((test_instances)) # 5x14
+        print(len(counterfactuals)) # 1x14
+        print((counterfactuals)) # 1x14
+        print(times)
 
     # Compute AR measurements
     print('==============================================================================')
@@ -347,6 +359,28 @@ def main():
     print('Measurement results for Action Sequence on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
                          normalized=True)
+
+    # im_feata = ["marital-status_Non-Married","race_White", "sex_Male","native-country_US", "relationship_Non-Husband"]
+    # #
+    # # # Compute Actionable Recourse Counterfactuals
+    # test_instances, counterfactuals, times = ce_explainer.run_synthetic(query = querry_instances_tf,
+    #                                                         im_feat = im_feata,
+    #                                                         train_steps = 8000,
+    #                                                         model = "ANN", dataset = "Adult")
+    #
+    # print("out")
+    # with pd.option_context('display.max_rows', 20, 'display.max_columns', 20):
+    #     print(len(test_instances)) # 5x14
+    #     print((test_instances)) # 5x14
+    #     print(len(counterfactuals)) # 1x14
+    #     print((counterfactuals)) # 1x14
+    #     print(times)
+    # # Compute AR measurements
+    # print('==============================================================================')
+    # print('Measurement results for Actionable Recourse')
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
+    #                      normalized=False, one_hot=False, encoded=True)
+
 
 
 if __name__ == "__main__":
