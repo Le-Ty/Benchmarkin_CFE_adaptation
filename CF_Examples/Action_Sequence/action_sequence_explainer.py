@@ -4,17 +4,18 @@ import numpy as np
 import CF_Examples.Action_Sequence.feature_wrapper as fw
 import library.data_processing as processing
 import CF_Examples.Action_Sequence.model_wrapper as model_wrapper
+import ML_Model.ANN_TF.model_ann as model_tf
+import library.measure as measure
 import timeit
 
 from CF_Examples.Action_Sequence.data_wrapper import Data_wrapper
 from CF_Models.act_seq.heuristics.loader import load_heuristics
 from CF_Models.act_seq.recourse.search import SequenceSearch, ParamsSearch
 from CF_Models.act_seq.recourse.config import base_config
-import ML_Model.ANN_TF.model_ann as model_tf
 from CF_Models.act_seq.recourse.utils import get_instance_info
 
 
-def get_counterfactual(dataset_path, dataset_filename, instances, target_name, model, cont_features, number_of_cf,
+def get_counterfactual(dataset_path, dataset_filename, instances, target_name, model, cont_features,
                        options, target_prediction):
     """
     Compute counterfactual for Action Sequence
@@ -31,12 +32,11 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     :param target_name: String, Class of label
     :param model: Pytorch model
     :param cont_features: List of continuous feature
-    :param number_of_cf: Number of counterfactuals to compute
     :param options: Dictionary with parameters for Action Sequence
     :param target_prediction: List of wanted prediction, e.g. for two classes [0., 1.]
     :return: Counterfactual object
-    """#
-    
+    """  #
+
     test_instances, counterfactuals, times_list = [], [], []
     # import dataset
     path = dataset_path
@@ -93,6 +93,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
         search = SequenceSearch(model_wr, actions, heuristics, config=base_config)
 
         for idx, instance in enumerate(instances_oh.values):
+            start = timeit.default_timer()
             if options['model_name'] == 'quickdraw':
                 result = search.find_correction(instance.reshape((1, instance.shape[0], instance.shape[1])),
                                                 np.array([target_prediction]), session)
@@ -110,7 +111,34 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
                 # Get original Feature order for Measurements
                 cf = cf[old_ordered_columns]
 
-                test_instances.append(inst)
-                counterfactuals.append(cf)
+                if cf[target_name].values[0] != inst[target_name].values[0]:
+                    counterfactuals.append(cf)
+                else:
+                    cf[:] = np.nan
+                    counterfactuals.append(cf)
 
-        return test_instances, counterfactuals
+                test_instances.append(inst)
+            stop = timeit.default_timer()
+            time_taken = stop - start
+            times_list.append(time_taken)
+
+        counterfactuals_df = pd.DataFrame(np.array(counterfactuals).squeeze(), columns=instances.columns)
+        instances_df = pd.DataFrame(np.array(test_instances).squeeze(), columns=instances.columns)
+
+        # Success rate & drop not successful counterfactuals & process remainder
+        success_rate, counterfactuals_indeces = measure.success_rate_and_indices(
+            counterfactuals_df[cont_features].astype('float64'))
+        counterfactuals_df = counterfactuals_df.iloc[counterfactuals_indeces]
+        instances_df = instances_df.iloc[counterfactuals_indeces]
+
+        # Collect in list making use of pandas
+        instances_list = []
+        counterfactuals_list = []
+
+        for i in range(counterfactuals_df.shape[0]):
+            counterfactuals_list.append(
+                pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
+            instances_list.append(
+                pd.DataFrame(instances_df.iloc[i].values.reshape((1, -1)), columns=instances_df.columns))
+
+        return instances_list, counterfactuals_list, times_list, success_rate

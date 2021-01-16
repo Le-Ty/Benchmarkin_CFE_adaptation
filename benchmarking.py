@@ -360,10 +360,11 @@ def main():
         'length': 4,
         'actions': adult_actions
     }
-    test_instances, counterfactuals = act_seq_examples.get_counterfactual(data_path, data_name, querry_instances,
-                                                                          target_name, ann_tf,
-                                                                          continuous_features, 1,
-                                                                          options, [0., 1.])
+    test_instances, counterfactuals, times, success_rate = act_seq_examples.get_counterfactual(data_path, data_name,
+                                                                                        querry_instances_tf,
+                                                                                        target_name, ann_tf,
+                                                                                        continuous_features,
+                                                                                        options, [0., 1.])
 
     # Compute AS measurements
     print('==============================================================================')
