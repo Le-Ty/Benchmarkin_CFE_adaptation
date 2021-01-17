@@ -24,7 +24,7 @@ class DataLoader(data.Dataset):
             self.categorical_features = pickle.load(f)
 
         if encode:
-            self.dataset = pd.get_dummies(self.dataset, columns=self.categorical_features, drop_first=True)
+            self.dataset = pd.get_dummies(self.dataset, columns=self.categorical_features, drop_first=False)
 
         if normalization:
             self.dataset = processing.normalize(self.dataset, label)
