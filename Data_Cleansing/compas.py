@@ -1,3 +1,4 @@
+import pickle
 import pandas as pd
 import library.data_processing as process
 
@@ -18,9 +19,9 @@ if compas_df.shape[1] == 47:
     if compas_df.columns.isin(columns_to_drop).any():
         compas_df = compas_df.drop(columns_to_drop, axis=1)
 
-    # convert binary features in 0 and 1
-    # male: 0; female: 1
-    process.categorize_binary(compas_df, 'sex', 'Female')
+    # # convert binary features in 0 and 1
+    # # male: 0; female: 1
+    # process.categorize_binary(compas_df, 'sex', 'Female')
 
     # convert jail_in and jail_out columns to jail time columns in days
     compas_df['c_jail_time'] = (
@@ -37,11 +38,34 @@ if compas_df.shape[1] == 47:
     compas_df['r_jail_time'] = compas_df['r_jail_time'].fillna(0)
 
     # One hot encode all categorical features
-    categorical_features = ['race', 'r_charge_degree', 'c_charge_degree']
-    compas_df = pd.get_dummies(compas_df, columns=categorical_features)
+    categorical_features = ['race', 'is_recid', 'is_violent_recid']
+    # compas_df = pd.get_dummies(compas_df, columns=categorical_features)
+
+    # simplify categorical features
+    race_map = {
+        'Caucasian': 'White',
+        'African-American': 'Non-White',
+        'Asian': 'Non-White',
+        'Hispanic': 'Non-White',
+        'Native American': 'Non-White',
+        'Other': 'Non-White'
+    }
+    compas_df['race'] = compas_df['race'].map(race_map)
+
+    charge_degree_mape = {
+        'O': 1,
+        'M': 2,
+        'F': 3
+    }
+    compas_df['r_charge_degree'] = compas_df['r_charge_degree'].map(charge_degree_mape)
+    compas_df['c_charge_degree'] = compas_df['c_charge_degree'].map(charge_degree_mape)
 
     # Drop rows without information
     compas_df.dropna(axis=0, inplace=True)
+
+    # save column names of categorical data
+    with open(filePath + 'cat_names.txt', 'wb') as f:
+        pickle.dump(categorical_features, f)
 
 # save cleansed data in edited folder
 compas_df.to_csv(filePath + fileName, index=False)
