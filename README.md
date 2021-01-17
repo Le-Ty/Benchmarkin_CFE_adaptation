@@ -64,12 +64,12 @@ v_type_of_assessment, type_of_assessment, v_score_text, score_text, age_cat, dob
 compas_screening_date, c_offense_date, c_arrest_date, num_r_cases, r_days_from_arrest,
 r_offense_date, num_vr_cases, vr_charge_degree, vr_offense_date, vr_charge_desc, v_screening_date,
 screening_date
-- Binary features 'sex' and 'income' are encoded with:
-  - male: 0; female: 1
+- The categorical variables are kept as strings and encoded as follows:
+  - race: White, Non-White
+  - r_charge_degree and c_charge_degree: F=3, M=2, O=1
 - jail_in and jail_out columns are compressed to one jail time column which results after enddate - startdate
   - jail time of only a few hours is converted to 1 day
   - NaN values (no jail time) are converted to 0
-- one hot encoding for race, c_charge_desc, r_charge_degree, c_charge_degree, r_charge_desc
 
 ### Home Credit Default Risk
 - Drop columns SK_ID_CURR
