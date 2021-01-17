@@ -38,7 +38,7 @@ if compas_df.shape[1] == 47:
     compas_df['r_jail_time'] = compas_df['r_jail_time'].fillna(0)
 
     # One hot encode all categorical features
-    categorical_features = ['race', 'is_violent_recid']
+    categorical_features = ['race', 'sex', 'is_violent_recid']
     # compas_df = pd.get_dummies(compas_df, columns=categorical_features)
 
     # simplify categorical features
