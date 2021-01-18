@@ -73,6 +73,9 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     """  #
 
     N = len(test_instances)
+    if N == 0:
+        print('No counterfactuals found!')
+        return
     distances = np.zeros((4, 1))
     costs = np.zeros((2, 1))
     redundancy = 0
