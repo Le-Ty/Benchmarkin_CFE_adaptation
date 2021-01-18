@@ -60,6 +60,10 @@ if compas_df.shape[1] == 47:
     compas_df['r_charge_degree'] = compas_df['r_charge_degree'].map(charge_degree_mape)
     compas_df['c_charge_degree'] = compas_df['c_charge_degree'].map(charge_degree_mape)
 
+    compas_df = compas_df.rename(columns={'decile_score.1': 'decile_score_2'})
+    compas_df['is_violent_recid'].loc[compas_df['is_violent_recid'] == 0] = 'Low'
+    compas_df['is_violent_recid'].loc[compas_df['is_violent_recid'] == 1] = 'High'
+
     # Drop rows without information
     compas_df.dropna(axis=0, inplace=True)
 
