@@ -8,7 +8,7 @@ import ML_Model.ANN_TF.model_ann as model_tf
 from benchmarking import compute_measurements, compute_H_minus
 
 # CE models
-import CF_Examples.DICE.dice_explainer as dice_examples
+import CF_Examples.DICE.dice_explainer as dice_explainer
 import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
 import CF_Examples.CEM.cem_explainer as cem_explainer
 import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
@@ -48,7 +48,7 @@ def main():
     columns = data.columns
     continuous_features = ['age', 'juv_fel_count', 'decile_score', 'juv_misd_count', 'juv_other_count', 'priors_count',
                            'days_b_screening_arrest', 'c_days_from_compas', 'c_charge_degree', 'r_charge_degree',
-                           'v_decile_score', 'decile_score.1', 'c_jail_time', 'r_jail_time']
+                           'v_decile_score', 'decile_score_2', 'c_jail_time', 'r_jail_time']
     immutable = ['age', 'sex']
     cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
 
@@ -71,6 +71,19 @@ def main():
     """
         Below we can start to define counterfactual models and start benchmarking
     """
+
+    # Compute DICE counterfactuals
+    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
+                                                                                             querry_instances,
+                                                                                             target_name, ann,
+                                                                                             continuous_features,
+                                                                                             1, 'PYT')
+
+    # Compute DICE measurements
+    print('==============================================================================')
+    print('Measurement results for DICE on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+                         immutable, normalized=False, one_hot=True)
 
 
 if __name__ == "__main__":
