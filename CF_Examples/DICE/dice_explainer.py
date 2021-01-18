@@ -171,8 +171,27 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
         time_taken = stop - start
         times_list.append(time_taken)
 
+        a = dice_exp.org_instance
+        b = dice_exp.final_cfs_df
         # Define factual and counterfactual
         test_instances.append(dice_exp.org_instance)
         counterfactuals.append(dice_exp.final_cfs_df)
 
-    return test_instances, counterfactuals, times_list
+    # concatenate lists of data frames
+    test_instances = pd.concat(test_instances)
+    counterfactuals = pd.concat(counterfactuals)
+
+    # Success rate & drop not successful counterfactuals & process remainder
+    success_rate, counterfactuals_indeces = measure.success_rate_and_indices(counterfactuals[features].astype('float64'))
+    counterfactuals = counterfactuals.iloc[counterfactuals_indeces]
+    test_instances = test_instances.iloc[counterfactuals_indeces]
+
+    # Collect in list making use of pandas
+    instances_list = []
+    counterfactuals_list = []
+    for i in range(counterfactuals.shape[0]):
+        counterfactuals_list.append(
+            pd.DataFrame(counterfactuals.iloc[i].values.reshape((1, -1)), columns=counterfactuals.columns))
+        instances_list.append(pd.DataFrame(instances.iloc[i].values.reshape((1, -1)), columns=instances.columns))
+
+    return instances_list, counterfactuals_list, times_list, success_rate

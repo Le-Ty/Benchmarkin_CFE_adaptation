@@ -6,7 +6,7 @@ import ML_Model.ANN.model as model
 import ML_Model.ANN_TF.model_ann as model_tf
 
 # CE models
-import CF_Examples.DICE.dice_explainer as dice_examples
+import CF_Examples.DICE.dice_explainer as dice_explainer
 import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
 import CF_Examples.CEM.cem_explainer as cem_explainer
 import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
@@ -243,7 +243,7 @@ def main():
     """
 
     
-    '''
+    
     # Compute CLUE counterfactuals; This one requires the pytorch model
     test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
                                                                                              'adult', querry_instances,
@@ -303,14 +303,13 @@ def main():
                          immutable, normalized=True, one_hot=False)
 	
 	
-
+    
     # Compute DICE counterfactuals
-    test_instances, counterfactuals, times, success_rate = dice_examples.get_counterfactual(data_path, data_name,
+    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
                                                                                             querry_instances,
                                                                                             target_name, ann,
                                                                                             continuous_features,
-                                                                                            1,
-                                                                                            'PYT')
+                                                                                            1, 'PYT')
 
     # test_instances, counterfactuals, times, success_rate = dice_examples.get_counterfactual(data_path, data_name,
     #                                                                           querry_instances,
@@ -321,11 +320,11 @@ def main():
     print('==============================================================================')
     print('Measurement results for DICE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, one_hot=True)
+                         immutable, normalized=False, one_hot=True)
 
     
     # Compute DICE with VAE
-    test_instances, counterfactuals, times = dice_examples.get_counterfactual_VAE(data_path, data_name,
+    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual_VAE(data_path, data_name,
                                                                                   querry_instances,
                                                                                   target_name, ann,
                                                                                   continuous_features,
@@ -335,7 +334,8 @@ def main():
     # Compute DICE VAE measurements
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+                         immutable, normalized=False, one_hot=True)
     
 
     # Compute Actionable Recourse Counterfactuals
@@ -351,7 +351,7 @@ def main():
     print('Measurement results for Actionable Recourse')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                          immutable, normalized=False, one_hot=False, encoded=True)
-    '''
+    
     # Compute Action Sequence counterfactuals
     # Declare options for Action Sequence
     options = {
