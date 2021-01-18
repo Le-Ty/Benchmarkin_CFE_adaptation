@@ -5,15 +5,15 @@ import ML_Model.ANN.model as model
 import ML_Model.ANN_TF.model_ann as model_tf
 
 # CE models
-import CF_Examples.DICE.dice_explainer as dice_examples
+# import CF_Examples.DICE.dice_explainer as dice_examples
 import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
-import CF_Examples.counterfact_expl.CE.experiments.run_synthetic as ce_explainer
-import CF_Examples.CEM.cem_explainer as cem_explainer
-import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
-import CF_Examples.FACE.face_explainer as face_explainer
-import CF_Examples.CLUE.clue_explainer as clue_explainer
-import CF_Examples.Action_Sequence.action_sequence_explainer as act_seq_examples
-from CF_Examples.Action_Sequence.adult_actions import actions as adult_actions
+# import CF_Examples.counterfact_expl.CE.experiments.run_synthetic as ce_explainer
+# import CF_Examples.CEM.cem_explainer as cem_explainer
+# import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
+# import CF_Examples.FACE.face_explainer as face_explainer
+# import CF_Examples.CLUE.clue_explainer as clue_explainer
+# import CF_Examples.Action_Sequence.action_sequence_explainer as act_seq_examples
+# from CF_Examples.Action_Sequence.adult_actions import actions as adult_actions
 from sklearn.neural_network import MLPClassifier
 
 # others
@@ -223,9 +223,9 @@ def main():
     querry_instances_tf13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
     querry_instances_tf = compute_H_minus(data, oh_data, ann_tf, target_name)
     querry_instances = compute_H_minus(data, oh_data, ann, target_name)
-    querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
+    querry_instances = querry_instances.head(20)  # Only for testing because of the size of querry_instances
     querry_instances_tf13 = querry_instances_tf13.head(5)
-    querry_instances_tf = querry_instances_tf.head(3)
+    querry_instances_tf = querry_instances_tf.head(5)
 
     print(querry_instances_tf13)
 
@@ -233,8 +233,8 @@ def main():
         Below we can start to define counterfactual models and start benchmarking
     """
 
-
-
+    #
+    #
     # # Compute CLUE counterfactuals; This one requires the pytorch model
     # test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
     #                                                                                          'adult', querry_instances,
@@ -247,81 +247,81 @@ def main():
     # print('Measurement results for CLUE on Adult')
     # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann, normalized=True)
     #
-    # Compute FACE counterfactuals
-    test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name,
-                                                                                             'adult',
-                                                                                             querry_instances_tf13,
-                                                                                             cat_features,
-                                                                                             continuous_features,
-                                                                                             target_name, ann_tf_13,
-                                                                                             'knn')
-
-    # Compute FACE measurements
-    print('==============================================================================')
-    print('Measurement results for FACE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                         normalized=True, one_hot=False)
-
-    # Compute GS counterfactuals
-    test_instances, counterfactuals, times, success_rate = gs_explainer.get_counterfactual(data_path, data_name,
-                                                                                           'adult',
-                                                                                           querry_instances_tf13,
-                                                                                           cat_features,
-                                                                                           continuous_features,
-                                                                                           target_name, ann_tf_13)
-
-    # Compute GS measurements
-    print('==============================================================================')
-    print('Measurement results for GS on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                         normalized=True, one_hot=False)
-
-    # Compute CEM counterfactuals
-    ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
-    ## TODO: as input: 'ann_tf', 'whether AE should be trained'
-    test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path, data_name,
-                                                                                            'adult',
-                                                                                            querry_instances_tf13,
-                                                                                            cat_features,
-                                                                                            continuous_features,
-                                                                                            target_name, ann_tf_13)
-
-    # Compute CEM measurements
-    print('==============================================================================')
-    print('Measurement results for CEM on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                         normalized=True, one_hot=False)
-
-    # Compute DICE counterfactuals
+    # # Compute FACE counterfactuals
+    # test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name,
+    #                                                                                          'adult',
+    #                                                                                          querry_instances_tf13,
+    #                                                                                          cat_features,
+    #                                                                                          continuous_features,
+    #                                                                                          target_name, ann_tf_13,
+    #                                                                                          'knn')
+    #
+    # # Compute FACE measurements
+    # print('==============================================================================')
+    # print('Measurement results for FACE on Adult')
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+    #                      normalized=True, one_hot=False)
+    #
+    # # Compute GS counterfactuals
+    # test_instances, counterfactuals, times, success_rate = gs_explainer.get_counterfactual(data_path, data_name,
+    #                                                                                        'adult',
+    #                                                                                        querry_instances_tf13,
+    #                                                                                        cat_features,
+    #                                                                                        continuous_features,
+    #                                                                                        target_name, ann_tf_13)
+    #
+    # # Compute GS measurements
+    # print('==============================================================================')
+    # print('Measurement results for GS on Adult')
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+    #                      normalized=True, one_hot=False)
+    #
+    # # Compute CEM counterfactuals
+    # # TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
+    # # TODO: as input: 'ann_tf', 'whether AE should be trained'
+    # test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path, data_name,
+    #                                                                                         'adult',
+    #                                                                                         querry_instances_tf13,
+    #                                                                                         cat_features,
+    #                                                                                         continuous_features,
+    #                                                                                         target_name, ann_tf_13)
+    #
+    # # Compute CEM measurements
+    # print('==============================================================================')
+    # print('Measurement results for CEM on Adult')
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+    #                      normalized=True, one_hot=False)
+    #
+    # # Compute DICE counterfactuals
     # test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
     #                                                                           target_name, ann, continuous_features,
     #                                                                           1,
     #                                                                           'PYT')
-
-    test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
-                                                                              target_name, ann_tf, continuous_features,
-                                                                              1, 'TF1', model_path_tf)
-
-    # Compute DICE measurements
-    print('==============================================================================')
-    print('Measurement results for DICE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf, one_hot=True)
-
-    '''
-    # Compute DICE with VAE
-    test_instances, counterfactuals, times = dice_examples.get_counterfactual_VAE(data_path, data_name,
-                                                                                  querry_instances,
-                                                                                  target_name, ann,
-                                                                                  continuous_features,
-                                                                                  1, pretrained=1,
-                                                                                  backend='PYT')
-
-    # Compute DICE VAE measurements
-    print('==============================================================================')
-    print('Measurement results for DICE with VAE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
-    '''
-
+    #
+    # # test_instances, counterfactuals, times = dice_examples.get_counterfactual(data_path, data_name, querry_instances,
+    # #                                                                           target_name, ann_tf, continuous_features,
+    # #                                                                           1, 'TF1', model_path_tf)
+    # #
+    # # # Compute DICE measurements
+    # # print('==============================================================================')
+    # # print('Measurement results for DICE on Adult')
+    # # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf, one_hot=True)
+    # #
+    # # '''
+    # # # Compute DICE with VAE
+    # # test_instances, counterfactuals, times = dice_examples.get_counterfactual_VAE(data_path, data_name,
+    # #                                                                               querry_instances,
+    # #                                                                               target_name, ann,
+    # #                                                                               continuous_features,
+    # #                                                                               1, pretrained=1,
+    # #                                                                               backend='PYT')
+    # #
+    # # # Compute DICE VAE measurements
+    # # print('==============================================================================')
+    # # print('Measurement results for DICE with VAE on Adult')
+    # # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    # # '''
+    # #
     # Compute Actionable Recourse Counterfactuals
     test_instances, counterfactuals, times = ac_explainer.get_counterfactuals(data_path, data_name, 'adult_tf13',
                                                                               ann_tf_13,
@@ -341,40 +341,40 @@ def main():
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                          normalized=False, one_hot=False, encoded=True)
 
-    # Compute Action Sequence counterfactuals
-    # Declare options for Action Sequence
-    options = {
-        'model_name': 'adult',
-        'mode': 'vanilla',
-        'length': 4,
-        'actions': adult_actions
-    }
-    test_instances, counterfactuals = act_seq_examples.get_counterfactual(data_path, data_name, querry_instances,
-                                                                          target_name, ann_tf,
-                                                                          continuous_features, 1,
-                                                                          options, [0., 1.])
+    # # Compute Action Sequence counterfactuals
+    # # Declare options for Action Sequence
+    # options = {
+    #     'model_name': 'adult',
+    #     'mode': 'vanilla',
+    #     'length': 4,
+    #     'actions': adult_actions
+    # }
+    # test_instances, counterfactuals = act_seq_examples.get_counterfactual(data_path, data_name, querry_instances,
+    #                                                                       target_name, ann_tf,
+    #                                                                       continuous_features, 1,
+    #                                                                       options, [0., 1.])
+    #
+    # # Compute AS measurements
+    # print('==============================================================================')
+    # print('Measurement results for Action Sequence on Adult')
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
+    #                      normalized=True)
 
-    # Compute AS measurements
-    print('==============================================================================')
-    print('Measurement results for Action Sequence on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
-                         normalized=True)
-
-    # im_feata = ["marital-status_Non-Married","race_White", "sex_Male","native-country_US", "relationship_Non-Husband"]
+    # im_feata = ["age", "sex_Male"]
     # #
     # # # Compute Actionable Recourse Counterfactuals
     # test_instances, counterfactuals, times = ce_explainer.run_synthetic(query = querry_instances_tf,
     #                                                         im_feat = im_feata,
-    #                                                         train_steps = 8000,
-    #                                                         model = "ANN", dataset = "Adult")
+    #                                                         train_steps = 6000,
+    #                                                         model = "ANN", dataset = "Adult", number_cf = 20, train_AAE = False)
     #
-    # print("out")
-    # with pd.option_context('display.max_rows', 20, 'display.max_columns', 20):
-    #     print(len(test_instances)) # 5x14
-    #     print((test_instances)) # 5x14
-    #     print(len(counterfactuals)) # 1x14
-    #     print((counterfactuals)) # 1x14
-    #     print(times)
+    # # print("out")
+    # # with pd.option_context('display.max_rows', 20, 'display.max_columns', 20):
+    # #     print(len(test_instances)) # 5x14
+    # #     print((test_instances)) # 5x14
+    # #     print(len(counterfactuals)) # 1x14
+    # #     print((counterfactuals)) # 1x14
+    # #     print(times)
     # # Compute AR measurements
     # print('==============================================================================')
     # print('Measurement results for Actionable Recourse')
