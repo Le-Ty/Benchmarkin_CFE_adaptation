@@ -29,7 +29,7 @@ def main():
     # Get COMPAS Dataset
     data_path = 'Datasets/COMPAS/'
     data_name = 'compas-scores.csv'
-    target_name = 'is_recid'
+    target_name = 'is-recid'
 
     # Load ANNs
     model_path = 'ML_Model/Saved_Models/ANN/2021-01-17_08-58-41_compas_input_20_lr_0.0001_te_0.42.pt'
@@ -46,9 +46,10 @@ def main():
     # Define data with original values
     data = pd.read_csv(data_path + data_name)
     columns = data.columns
-    continuous_features = ['age', 'juv_fel_count', 'decile_score', 'juv_misd_count', 'juv_other_count', 'priors_count',
-                           'days_b_screening_arrest', 'c_days_from_compas', 'c_charge_degree', 'r_charge_degree',
-                           'v_decile_score', 'decile_score.1', 'c_jail_time', 'r_jail_time']
+    # assign updated column names
+    continuous_features = ['age', 'juv-fel-count', 'decile-score', 'juv-misd-count', 'juv-other-count', 'priors-count',
+                           'days-b-screening-arrest', 'c-days-from-compas', 'c-charge-degree', 'r-charge-degree',
+                           'v-decile-score', 'decile-score-01', 'c-jail-time', 'r-jail-time']
     immutable = ['age', 'sex']
     cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
 
@@ -61,16 +62,64 @@ def main():
     oh_data[target_name] = label_data
 
     # Instances we want to explain
-    querry_instances_tf13 = compute_H_minus(data, enc_data, ann_tf_17, target_name)
+    querry_instances_tf17 = compute_H_minus(data, enc_data, ann_tf_17, target_name)
     querry_instances_tf = compute_H_minus(data, oh_data, ann_tf, target_name)
     querry_instances = compute_H_minus(data, oh_data, ann, target_name)
     querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
-    querry_instances_tf13 = querry_instances_tf13.head(10)
+    querry_instances_tf17 = querry_instances_tf17.head(5)
     querry_instances_tf = querry_instances_tf.head(3)
 
     """
         Below we can start to define counterfactual models and start benchmarking
     """
+    
+    
+    '''
+    # Compute CLUE counterfactuals; This one requires the pytorch model
+    test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
+                                                                                             'compas', querry_instances,
+                                                                                             cat_features,
+                                                                                             continuous_features,
+                                                                                             target_name, ann,
+                                                                                             train_vae=False)
+
+    # Compute CLUE measurements
+    print('==============================================================================')
+    print('Measurement results for CLUE on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+                         immutable, normalized=True)
+
+    '''
+
+
+    # Compute FACE counterfactuals
+    test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name,
+                                                                                             'compas',
+                                                                                             querry_instances_tf17,
+                                                                                             cat_features,
+                                                                                             continuous_features,
+                                                                                             target_name, ann_tf_17,
+                                                                                             'knn')
+
+    # Compute FACE measurements
+    print('==============================================================================')
+    print('Measurement results for FACE on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_17,
+                         immutable, normalized=True, one_hot=False)
+
+    # Compute GS counterfactuals
+    test_instances, counterfactuals, times, success_rate = gs_explainer.get_counterfactual(data_path, data_name,
+                                                                                           'compas',
+                                                                                           querry_instances_tf17,
+                                                                                           cat_features,
+                                                                                           continuous_features,
+                                                                                           target_name, ann_tf_17)
+
+    # Compute GS measurements
+    print('==============================================================================')
+    print('Measurement results for GS on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_17,
+                         immutable, normalized=True, one_hot=False)
 
 
 if __name__ == "__main__":

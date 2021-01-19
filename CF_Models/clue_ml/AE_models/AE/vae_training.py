@@ -5,8 +5,8 @@ from CF_Models.clue_ml.AE_models.AE.fc_gauss_cat import VAE_gauss_cat_net
 from CF_Models.clue_ml.AE_models.AE.train import train_VAE
 from CF_Models.clue_ml.src.utils import Datafeed
 
-def training(x_train, x_test, input_dim_vec, dataset_name, width=10, depth=2, latent_dim=4,
-			 batch_size=128, nb_epochs=2, lr=1e-4, early_stop=25):
+def training(x_train, x_test, input_dim_vec, dataset_name, width=10, depth=2, latent_dim=6,
+			 batch_size=128, nb_epochs=10, lr=1e-4, early_stop=25):
 	
 	"""
 	:param x_train: np.array; train set

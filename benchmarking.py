@@ -122,12 +122,18 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
                                                                                cat_features)
                 encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
             else:
-                encoded_factual = preprocessing.robust_binarization_2(pd.DataFrame([test_instance], columns=columns),
-                                                                      data)
+                data_no_target = data.drop(columns=target_name)
+                columns = data_no_target.columns.tolist()
+                
+                encoded_factual = pd.DataFrame([test_instance], columns=columns + [target_name])
                 encoded_factual = encoded_factual.drop(columns=target_name)
-                encoded_counterfactual = preprocessing.robust_binarization_2(pd.DataFrame([counterfactual],
-                                                                                          columns=columns), data)
+                encoded_factual = preprocessing.robust_binarization_2(encoded_factual, data_no_target,
+                                                                      cat_features, continuous_features)
+                
+                encoded_counterfactual = pd.DataFrame([counterfactual], columns=columns + [target_name])
                 encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
+                encoded_counterfactual = preprocessing.robust_binarization_2(encoded_counterfactual, data_no_target,
+                                                                             cat_features, continuous_features)
         else:
             encoded_factual = pd.DataFrame([test_instance], columns=columns)
             encoded_factual = encoded_factual.drop(columns=target_name)
@@ -235,21 +241,22 @@ def main():
     querry_instances_tf = compute_H_minus(data, oh_data, ann_tf, target_name)
     querry_instances = compute_H_minus(data, oh_data, ann, target_name)
     querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
-    querry_instances_tf13 = querry_instances_tf13.head(5)
+    querry_instances_tf13 = querry_instances_tf13.head(2)
     querry_instances_tf = querry_instances_tf.head(2)
 
     """
         Below we can start to define counterfactual models and start benchmarking
     """
 
-    
+    '''
     
     # Compute CLUE counterfactuals; This one requires the pytorch model
     test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
                                                                                              'adult', querry_instances,
                                                                                              cat_features,
                                                                                              continuous_features,
-                                                                                             target_name, ann)
+                                                                                             target_name, ann,
+                                                                                             train_vae=False)
 
     # Compute CLUE measurements
     print('==============================================================================')
@@ -337,7 +344,7 @@ def main():
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, normalized=False, one_hot=True)
     
-
+    '''
     # Compute Actionable Recourse Counterfactuals
     test_instances, counterfactuals, times, success_rate = ac_explainer.get_counterfactuals(data_path, data_name,
                                                                                             'adult_tf13',
@@ -346,6 +353,8 @@ def main():
                                                                                             target_name, False,
                                                                                             querry_instances_tf13)
 
+    
+    
     # Compute AR measurements
     print('==============================================================================')
     print('Measurement results for Actionable Recourse')

@@ -36,7 +36,8 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	# VAE model archiceture parameters
 	widths = [10, 10, 10, 10]
 	depths = [3, 3, 3, 3]  # Authors go deeper because they are using residual models
-	latent_dims = [6, 8, 4, 4]
+	#latent_dims = [6, 8, 4, 4]
+	latent_dims = [12, 8, 4, 4]
 	
 	# drop targets
 	data = pd.read_csv(dataset_path + dataset_filename)

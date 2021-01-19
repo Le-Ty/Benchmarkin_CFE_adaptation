@@ -2,14 +2,14 @@ import pickle
 import pandas as pd
 import library.data_processing as process
 
-filePath = '../Datasets/COMPAS/'
+filePath = 'Datasets/COMPAS/'
 fileName = 'compas-scores.csv'
 
 # Read Data from csv
 compas_df = pd.read_csv(filePath + fileName, skipinitialspace=True)
 
 # if data is already cleansed, don't do anything
-if compas_df.shape[1] == 47:
+if compas_df.shape[1] == 47: #47
     # drop columns which are not necessary for learning
     columns_to_drop = ['id', 'name', 'first', 'last', 'c_case_number', 'r_case_number', 'vr_case_number',
                        'v_type_of_assessment', 'type_of_assessment', 'v_score_text', 'score_text', 'age_cat', 'dob',
@@ -59,6 +59,18 @@ if compas_df.shape[1] == 47:
     }
     compas_df['r_charge_degree'] = compas_df['r_charge_degree'].map(charge_degree_mape)
     compas_df['c_charge_degree'] = compas_df['c_charge_degree'].map(charge_degree_mape)
+
+    is_violent_map = {0: 'non-violent',
+                      1: 'violent'}
+    compas_df['is_violent_recid'] = compas_df['is_violent_recid'].map(is_violent_map)
+    
+    # make sure names have minus, and not underscore
+    columns = ['sex', 'age', 'race', 'juv-fel-count', 'decile-score', 'juv-misd-count',
+               'juv-other-count', 'priors-count', 'days-b-screening-arrest',
+               'c-days-from-compas', 'c-charge-degree', 'is-recid', 'r-charge-degree',
+               'is-violent-recid', 'v-decile-score', 'decile-score-01', 'c-jail-time', 'r-jail-time']
+    
+    compas_df.columns = columns
 
     # Drop rows without information
     compas_df.dropna(axis=0, inplace=True)

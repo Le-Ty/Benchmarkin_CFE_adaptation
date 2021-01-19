@@ -431,7 +431,10 @@ def yNN(counterfactuals, data, label, k, cat_features, cont_features, model, one
                     enc_cf = processing.one_hot_encode_instance(norm_data, norm_cf, cat_features)
                 else:
                     norm_cf = norm_cf.values.tolist()[0]
-                    norm_cf = pd.DataFrame([norm_cf], columns=data.columns)
+                    data_no_target = data.drop(columns=label)
+                    columns = data_no_target.columns.tolist()
+                    norm_cf = pd.DataFrame([norm_cf], columns=columns + [label])
+                    norm_cf = norm_cf[data.columns.tolist()]
                     enc_cf = processing.robust_binarization_2(norm_cf, data)
             else:
                 enc_cf = norm_cf

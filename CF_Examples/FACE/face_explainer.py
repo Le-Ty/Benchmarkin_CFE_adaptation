@@ -30,12 +30,15 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 	# normalize data
 	data_processed = preprocessing.normalize_instance(data, data, continuous_cols)
 	# binarize cat binary instances in robust way
-	data_processed = preprocessing.robust_binarization(data_processed, binary_cols, continuous_cols)
+	#data_processed = preprocessing.robust_binarization(data_processed, binary_cols, continuous_cols)
+	data_processed = preprocessing.robust_binarization_2(data_processed, data, binary_cols, continuous_cols)
+
 	
 	# normalize instances
 	instances = preprocessing.normalize_instance(data, instances, continuous_cols)
 	# binarize cat binary instances in robust way
-	instances = preprocessing.robust_binarization(instances, binary_cols, continuous_cols)
+	#instances = preprocessing.robust_binarization(instances, binary_cols, continuous_cols)
+	instances = preprocessing.robust_binarization_2(instances, data, binary_cols, continuous_cols)
 	
 	if dataset_name == 'adult':
 		
@@ -46,7 +49,9 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 		# keys_mutable_and_immutable = keys_mutable + keys_immutable
 		
 	elif dataset_name == 'compas':
-		print('not considered yet')
+		keys_correct = continuous_cols + binary_cols
+		keys_immutable = ['sex']
+		keys_mutable = list(set(keys_correct) - set(keys_immutable))
 		
 	elif dataset_name == 'GiveMeSomeCredit':
 		print('not considered yet')
