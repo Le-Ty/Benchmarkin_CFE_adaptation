@@ -141,6 +141,25 @@ def main():
             print('Measurement results for GS on COMPAS')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_17,
                          immutable, normalized=True, one_hot=False)
+            
+            
+    with graph1.as_default():
+        with ann_17_sess.as_default():
+            test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path, data_name,
+                                                                                                'adult',
+                                                                                                querry_instances_tf17,
+                                                                                                cat_features,
+                                                                                                continuous_features,
+                                                                                                target_name,
+                                                                                                ann_tf_17,
+                                                                                                ann_17_sess)
+
+        # Compute CEM measurements
+            print('==============================================================================')
+            print('Measurement results for CEM on Adult')
+            compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_17,
+                            immutable, normalized=True, one_hot=False)
+            
 
     # Compute DICE counterfactuals
     test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
