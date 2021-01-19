@@ -67,7 +67,7 @@ class Train_ANN():
 
 class Model_Tabular:
     def __init__(self, dim_input, dim_hidden_layer1, dim_hidden_layer2, dim_output_layer, num_of_classes,
-                 restore=None, session=None, use_prob=False):
+                 restore=None, use_prob=False):
 
         # For model loading
         """

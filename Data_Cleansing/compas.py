@@ -60,17 +60,9 @@ if compas_df.shape[1] == 47: #47
     compas_df['r_charge_degree'] = compas_df['r_charge_degree'].map(charge_degree_mape)
     compas_df['c_charge_degree'] = compas_df['c_charge_degree'].map(charge_degree_mape)
 
-    is_violent_map = {0: 'non-violent',
-                      1: 'violent'}
-    compas_df['is_violent_recid'] = compas_df['is_violent_recid'].map(is_violent_map)
-    
-    # make sure names have minus, and not underscore
-    columns = ['sex', 'age', 'race', 'juv-fel-count', 'decile-score', 'juv-misd-count',
-               'juv-other-count', 'priors-count', 'days-b-screening-arrest',
-               'c-days-from-compas', 'c-charge-degree', 'is-recid', 'r-charge-degree',
-               'is-violent-recid', 'v-decile-score', 'decile-score-01', 'c-jail-time', 'r-jail-time']
-    
-    compas_df.columns = columns
+    compas_df = compas_df.rename(columns={'decile_score.1': 'decile_score_2'})
+    compas_df['is_violent_recid'].loc[compas_df['is_violent_recid'] == 0] = 'Low'
+    compas_df['is_violent_recid'].loc[compas_df['is_violent_recid'] == 1] = 'High'
 
     # Drop rows without information
     compas_df.dropna(axis=0, inplace=True)
