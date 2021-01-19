@@ -15,7 +15,7 @@ from CF_Models.act_seq.recourse.config import base_config
 from CF_Models.act_seq.recourse.utils import get_instance_info
 
 
-def get_counterfactual(dataset_path, dataset_filename, instances, target_name, model, cont_features,
+def get_counterfactual(dataset_path, dataset_filename, instances, target_name, model, sess, cont_features,
                        options, target_prediction):
     """
     Compute counterfactual for Action Sequence
@@ -50,95 +50,92 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     instances_oh = processing.normalize_instance(dataset, instances_oh, cont_features)
     instances_oh = instances_oh.drop(target_name, axis=1)
 
-    with tf.Session() as session:
-        model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_20'
-        model = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, session=None, use_prob=False)
-        model_wr = model_wrapper.Model_wrapper(model)
-        # for layer in model_wr.model.model.layers:
-        #     if hasattr(layer, 'kernel_initializer'):
-        #         layer.kernel.initializer.run(session=session)
+    model_wr = model_wrapper.Model_wrapper(model)
+    # for layer in model_wr.model.model.layers:
+    #     if hasattr(layer, 'kernel_initializer'):
+    #         layer.kernel.initializer.run(session=session)
 
-        # Load data with wrapper for Action Sequence
-        data = Data_wrapper(dataset, target_name, cat_features, cont_features)
+    # Load data with wrapper for Action Sequence
+    data = Data_wrapper(dataset, target_name, cat_features, cont_features)
 
-        # Build correct feature order between dataset and data
-        ordered_columns = data.get_feature_order() + [target_name]  # Action Sequence needs target label to be at last
-        # Loose one-hot-encoded column names for ordering dataset
-        last = ''
-        ordered_columns_temp = []
-        for col in ordered_columns:
-            f = col.split('_')[0]
-            if last != f:
-                ordered_columns_temp.append(f)
-                last = f
-        ordered_columns = ordered_columns_temp
-        old_ordered_columns = dataset.columns
-        dataset = dataset[ordered_columns]
+    # Build correct feature order between dataset and data
+    ordered_columns = data.get_feature_order() + [target_name]  # Action Sequence needs target label to be at last
+    # Loose one-hot-encoded column names for ordering dataset
+    last = ''
+    ordered_columns_temp = []
+    for col in ordered_columns:
+        f = col.split('_')[0]
+        if last != f:
+            ordered_columns_temp.append(f)
+            last = f
+    ordered_columns = ordered_columns_temp
+    old_ordered_columns = dataset.columns
+    dataset = dataset[ordered_columns]
 
-        # Classification label in Action sequence is encoded in Low and High
-        dataset[target_name].loc[dataset[target_name] == 0] = 'Low'
-        dataset[target_name].loc[dataset[target_name] == 1] = 'High'
-        raw_features, mapping = fw.create_feature_mapping(dataset, target_name)
-        features = fw.loader(raw_features)
+    # Classification label in Action sequence is encoded in Low and High
+    dataset[target_name].loc[dataset[target_name] == 0] = 'Low'
+    dataset[target_name].loc[dataset[target_name] == 1] = 'High'
+    raw_features, mapping = fw.create_feature_mapping(dataset, target_name)
+    features = fw.loader(raw_features)
 
-        # Choose correct actions for method
-        actions = [action_cls(features) for action_cls in options['actions']]
+    # Choose correct actions for method
+    actions = [action_cls(features) for action_cls in options['actions']]
 
-        for name, feature in features.items():
-            feature.initialize_tf_variables()
+    for name, feature in features.items():
+        feature.initialize_tf_variables()
+    if options['model_name'] == 'quickdraw':
+        actions = [action.set_p_selector(i, len(actions)) for i, action in enumerate(actions)]
+
+    heuristics = load_heuristics(options['mode'], actions, model_wr, options['length'])
+    search = SequenceSearch(model_wr, actions, heuristics, config=base_config)
+
+    for idx, instance in enumerate(instances_oh.values):
+        start = timeit.default_timer()
         if options['model_name'] == 'quickdraw':
-            actions = [action.set_p_selector(i, len(actions)) for i, action in enumerate(actions)]
+            result = search.find_correction(instance.reshape((1, instance.shape[0], instance.shape[1])),
+                                            np.array([target_prediction]), sess)
+        else:
+            result = search.find_correction(instance.reshape((1, instance.shape[0])),
+                                            np.array([target_prediction]), sess)
+        if result.best_result is not None:
+            inst = processing.undummify(pd.DataFrame(instance.reshape((1, -1)), columns=data.get_feature_order()))
+            inst[target_name] = np.argmax(model.model.predict(instance.reshape((1, -1))))
+            # Get original Feature order for Measurements
+            inst = inst[old_ordered_columns]
+            cf = processing.undummify(pd.DataFrame(result.best_result.final_instance.reshape((1, -1)),
+                                                    columns=data.get_feature_order()))
+            cf[target_name] = np.argmax(model.model.predict(result.best_result.final_instance.reshape((1, -1))))
+            # Get original Feature order for Measurements
+            cf = cf[old_ordered_columns]
 
-        heuristics = load_heuristics(options['mode'], actions, model_wr, options['length'])
-        search = SequenceSearch(model_wr, actions, heuristics, config=base_config)
-
-        for idx, instance in enumerate(instances_oh.values):
-            start = timeit.default_timer()
-            if options['model_name'] == 'quickdraw':
-                result = search.find_correction(instance.reshape((1, instance.shape[0], instance.shape[1])),
-                                                np.array([target_prediction]), session)
+            if cf[target_name].values[0] != inst[target_name].values[0]:
+                counterfactuals.append(cf)
             else:
-                result = search.find_correction(instance.reshape((1, instance.shape[0])),
-                                                np.array([target_prediction]), session)
-            if result.best_result is not None:
-                inst = processing.undummify(pd.DataFrame(instance.reshape((1, -1)), columns=data.get_feature_order()))
-                inst[target_name] = np.argmax(model.model.predict(instance.reshape((1, -1))))
-                # Get original Feature order for Measurements
-                inst = inst[old_ordered_columns]
-                cf = processing.undummify(pd.DataFrame(result.best_result.final_instance.reshape((1, -1)),
-                                                       columns=data.get_feature_order()))
-                cf[target_name] = np.argmax(model.model.predict(result.best_result.final_instance.reshape((1, -1))))
-                # Get original Feature order for Measurements
-                cf = cf[old_ordered_columns]
+                cf[:] = np.nan
+                counterfactuals.append(cf)
 
-                if cf[target_name].values[0] != inst[target_name].values[0]:
-                    counterfactuals.append(cf)
-                else:
-                    cf[:] = np.nan
-                    counterfactuals.append(cf)
+            test_instances.append(inst)
+        stop = timeit.default_timer()
+        time_taken = stop - start
+        times_list.append(time_taken)
 
-                test_instances.append(inst)
-            stop = timeit.default_timer()
-            time_taken = stop - start
-            times_list.append(time_taken)
+    counterfactuals_df = pd.DataFrame(np.array(counterfactuals).squeeze(), columns=instances.columns)
+    instances_df = pd.DataFrame(np.array(test_instances).squeeze(), columns=instances.columns)
 
-        counterfactuals_df = pd.DataFrame(np.array(counterfactuals).squeeze(), columns=instances.columns)
-        instances_df = pd.DataFrame(np.array(test_instances).squeeze(), columns=instances.columns)
+    # Success rate & drop not successful counterfactuals & process remainder
+    success_rate, counterfactuals_indeces = measure.success_rate_and_indices(
+        counterfactuals_df[cont_features].astype('float64'))
+    counterfactuals_df = counterfactuals_df.iloc[counterfactuals_indeces]
+    instances_df = instances_df.iloc[counterfactuals_indeces]
 
-        # Success rate & drop not successful counterfactuals & process remainder
-        success_rate, counterfactuals_indeces = measure.success_rate_and_indices(
-            counterfactuals_df[cont_features].astype('float64'))
-        counterfactuals_df = counterfactuals_df.iloc[counterfactuals_indeces]
-        instances_df = instances_df.iloc[counterfactuals_indeces]
+    # Collect in list making use of pandas
+    instances_list = []
+    counterfactuals_list = []
 
-        # Collect in list making use of pandas
-        instances_list = []
-        counterfactuals_list = []
+    for i in range(counterfactuals_df.shape[0]):
+        counterfactuals_list.append(
+            pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
+        instances_list.append(
+            pd.DataFrame(instances_df.iloc[i].values.reshape((1, -1)), columns=instances_df.columns))
 
-        for i in range(counterfactuals_df.shape[0]):
-            counterfactuals_list.append(
-                pd.DataFrame(counterfactuals_df.iloc[i].values.reshape((1, -1)), columns=counterfactuals_df.columns))
-            instances_list.append(
-                pd.DataFrame(instances_df.iloc[i].values.reshape((1, -1)), columns=instances_df.columns))
-
-        return instances_list, counterfactuals_list, times_list, success_rate
+    return instances_list, counterfactuals_list, times_list, success_rate

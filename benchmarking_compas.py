@@ -36,10 +36,10 @@ def main():
     ann = model.ANN(20, 18, 9, 3, 1)
     # Load TF ANN
     model_path_tf_17 = 'ML_Model/Saved_Models/ANN_TF/ann_tf_compas-scores_input_17'
-    ann_tf_17 = model_tf.Model_Tabular(17, 18, 9, 3, 2, restore=model_path_tf_17, session=None, use_prob=True)
+    ann_tf_17 = model_tf.Model_Tabular(17, 18, 9, 3, 2, restore=model_path_tf_17, use_prob=True)
     # Load TF ANN
     model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_compas-scores_input_20'
-    ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, session=None, use_prob=True)
+    ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, use_prob=True)
     # Load Pytorch ANN
     ann.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
