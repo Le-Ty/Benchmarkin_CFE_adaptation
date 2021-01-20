@@ -62,9 +62,7 @@ class Train_ANN():
         # save model
         timestamp = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
         model_name = 'ann_tf'
-        model.save(
-            'C:/Users/fred0/Documents/proj/Benchmarkin_Counterfactual_Examples/ML_Model/Saved_Models/ANN_TF/{}_{}_input_{:.0f}'.format(
-                model_name, self.data_name, self.dim_input))
+        model.save('ML_Model/Saved_Models/ANN_TF/{}_{}_input_{:.0f}'.format(model_name, self.data_name, self.dim_input))
 
 
 class Model_Tabular:

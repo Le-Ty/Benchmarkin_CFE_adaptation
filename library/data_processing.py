@@ -138,16 +138,24 @@ def robust_binarization(instances, binary_cols, continuous_cols, drop_first=True
 
     return instances
 
-def robust_binarization_2(instances, data):
+def robust_binarization_2(instances, data, binary_cols=None, continuous_cols=None):
     """
     :param instances: pd df
     :param data: pd df
     :return: returns robust binarized instances
     """
     
-    robust_instances = instances.append(data, ignore_index=True)
-    robust_instances = pd.get_dummies(robust_instances, drop_first=True)
-    robust_instances = robust_instances.iloc[:instances.values.shape[0]]
+    if binary_cols is not None:
+        robust_names = continuous_cols + binary_cols
+        robust_instances = instances.append(data, ignore_index=True)
+        robust_instances = pd.get_dummies(robust_instances, drop_first=True)
+        robust_instances = robust_instances.iloc[:instances.values.shape[0]]
+        robust_instances.columns = robust_names
+        
+    else:
+        robust_instances = instances.append(data, ignore_index=True)
+        robust_instances = pd.get_dummies(robust_instances, drop_first=True)
+        robust_instances = robust_instances.iloc[:instances.values.shape[0]]
     
     return robust_instances
 

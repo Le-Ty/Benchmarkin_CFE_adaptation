@@ -30,7 +30,10 @@ def counterfactual_search(dataset_filename, data_name, instance, session, model,
         if data_name == 'adult':
             dataset_filename = dataset_filename.split('.')[0]
             AE_model = util.load_AE(dataset_filename)
-
+            
+        elif data_name == 'compas':
+            dataset_filename = dataset_filename.split('.')[0]
+            AE_model = util.load_AE(dataset_filename)
 
         orig_prob, orig_class, orig_prob_str = util.model_prediction(model, np.expand_dims(instance, axis=0))
 

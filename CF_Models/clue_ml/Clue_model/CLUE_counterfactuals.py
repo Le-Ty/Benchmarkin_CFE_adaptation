@@ -70,7 +70,7 @@ def vae_gradient_search(instance, model, VAE, lr=0.50, prediction_similarity_wei
 	Check if explanation indeed produced counterfactual:
 	We accept, if CLUE produced any counterfactual within these max_steps.
 	Otherwise we would very often find no counterfactual.
-	This issue is also known by the authors who show in the Appendix that CLUE
+	This 'issue' is also known by the authors who show in the Appendix that CLUE
 	produced counterfactuals not more than 20% percent of the time. E.g. running optimization to end
 	leads to 16% of successfuly generated counterfactuals for their LSAT data set.
 	'''

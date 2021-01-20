@@ -1,23 +1,11 @@
-import os
-import time
-
-import pandas as pd
-import numpy as np
-
-import matplotlib.pyplot as plt
-from scipy.stats import norm
-
 from keras import backend as K
-
 from keras.layers import Input, Dense, Lambda, Layer, Multiply
 from keras.models import Model, Sequential
-from keras.datasets import mnist
 
-import tensorflow as tf
 
 class Train_AE:
 	def __init__(self, dim_input, dim_hidden_layer1, dim_hidden_layer2, dim_latent, data_name,
-				 epochs=10, learning_rate=0.002, batch_size=64):
+				 epochs=25, learning_rate=0.002, batch_size=64):
 
 		"""
 		Defines the structure of the autoencoder
@@ -83,12 +71,12 @@ class Train_AE:
 		# save ae weights
 		model_name = 'ae_tf'
 
-		autoencoder.save_weights('C:/Users/fred0/Documents/proj/Benchmarkin_Counterfactual_Examples/CF_Models/cem_ml/AE_models/Saved_Models/{}_{}.{}'.format(model_name, self.data_name, 'h5'))
+		autoencoder.save_weights('CF_Models/cem_ml/AE_models/Saved_Models/{}_{}.{}'.format(model_name, self.data_name, 'h5'))
 
 		# save model
 		model_json = autoencoder.to_json()
 
-		with open('C:/Users/fred0/Documents/proj/Benchmarkin_Counterfactual_Examples/CF_Models/cem_ml/AE_models/Saved_Models/{}_{}.{}'.format(model_name, self.data_name, 'json'), "w") as json_file:
+		with open('CF_Models/cem_ml/AE_models/Saved_Models/{}_{}.{}'.format(model_name, self.data_name, 'json'), "w") as json_file:
 			json_file.write(model_json)
 	
 		# return [autoencoder, encoder, decoder]

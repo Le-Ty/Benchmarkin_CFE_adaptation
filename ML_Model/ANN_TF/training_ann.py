@@ -8,9 +8,13 @@ import library.data_processing as preprocessing
 def __main__():
     # choose data set
     # = 'C:/Users/fred0/Desktop/Benchmarkin_Counterfactual_Examples-main/'
+    
+    # ADULT PATH
     # data_path = 'Datasets/Adult/'
     # data_name = 'adult_full.csv'
     # target_name = 'income'
+    
+    # COMPAS PATH
     data_path = '../../Datasets/COMPAS/'
     data_name = 'compas-scores.csv'
     target_name = 'is_recid'

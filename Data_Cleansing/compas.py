@@ -2,14 +2,14 @@ import pickle
 import pandas as pd
 import library.data_processing as process
 
-filePath = '../Datasets/COMPAS/'
+filePath = 'Datasets/COMPAS/'
 fileName = 'compas-scores.csv'
 
 # Read Data from csv
 compas_df = pd.read_csv(filePath + fileName, skipinitialspace=True)
 
 # if data is already cleansed, don't do anything
-if compas_df.shape[1] == 47:
+if compas_df.shape[1] == 47: #47
     # drop columns which are not necessary for learning
     columns_to_drop = ['id', 'name', 'first', 'last', 'c_case_number', 'r_case_number', 'vr_case_number',
                        'v_type_of_assessment', 'type_of_assessment', 'v_score_text', 'score_text', 'age_cat', 'dob',

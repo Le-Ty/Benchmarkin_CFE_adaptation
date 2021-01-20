@@ -39,7 +39,16 @@ def get_counterfactual(dataset_path, dataset_filename, dataset_name,
 		# these keys chosen for sake of illustration
 		keys_immutable = ['age', 'sex']
 		keys_mutable = list(set(keys_correct) - set(keys_immutable))
-	
+		
+	elif dataset_name == 'compas':
+		
+		# choose mutabale vs. immutable
+		keys_correct = continuous_cols + binary_cols
+		
+		# these keys chosen for sake of illustration
+		keys_immutable = ['age', 'sex']
+		keys_mutable = list(set(keys_correct) - set(keys_immutable))
+		
 	counterfactuals = []
 	times_list = []
 	
