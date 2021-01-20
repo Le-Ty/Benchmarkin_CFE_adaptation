@@ -8,7 +8,7 @@ import library.data_processing as processing
 
 
 class DataLoader(data.Dataset):
-    def __init__(self, path, filename, label, normalization=False, encode=False):
+    def __init__(self, path, filename, label, normalization=False, encode=False, drop_first=False):
         """
         Load training dataset
         :param path: string with path to training set
@@ -24,7 +24,7 @@ class DataLoader(data.Dataset):
             self.categorical_features = pickle.load(f)
 
         if encode:
-            self.dataset = pd.get_dummies(self.dataset, columns=self.categorical_features, drop_first=False)
+            self.dataset = pd.get_dummies(self.dataset, columns=self.categorical_features, drop_first=drop_first)
 
         if normalization:
             self.dataset = processing.normalize(self.dataset, label)
