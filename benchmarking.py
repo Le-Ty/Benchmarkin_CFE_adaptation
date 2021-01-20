@@ -348,7 +348,7 @@ def main():
 
 
     # # Compute DICE with VAE
-    # test_instances, counterfactuals, times = dice_examples.get_counterfactual_VAE(data_path, data_name,
+    # test_instances, counterfactuals, times, success_rate= dice_examples.get_counterfactual_VAE(data_path, data_name,
     #                                                                               querry_instances,
     #                                                                               target_name, ann,
     #                                                                               continuous_features,
@@ -358,7 +358,8 @@ def main():
     # # Compute DICE VAE measurements
     # print('==============================================================================')
     # print('Measurement results for DICE with VAE on Adult')
-    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    # compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+    #                          immutable, normalized=False, one_hot=True)
 
 
     # Compute Actionable Recourse Counterfactuals
