@@ -2,7 +2,7 @@
 import torch
 import tensorflow as tf
 import pandas as pd
-# from tensorflow import Graph, Session
+from tensorflow import Graph, Session
 import ML_Model.ANN.model as model
 import ML_Model.ANN_TF.model_ann as model_tf
 from benchmarking import compute_measurements, compute_H_minus
@@ -34,12 +34,23 @@ def main():
     # Load ANNs
     model_path = 'ML_Model/Saved_Models/ANN/2021-01-17_08-58-41_compas_input_20_lr_0.0001_te_0.42.pt'
     ann = model.ANN(20, 18, 9, 3, 1)
-    # Load TF ANN
+    # # Load TF ANN
     model_path_tf_17 = 'ML_Model/Saved_Models/ANN_TF/ann_tf_compas-scores_input_17'
     ann_tf_17 = model_tf.Model_Tabular(17, 18, 9, 3, 2, restore=model_path_tf_17, use_prob=True)
     # Load TF ANN
     model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_compas-scores_input_20'
     ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, use_prob=True)
+    # Load TF ANN
+    # ann_17_sess = Session()
+    # with ann_17_sess.as_default():
+    #     model_path_tf_17 = 'ML_Model/Saved_Models/ANN_TF/ann_tf_compas-scores_input_17'
+    #     ann_tf_17 = model_tf.Model_Tabular(17, 18, 9, 3, 2, restore=model_path_tf_17, use_prob=True)
+    #
+    # # Load TF ANN: One hot encoded
+    # ann_20_sess = Session()
+    # with ann_20_sess.as_default():
+    #     model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_compas-scores_input_20'
+    #     ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, use_prob=True)
     # Load Pytorch ANN
     ann.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
@@ -61,17 +72,17 @@ def main():
     oh_data[target_name] = label_data
 
     # Instances we want to explain
-    querry_instances_tf13 = compute_H_minus(data, enc_data, ann_tf_17, target_name)
+    querry_instances_tf17 = compute_H_minus(data, enc_data, ann_tf_17, target_name)
     querry_instances_tf = compute_H_minus(data, oh_data, ann_tf, target_name)
     querry_instances = compute_H_minus(data, oh_data, ann, target_name)
     querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
-    querry_instances_tf13 = querry_instances_tf13.head(10)
+    querry_instances_tf17 = querry_instances_tf17.head(10)
     querry_instances_tf = querry_instances_tf.head(3)
 
     """
         Below we can start to define counterfactual models and start benchmarking
     """
-
+    '''
     # Compute DICE counterfactuals
     test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
                                                                                              querry_instances,
@@ -84,6 +95,59 @@ def main():
     print('Measurement results for DICE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, normalized=False, one_hot=True)
+
+    # Compute DICE with VAE
+    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual_VAE(data_path, data_name,
+                                                                                                 querry_instances,
+                                                                                                 target_name, ann,
+                                                                                                 continuous_features,
+                                                                                                 1, pretrained=0,
+                                                                                                 backend='PYT')
+
+    # Compute DICE VAE measurements
+    print('==============================================================================')
+    print('Measurement results for DICE with VAE on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+                         immutable, normalized=False, one_hot=True)
+    
+    # Compute Actionable Recourse Counterfactuals
+    # with ann_17_sess.as_default():
+    # TODO: LIME Coefficients for ann_tf_17 on compas are to small (1e-16). 
+    test_instances, counterfactuals, times, success_rate = ac_explainer.get_counterfactuals(data_path, data_name,
+                                                                                            'compas',
+                                                                                            ann_tf_17,
+                                                                                            continuous_features,
+                                                                                            target_name, False,
+                                                                                            querry_instances_tf17)
+
+    # Compute AR measurements
+    print('==============================================================================')
+    print('Measurement results for Actionable Recourse')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_17,
+                         immutable, normalized=False, one_hot=False, encoded=True)
+    '''
+
+    # Declare options for Action Sequence
+    options = {
+        'model_name': 'compas',
+        'mode': 'vanilla',
+        'length': 4,
+        'actions': adult_actions
+    }
+    test_instances, counterfactuals, times, success_rate = act_seq_examples.get_counterfactual(data_path, data_name,
+                                                                                               querry_instances_tf,
+                                                                                               target_name,
+                                                                                               ann_tf,
+                                                                                               ann_20_sess,
+                                                                                               continuous_features,
+                                                                                               options,
+                                                                                               [0., 1.])
+
+    # Compute AS measurements
+    print('==============================================================================')
+    print('Measurement results for Action Sequence on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
+                         immutable, normalized=True, one_hot=True)
 
 
 if __name__ == "__main__":
