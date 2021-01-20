@@ -58,7 +58,7 @@ def get_cost(data, factual, counterfactual):
 
 
 def compute_measurements(data, test_instances, list_of_cfs, continuous_features, target_name, model, immutable,
-                         normalized=False, one_hot=True, encoded=False):
+                         times, success_rate, normalized=False, one_hot=True, encoded=False):
     """
     Compute all measurements together and print them on the console
     :param data: Dataframe of whole data
@@ -287,7 +287,7 @@ def main():
     print('==============================================================================')
     print('Measurement results for CLUE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, normalized=True)
+                         immutable, times, success_rate, normalized=True, one_hot=True)
 
     # Compute FACE counterfactuals
     with graph1.as_default():
@@ -304,7 +304,7 @@ def main():
             print('==============================================================================')
             print('Measurement results for FACE on Adult')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                            immutable, normalized=True, one_hot=False)
+                            immutable, times, success_rate, normalized=True, one_hot=False)
 
     # Compute GS counterfactuals
     with graph1.as_default():
@@ -320,7 +320,7 @@ def main():
             print('==============================================================================')
             print('Measurement results for GS on Adult')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                            immutable, normalized=True, one_hot=False)
+                            immutable, times, success_rate, normalized=True, one_hot=False)
 
 
     # Compute CEM counterfactuals
@@ -340,7 +340,7 @@ def main():
             print('==============================================================================')
             print('Measurement results for CEM on Adult')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                            immutable, normalized=True, one_hot=False)
+                            immutable, times, success_rate, normalized=True, one_hot=False)
 
     
     
@@ -364,7 +364,7 @@ def main():
     print('==============================================================================')
     print('Measurement results for DICE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, one_hot=True)
+                         immutable, times, success_rate, one_hot=True)
 
 
     # Compute DICE with VAE
@@ -379,7 +379,7 @@ def main():
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, one_hot=True)
+                         immutable, times, success_rate, one_hot=True)
 
     '''
     
@@ -396,7 +396,7 @@ def main():
             print('==============================================================================')
             print('Measurement results for Actionable Recourse')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                            immutable, normalized=False, one_hot=False, encoded=True)
+                            immutable, times, success_rate, normalized=False, one_hot=False, encoded=True)
 
 
     # Compute Action Sequence counterfactuals
@@ -423,7 +423,7 @@ def main():
             print('==============================================================================')
             print('Measurement results for Action Sequence on Adult')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
-                            immutable, normalized=True, one_hot=True)
+                            immutable, times, success_rate, normalized=True, one_hot=True)
 
 
 

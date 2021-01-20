@@ -104,7 +104,7 @@ def main():
     print('==============================================================================')
     print('Measurement results for CLUE on COMPAS')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, normalized=True)
+                         immutable, times, success_rate, normalized=True)
 
     '''
 
@@ -124,7 +124,7 @@ def main():
             print('==============================================================================')
             print('Measurement results for FACE on COMPAS')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_17,
-                         immutable, normalized=True, one_hot=False)
+                         immutable, times, success_rate, normalized=True, one_hot=False)
 
     # Compute GS counterfactuals
     with graph1.as_default():
@@ -140,7 +140,7 @@ def main():
             print('==============================================================================')
             print('Measurement results for GS on COMPAS')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_17,
-                         immutable, normalized=True, one_hot=False)
+                         immutable, times, success_rate, normalized=True, one_hot=False)
             
             
     with graph1.as_default():
@@ -158,7 +158,7 @@ def main():
             print('==============================================================================')
             print('Measurement results for CEM on Adult')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_17,
-                            immutable, normalized=True, one_hot=False)
+                            immutable, times, success_rate, normalized=True, one_hot=False)
             
 
     # Compute DICE counterfactuals
@@ -172,7 +172,7 @@ def main():
     print('==============================================================================')
     print('Measurement results for DICE on COMPAS')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, normalized=False, one_hot=True)
+                         immutable, times, success_rate, normalized=False, one_hot=True)
 
 
 if __name__ == "__main__":
