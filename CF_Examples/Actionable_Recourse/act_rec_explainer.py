@@ -85,6 +85,7 @@ def build_lime(data, cat_feat, cont_feat, label, dataset_name):
                                                       training_labels=y,
                                                       feature_names=X.columns,
                                                       discretize_continuous=False,
+                                                      sample_around_instance=True,
                                                       categorical_names=cat_feat)
 
     return lime_exp

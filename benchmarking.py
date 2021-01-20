@@ -5,7 +5,6 @@ from tensorflow import Graph, Session
 import ML_Model.ANN.model as model
 import ML_Model.ANN_TF.model_ann as model_tf
 
-from keras import backend as K
 
 # CE models
 import CF_Examples.DICE.dice_explainer as dice_explainer
@@ -16,7 +15,7 @@ import CF_Examples.FACE.face_explainer as face_explainer
 import CF_Examples.CLUE.clue_explainer as clue_explainer
 import CF_Examples.Action_Sequence.action_sequence_explainer as act_seq_examples
 from CF_Examples.Action_Sequence.adult_actions import actions as adult_actions
-from sklearn.neural_network import MLPClassifier
+# from sklearn.neural_network import MLPClassifier
 
 # others
 import library.measure as measure
@@ -178,13 +177,13 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
 
 def compute_H_minus(data, enc_norm_data, ml_model, label):
     """
-    Computes H^{-} dataset, which contains all samples that are labeled with 0 by a black box classifier f.
+    Computes H^{-} dataset: contains all samples that are predicted as 0 (negative class) by black box classifier f.
     :param data: Dataframe with plain unchanged data
     :param enc_norm_data: Dataframe with normalized and encoded data
     :param ml_model: Black Box Model f (ANN, SKlearn MLP)
     :param label: String, target name
     :return: Dataframe
-    """
+    """ #
 
     H_minus = data.copy()
 
@@ -212,6 +211,7 @@ def compute_H_minus(data, enc_norm_data, ml_model, label):
 def main():
     random.seed(121)
     np.random.seed(1211)
+    tf.set_random_seed(12111)
 
     # Get DICE counterfactuals for Adult Dataset
     data_path = 'Datasets/Adult/'
@@ -272,6 +272,8 @@ def main():
     """
         Below we can start to define counterfactual models and start benchmarking
     """
+    
+    '''
 
     # Compute CLUE counterfactuals; This one requires the pytorch model
     test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
@@ -322,8 +324,7 @@ def main():
 
 
     # Compute CEM counterfactuals
-    ## TODO: currently AutoEncoder (AE) and ANN models have to be pretrained; automate this!
-    ## TODO: as input: 'ann_tf', 'whether AE should be trained'
+    ## TODO: as input: 'whether AE should be trained'
     with graph1.as_default():
         with ann_13_sess.as_default():
             test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path, data_name,
@@ -341,18 +342,20 @@ def main():
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, normalized=True, one_hot=False)
 
-
+    
+    
 
     # Compute DICE counterfactuals
-    test_instances, counterfactuals, times, success_rate = dice_examples.get_counterfactual(data_path, data_name,
+    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
                                                                                              querry_instances,
                                                                                              target_name, ann,
                                                                                              continuous_features,
                                                                                              1,
                                                                                              'PYT')
+    
 
     # THIS MODEL DOES NOT WORK YET! WEIRD 'GRAPH NOT FOUND ISSUE'
-    # test_instances, counterfactuals, times, success_rate = dice_examples.get_counterfactual(data_path, data_name,
+    # test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
     #                                                                           querry_instances,
     #                                                                           target_name, ann_tf, continuous_features,
     #                                                                           1, 'TF1', model_path_tf)
@@ -365,7 +368,7 @@ def main():
 
 
     # Compute DICE with VAE
-    test_instances, counterfactuals, times = dice_examples.get_counterfactual_VAE(data_path, data_name,
+    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual_VAE(data_path, data_name,
                                                                                    querry_instances,
                                                                                    target_name, ann,
                                                                                    continuous_features,
@@ -375,9 +378,11 @@ def main():
     # Compute DICE VAE measurements
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann)
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+                         immutable, one_hot=True)
 
-
+    '''
+    
     # Compute Actionable Recourse Counterfactuals
     with graph1.as_default():
         with ann_13_sess.as_default():
@@ -419,6 +424,7 @@ def main():
             print('Measurement results for Action Sequence on Adult')
             compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
                             immutable, normalized=True, one_hot=True)
+
 
 
 if __name__ == "__main__":
