@@ -226,7 +226,7 @@ def main():
     print('Measurement results for Action Sequence on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
                          immutable, normalized=True, one_hot=True)
-
+'''
 
 if __name__ == "__main__":
     # execute only if run as a script
