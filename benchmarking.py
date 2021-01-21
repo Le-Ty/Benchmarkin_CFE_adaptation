@@ -5,7 +5,6 @@ from tensorflow import Graph, Session
 import ML_Model.ANN.model as model
 import ML_Model.ANN_TF.model_ann as model_tf
 
-
 # CE models
 import CF_Examples.DICE.dice_explainer as dice_explainer
 import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
@@ -90,6 +89,11 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     # normalize original data
     norm_data = preprocessing.normalize(data, target_name)
 
+    # Initialize lists
+    distances_list = []
+    redundancy_list = []
+    violation_list = []
+    
     for i in range(N):
         test_instance = test_instances[i]
         counterfactuals = list_of_cfs[i]  # Each list entry could be a Dataframe with more than 1 entry
@@ -107,6 +111,7 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
 
         distances_temp = get_distances(norm_data, test_instance, counterfactual).reshape((-1, 1))
         distances += distances_temp
+        distances_list.append(np.array(distances_temp).reshape(1, -1))
 
         # Distances are ok for now
         '''
@@ -145,34 +150,54 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
             encoded_counterfactual = pd.DataFrame([counterfactual], columns=columns)
             encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
 
-        redundancy += measure.redundancy(encoded_factual.values, encoded_counterfactual.values, model)
+        redundancy_measure = measure.redundancy(encoded_factual.values, encoded_counterfactual.values, model)
+        redundancy_list.append(redundancy_measure)
+        redundancy += redundancy_measure
 
         if len(immutable) > 0:
-            violation += measure.constraint_violation(encoded_counterfactual, encoded_factual, immutable)
-
+            violation_measure = measure.constraint_violation(encoded_counterfactual, encoded_factual, immutable)
+            violation_list.append(violation_measure)
+            violation += violation_measure
+        
     distances *= (1 / N)
     costs *= (1 / N)
     redundancy *= (1 / N)
     if len(immutable) > 0:
         violation *= (1 / len(immutable) * N)
     else:
-        violation = 0
+        violation_list, violation = 0, 0
 
     print('dist(x; x^F)_1: {}'.format(distances[0]))
     print('dist(x; x^F)_2: {}'.format(distances[1]))
     print('dist(x; x^F)_3: {}'.format(distances[2]))
     print('dist(x; x^F)_4: {}'.format(distances[3]))
-    print('Redundancy: {}'.format(redundancy))
-    print('Constraint Violation: {}'.format(violation))
     # Distances are ok for now
     # print('cost(x^CF; x^F)_1: {}'.format(costs[0]))
     # print('cost(x^CF; x^F)_2: {}'.format(costs[1]))
 
-    yNN = measure.yNN(list_of_cfs, data, target_name, 5, cat_features, continuous_features, model, one_hot, normalized,
-                      encoded)
-
+    yNN = measure.yNN(list_of_cfs, data, target_name, 5,
+                      cat_features, continuous_features,
+                      model, one_hot, normalized, encoded)
+    avg_time = np.mean(np.array(times))
+    
+    print('Redundancy: {}'.format(redundancy))
+    print('Constraint Violation: {}'.format(violation))
     print('YNN: {}'.format(yNN))
+    print('Success Rate: {}'.format(success_rate))
+    print('Average Time: {}'.format(avg_time))
     print('==============================================================================\n')
+
+    # Convert results to data frames
+    df_distances = pd.DataFrame(np.array(distances_list)[:, 0, :], columns=['ell0', 'ell1', 'ell2', 'ell-inf'])
+    df_violation = pd.DataFrame(np.array(violation_list).reshape(-1, 1), columns=['violation'])
+    df_redundancy = pd.DataFrame(np.array(redundancy_list).reshape(-1, 1), columns=['redundancy'])
+    df_ynn = pd.DataFrame(np.array(yNN).reshape(-1, 1), columns=['ynn'])
+    df_success = pd.DataFrame(np.array(success_rate).reshape(-1, 1), columns=['success'])
+    df_time = pd.DataFrame(np.array(avg_time).reshape(-1, 1), columns=['avgtime'])
+
+    df_results = pd.concat([df_distances, df_redundancy, df_violation, df_ynn, df_success, df_time], axis=1)
+
+    return df_results
 
 
 def compute_H_minus(data, enc_norm_data, ml_model, label):
@@ -259,23 +284,23 @@ def main():
     with graph1.as_default():
         with ann_13_sess.as_default():
             querry_instances_tf13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
-            querry_instances_tf13 = querry_instances_tf13.head(5)
+            querry_instances_tf13 = querry_instances_tf13.head(100)
 
     with graph2.as_default():
         with ann_20_sess.as_default():
            querry_instances_tf = compute_H_minus(data, oh_data, ann_tf, target_name)
-           querry_instances_tf = querry_instances_tf.head(2)
+           querry_instances_tf = querry_instances_tf.head(100)
 
     querry_instances = compute_H_minus(data, oh_data, ann, target_name)
-    querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
+    querry_instances = querry_instances.head(100)  # Only for testing because of the size of querry_instances
 
     """
         Below we can start to define counterfactual models and start benchmarking
     """
-    
-    '''
+    classifier_name = 'ANN'
 
     # Compute CLUE counterfactuals; This one requires the pytorch model
+    model_name = 'clue'
     test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
                                                                                              'adult', querry_instances,
                                                                                              cat_features,
@@ -286,10 +311,13 @@ def main():
     # Compute CLUE measurements
     print('==============================================================================')
     print('Measurement results for CLUE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+    df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, times, success_rate, normalized=True, one_hot=True)
+    df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+
 
     # Compute FACE counterfactuals
+    model_name = 'face'
     with graph1.as_default():
         with ann_13_sess.as_default():
             test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name,
@@ -303,10 +331,13 @@ def main():
             # Compute FACE measurements
             print('==============================================================================')
             print('Measurement results for FACE on Adult')
-            compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, times, success_rate, normalized=True, one_hot=False)
+            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+
 
     # Compute GS counterfactuals
+    model_name = 'gs'
     with graph1.as_default():
         with ann_13_sess.as_default():
             test_instances, counterfactuals, times, success_rate = gs_explainer.get_counterfactual(data_path, data_name,
@@ -319,11 +350,14 @@ def main():
         # Compute GS measurements
             print('==============================================================================')
             print('Measurement results for GS on Adult')
-            compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, times, success_rate, normalized=True, one_hot=False)
+            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+
 
 
     # Compute CEM counterfactuals
+    model_name = 'cem'
     ## TODO: as input: 'whether AE should be trained'
     with graph1.as_default():
         with ann_13_sess.as_default():
@@ -339,13 +373,13 @@ def main():
         # Compute CEM measurements
             print('==============================================================================')
             print('Measurement results for CEM on Adult')
-            compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, times, success_rate, normalized=True, one_hot=False)
+            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
     
-    
-
     # Compute DICE counterfactuals
+    model_name = 'dice'
     test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
                                                                                              querry_instances,
                                                                                              target_name, ann,
@@ -353,7 +387,6 @@ def main():
                                                                                              1,
                                                                                              'PYT')
     
-
     # THIS MODEL DOES NOT WORK YET! WEIRD 'GRAPH NOT FOUND ISSUE'
     # test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
     #                                                                           querry_instances,
@@ -363,11 +396,13 @@ def main():
     # Compute DICE measurements
     print('==============================================================================')
     print('Measurement results for DICE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+    df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, times, success_rate, one_hot=True)
+    df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
     # Compute DICE with VAE
+    model_name = 'dice_vae'
     test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual_VAE(data_path, data_name,
                                                                                    querry_instances,
                                                                                    target_name, ann,
@@ -378,12 +413,13 @@ def main():
     # Compute DICE VAE measurements
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')
-    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+    df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, times, success_rate, one_hot=True)
-
-    '''
+    df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
     
+
     # Compute Actionable Recourse Counterfactuals
+    model_name = 'ar'
     with graph1.as_default():
         with ann_13_sess.as_default():
             test_instances, counterfactuals, times, success_rate = ac_explainer.get_counterfactuals(data_path, data_name,
@@ -395,11 +431,13 @@ def main():
             # Compute AR measurements
             print('==============================================================================')
             print('Measurement results for Actionable Recourse')
-            compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, times, success_rate, normalized=False, one_hot=False, encoded=True)
+            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
     # Compute Action Sequence counterfactuals
+    model_name = 'as'
     with graph2.as_default():
         with ann_20_sess.as_default():
 
@@ -422,8 +460,9 @@ def main():
             # Compute AS measurements
             print('==============================================================================')
             print('Measurement results for Action Sequence on Adult')
-            compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
+            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
                             immutable, times, success_rate, normalized=True, one_hot=True)
+            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
 

@@ -174,6 +174,59 @@ def main():
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, times, success_rate, normalized=False, one_hot=True)
 
+    # Compute DICE with VAE
+    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual_VAE(data_path, data_name,
+                                                                                                 querry_instances,
+                                                                                                 target_name, ann,
+                                                                                                 continuous_features,
+                                                                                                 1, pretrained=0,
+                                                                                                 backend='PYT')
+
+    # Compute DICE VAE measurements
+    print('==============================================================================')
+    print('Measurement results for DICE with VAE on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
+                         immutable, normalized=False, one_hot=True)
+    
+    # Compute Actionable Recourse Counterfactuals
+    # with ann_17_sess.as_default():
+    # TODO: LIME Coefficients for ann_tf_17 on compas are to small (1e-16). 
+    test_instances, counterfactuals, times, success_rate = ac_explainer.get_counterfactuals(data_path, data_name,
+                                                                                            'compas',
+                                                                                            ann_tf_17,
+                                                                                            continuous_features,
+                                                                                            target_name, False,
+                                                                                            querry_instances_tf17)
+
+    # Compute AR measurements
+    print('==============================================================================')
+    print('Measurement results for Actionable Recourse')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_17,
+                         immutable, normalized=False, one_hot=False, encoded=True)
+    '''
+
+    # Declare options for Action Sequence
+    options = {
+        'model_name': 'compas',
+        'mode': 'vanilla',
+        'length': 4,
+        'actions': adult_actions
+    }
+    test_instances, counterfactuals, times, success_rate = act_seq_examples.get_counterfactual(data_path, data_name,
+                                                                                               querry_instances_tf,
+                                                                                               target_name,
+                                                                                               ann_tf,
+                                                                                               ann_20_sess,
+                                                                                               continuous_features,
+                                                                                               options,
+                                                                                               [0., 1.])
+
+    # Compute AS measurements
+    print('==============================================================================')
+    print('Measurement results for Action Sequence on Adult')
+    compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
+                         immutable, normalized=True, one_hot=True)
+'''
 
 if __name__ == "__main__":
     # execute only if run as a script

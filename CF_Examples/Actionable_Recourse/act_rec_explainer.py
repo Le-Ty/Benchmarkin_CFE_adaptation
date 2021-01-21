@@ -77,7 +77,7 @@ def build_lime(data, cat_feat, cont_feat, label, dataset_name):
 
     if dataset_name == 'adult':
         X = processing.one_hot_encode_instance(X, X, cat_feat)
-    elif dataset_name == 'adult_tf13':
+    elif dataset_name in ['adult_tf13', 'compas']:
         X = processing.robust_binarization(X, cat_feat, cont_feat)
     X = processing.normalize(X)
 
@@ -109,7 +109,7 @@ def get_lime_coefficients(data, lime_expl, model, instance, categorical_features
     # Prepare instance
     if dataset_name == 'adult':
         inst_to_expl = processing.one_hot_encode_instance(data, instance, categorical_features)
-    elif dataset_name == 'adult_tf13':
+    elif dataset_name in ['adult_tf13', 'compas']:
         inst_to_expl = pd.DataFrame(instance.values.reshape((1, -1)), columns=instance.index.values)
 
     inst_to_expl = processing.normalize_instance(data, inst_to_expl, continuous_features)
@@ -139,7 +139,7 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
     # select the correct data preparation
     if dataset_name == 'adult':
         prep_data = prepare_adult(dataset, continuous_features, label)
-    elif dataset_name == 'adult_tf13':
+    elif dataset_name in ['adult_tf13', 'compas']:
         prep_data = prepare_adult_tf13(dataset, continuous_features, label)
     else:
         print('Not yet implemented')
@@ -165,7 +165,7 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
         times_list = []
         lime_explainer = build_lime(dataset, categorical_features, continuous_features, label, dataset_name)
         # create coefficients for each instance
-        if dataset_name == 'adult_tf13':
+        if dataset_name in ['adult_tf13', 'compas']:
             label_data = instances[label]
             instances = processing.robust_binarization(instances, categorical_features, continuous_features)
             instances[label] = label_data
