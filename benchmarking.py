@@ -313,7 +313,7 @@ def main():
     print('Measurement results for CLUE on Adult')
     df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, times, success_rate, normalized=True, one_hot=True)
-    df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+    #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
     # Compute FACE counterfactuals
@@ -333,7 +333,7 @@ def main():
             print('Measurement results for FACE on Adult')
             df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, times, success_rate, normalized=True, one_hot=False)
-            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+            #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
     # Compute GS counterfactuals
@@ -352,7 +352,7 @@ def main():
             print('Measurement results for GS on Adult')
             df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, times, success_rate, normalized=True, one_hot=False)
-            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+            #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
 
@@ -375,7 +375,7 @@ def main():
             print('Measurement results for CEM on Adult')
             df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, times, success_rate, normalized=True, one_hot=False)
-            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+            #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
     
     # Compute DICE counterfactuals
@@ -398,7 +398,7 @@ def main():
     print('Measurement results for DICE on Adult')
     df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, times, success_rate, one_hot=True)
-    df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+    #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
     # Compute DICE with VAE
@@ -415,7 +415,7 @@ def main():
     print('Measurement results for DICE with VAE on Adult')
     df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, times, success_rate, one_hot=True)
-    df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+    #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
     
 
     # Compute Actionable Recourse Counterfactuals
@@ -433,7 +433,7 @@ def main():
             print('Measurement results for Actionable Recourse')
             df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, times, success_rate, normalized=False, one_hot=False, encoded=True)
-            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+            #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
     # Compute Action Sequence counterfactuals
@@ -462,7 +462,7 @@ def main():
             print('Measurement results for Action Sequence on Adult')
             df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
                             immutable, times, success_rate, normalized=True, one_hot=True)
-            df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+            #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
 
