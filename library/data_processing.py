@@ -80,13 +80,13 @@ def get_categorical_features(columns, continuous_features, label):
     return cat_features
 
 
-def one_hot_encode_instance(data, instance, categorical_features):
+def one_hot_encode_instance(data, instance, categorical_features, separator='_'):
     """
     one-hot-encode instance with respect to data to maintain consistency
     :param data: dataframe with whole dataset
     :param instance: dataframe to encode in context of data
-    :param: categorical_features: list
-    :param: target_name: String with label name
+    :param categorical_features: list
+    :param separator: String, determines the seperator for column names of one-hot-encoded data
     :return: dataframe with encoded instance
     """
     n = data.shape[0]
@@ -99,7 +99,7 @@ def one_hot_encode_instance(data, instance, categorical_features):
     encoded_instance['idx'] = n_inst
 
     indexed_data = indexed_data.append(encoded_instance)
-    indexed_data = pd.get_dummies(indexed_data, columns=categorical_features)
+    indexed_data = pd.get_dummies(indexed_data, columns=categorical_features, prefix_sep=separator)
 
     encoded_instance = indexed_data.loc[indexed_data['idx'] == n_inst]
 

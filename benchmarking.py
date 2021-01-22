@@ -57,7 +57,7 @@ def get_cost(data, factual, counterfactual):
 
 
 def compute_measurements(data, test_instances, list_of_cfs, continuous_features, target_name, model, immutable,
-                         times, success_rate, normalized=False, one_hot=True, encoded=False):
+                         times, success_rate, normalized=False, one_hot=True, encoded=False, separator='_'):
     """
     Compute all measurements together and print them on the console
     :param data: Dataframe of whole data
@@ -70,6 +70,7 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     :param one_hot: Boolean, indicates whether test_instances & counterfactual instances should become one-hot or binarized
     :param encoded: Boolean, indicates whether test_instances & counterfactual are already encoded
     :param immutable: List; list of immutable features
+    :param separator: String, determines the separator for one-hot-encoding
     :return:
     """  #
 
@@ -93,7 +94,7 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     distances_list = []
     redundancy_list = []
     violation_list = []
-    
+
     for i in range(N):
         test_instance = test_instances[i]
         counterfactuals = list_of_cfs[i]  # Each list entry could be a Dataframe with more than 1 entry
@@ -124,22 +125,22 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
             if one_hot:
                 encoded_factual = preprocessing.one_hot_encode_instance(norm_data,
                                                                         pd.DataFrame([test_instance], columns=columns),
-                                                                        cat_features)
+                                                                        cat_features, separator=separator)
                 encoded_factual = encoded_factual.drop(columns=target_name)
                 encoded_counterfactual = preprocessing.one_hot_encode_instance(norm_data,
                                                                                pd.DataFrame([counterfactual],
                                                                                             columns=columns),
-                                                                               cat_features)
+                                                                               cat_features, separator=separator)
                 encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
             else:
                 data_no_target = data.drop(columns=target_name)
                 columns = data_no_target.columns.tolist()
-                
+
                 encoded_factual = pd.DataFrame([test_instance], columns=columns + [target_name])
                 encoded_factual = encoded_factual.drop(columns=target_name)
                 encoded_factual = preprocessing.robust_binarization_2(encoded_factual, data_no_target,
                                                                       cat_features, continuous_features)
-                
+
                 encoded_counterfactual = pd.DataFrame([counterfactual], columns=columns + [target_name])
                 encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
                 encoded_counterfactual = preprocessing.robust_binarization_2(encoded_counterfactual, data_no_target,
@@ -155,10 +156,11 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
         redundancy += redundancy_measure
 
         if len(immutable) > 0:
-            violation_measure = measure.constraint_violation(encoded_counterfactual, encoded_factual, immutable)
+            violation_measure = measure.constraint_violation(encoded_counterfactual, encoded_factual, immutable,
+                                                             separator)
             violation_list.append(violation_measure)
             violation += violation_measure
-        
+
     distances *= (1 / N)
     costs *= (1 / N)
     redundancy *= (1 / N)
