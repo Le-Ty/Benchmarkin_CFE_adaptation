@@ -106,7 +106,7 @@ def main():
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, times, success_rate, normalized=True)
 
-    '''
+    
 
 
     # Compute FACE counterfactuals
@@ -174,6 +174,8 @@ def main():
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
                          immutable, times, success_rate, normalized=False, one_hot=True)
 
+    '''
+
     # Compute DICE with VAE
     test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual_VAE(data_path, data_name,
                                                                                                  querry_instances,
@@ -186,7 +188,7 @@ def main():
     print('==============================================================================')
     print('Measurement results for DICE with VAE on Adult')
     compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, normalized=False, one_hot=True)
+                         immutable, times, success_rate, normalized=False, one_hot=True)
     
     # Compute Actionable Recourse Counterfactuals
     # with ann_17_sess.as_default():

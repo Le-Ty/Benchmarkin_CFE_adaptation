@@ -22,7 +22,7 @@ from torch.autograd import Variable
 
 class FeasibleBaseVAE(ExplainerBase):
 
-    def __init__(self, data_interface, model_interface, max_iter=1000, **kwargs):
+    def __init__(self, data_interface, model_interface, max_iter=2000, **kwargs):
         """
         :param data_interface: an interface class to data related params
         :param model_interface: an interface class to access trained ML model

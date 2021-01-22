@@ -298,7 +298,7 @@ def main():
         Below we can start to define counterfactual models and start benchmarking
     """
     classifier_name = 'ANN'
-
+    '''
     # Compute CLUE counterfactuals; This one requires the pytorch model
     model_name = 'clue'
     test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
@@ -315,7 +315,7 @@ def main():
                          immutable, times, success_rate, normalized=True, one_hot=True)
     #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
-
+    
     # Compute FACE counterfactuals
     model_name = 'face'
     with graph1.as_default():
@@ -400,7 +400,7 @@ def main():
                          immutable, times, success_rate, one_hot=True)
     #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
-
+    '''
     # Compute DICE with VAE
     model_name = 'dice_vae'
     test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual_VAE(data_path, data_name,

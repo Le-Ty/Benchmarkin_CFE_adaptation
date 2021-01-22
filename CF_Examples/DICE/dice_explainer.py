@@ -154,8 +154,8 @@ def get_counterfactual_VAE(dataset_path, dataset_filename, instances, target_nam
         raise NotImplementedError()
 
     # initiate DiCE
-    exp = dice_ml_git.Dice(dice_data, dice_model, encoded_size=10, lr=1e-2, batch_size=2048, validity_reg=42.0,
-                           margin=0.165, epochs=50, wm1=1e-2, wm2=1e-2, wm3=1e-2)
+    exp = dice_ml_git.Dice(dice_data, dice_model, encoded_size=10, lr=1e-3, batch_size=2048, validity_reg=175.0,
+                           margin=0.11, epochs=10, wm1=1e-2, wm2=1e-2, wm3=1e-2)  #2048
 
     exp.train(pre_trained=pretrained)
 
