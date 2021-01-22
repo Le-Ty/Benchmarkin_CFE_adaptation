@@ -46,7 +46,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     cat_features = processing.get_categorical_features(dataset.columns, cont_features, target_name)
 
     # Preparing Instances
-    instances_oh = processing.one_hot_encode_instance(dataset, instances, cat_features)
+    instances_oh = processing.one_hot_encode_instance(dataset, instances, cat_features, separator=':')
     instances_oh = processing.normalize_instance(dataset, instances_oh, cont_features)
     instances_oh = instances_oh.drop(target_name, axis=1)
 
@@ -56,7 +56,7 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     #         layer.kernel.initializer.run(session=session)
 
     # Load data with wrapper for Action Sequence
-    data = Data_wrapper(dataset, target_name, cat_features, cont_features)
+    data = Data_wrapper(dataset, target_name, cat_features, cont_features, separator=':')
 
     # Build correct feature order between dataset and data
     ordered_columns = data.get_feature_order() + [target_name]  # Action Sequence needs target label to be at last
@@ -64,10 +64,13 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
     last = ''
     ordered_columns_temp = []
     for col in ordered_columns:
-        f = col.split('_')[0]
-        if last != f:
-            ordered_columns_temp.append(f)
-            last = f
+        f = "_".join(col.split(':')[0:-1])
+        if f in cat_features and col != target_name:
+            if last != f:
+                ordered_columns_temp.append(f)
+                last = f
+        elif col in cont_features or col == target_name:
+            ordered_columns_temp.append(col)
     ordered_columns = ordered_columns_temp
     old_ordered_columns = dataset.columns
     dataset = dataset[ordered_columns]
@@ -98,12 +101,13 @@ def get_counterfactual(dataset_path, dataset_filename, instances, target_name, m
             result = search.find_correction(instance.reshape((1, instance.shape[0])),
                                             np.array([target_prediction]), sess)
         if result.best_result is not None:
-            inst = processing.undummify(pd.DataFrame(instance.reshape((1, -1)), columns=data.get_feature_order()))
+            inst = processing.undummify(pd.DataFrame(instance.reshape((1, -1)), columns=data.get_feature_order()),
+                                        prefix_sep=':')
             inst[target_name] = np.argmax(model.model.predict(instance.reshape((1, -1))))
             # Get original Feature order for Measurements
             inst = inst[old_ordered_columns]
             cf = processing.undummify(pd.DataFrame(result.best_result.final_instance.reshape((1, -1)),
-                                                    columns=data.get_feature_order()))
+                                                    columns=data.get_feature_order()), prefix_sep=':')
             cf[target_name] = np.argmax(model.model.predict(result.best_result.final_instance.reshape((1, -1))))
             # Get original Feature order for Measurements
             cf = cf[old_ordered_columns]

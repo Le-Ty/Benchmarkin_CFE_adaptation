@@ -8,8 +8,8 @@ and to use arbitrary datasets
 
 
 class Data_wrapper(object):
-    def __init__(self, df, label, cat_feat, cont_feat):
-        data_enc = processing.one_hot_encode_instance(df, df, cat_feat)
+    def __init__(self, df, label, cat_feat, cont_feat, separator='_'):
+        data_enc = processing.one_hot_encode_instance(df, df, cat_feat, separator=separator)
         data_enc = processing.normalize_instance(data_enc, data_enc, cont_feat)
         data_enc = data_enc.drop(label, axis=1)
 
