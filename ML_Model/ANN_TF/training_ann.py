@@ -15,19 +15,19 @@ def __main__():
     # target_name = 'income'
     
     # COMPAS PATH
-    data_path = '../../Datasets/COMPAS/'
+    data_path = 'Datasets/COMPAS/'
     data_name = 'compas-scores.csv'
     target_name = 'is_recid'
 
     small_model = False
-    one_hot = False
+    one_hot = True
 
     data = pd.read_csv(data_path + data_name)
     columns = data.columns
     # continuous_features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'hours-per-week', 'capital-loss']
     continuous_features = ['age', 'juv_fel_count', 'decile_score', 'juv_misd_count', 'juv_other_count', 'priors_count',
                            'days_b_screening_arrest', 'c_days_from_compas', 'c_charge_degree', 'r_charge_degree',
-                           'v_decile_score', 'decile_score.1', 'c_jail_time', 'r_jail_time']
+                           'v_decile_score', 'c_jail_time', 'r_jail_time']
 
     if not small_model:
     

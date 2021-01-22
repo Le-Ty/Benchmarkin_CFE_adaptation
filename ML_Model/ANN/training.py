@@ -64,7 +64,7 @@ def training(model, train_loader, test_loader, learning_rate, epochs, dataset):
     # save model
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
     torch.save(model.state_dict(),
-               '../Saved_Models/ANN/{}_{}_input_{}_lr_{}_te_{:.2f}.pt'.format(timestamp, dataset, model.input_neurons, learning_rate, test_error))
+               'ML_Model/Saved_Models/ANN/{}_{}_input_{}_lr_{}_te_{:.2f}.pt'.format(timestamp, dataset, model.input_neurons, learning_rate, test_error))
 
 
 # Introducing a small ANN model, trained on few features to test runtime of MACE
@@ -74,7 +74,7 @@ if not small_model:
     # Dataloader
     # dataset = loader.DataLoader('../Datasets/Adult/',
     #                             'adult_full.csv', 'income', normalization=True, encode=True)
-    dataset = loader.DataLoader('../../Datasets/COMPAS/',
+    dataset = loader.DataLoader('Datasets/COMPAS/',
                                 'compas-scores.csv', 'is_recid', normalization=True, encode=True)
 
     # Split into train and test set
@@ -90,7 +90,7 @@ if not small_model:
     testloader = DataLoader(dataset_test, batch_size=10, shuffle=False)
 
     # training(model, trainloader, testloader, 0.002, 100, 'adult')
-    training(model, trainloader, testloader, 0.0001, 100, 'compas')
+    training(model, trainloader, testloader, 0.001, 100, 'compas')
 else:
     # Dataloader / Normalization OFF for MACE
     dataset = loader.DataLoader('../Datasets/Adult/',

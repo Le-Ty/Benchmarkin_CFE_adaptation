@@ -15,7 +15,7 @@ if compas_df.shape[1] == 47: #47
                        'v_type_of_assessment', 'type_of_assessment', 'v_score_text', 'score_text', 'age_cat', 'dob',
                        'compas_screening_date', 'c_offense_date', 'c_arrest_date', 'num_r_cases', 'r_days_from_arrest',
                        'r_offense_date', 'num_vr_cases', 'vr_charge_degree', 'vr_offense_date', 'vr_charge_desc',
-                       'v_screening_date', 'screening_date', 'c_charge_desc', 'r_charge_desc']
+                       'v_screening_date', 'screening_date', 'c_charge_desc', 'r_charge_desc', 'decile_score.1']
     if compas_df.columns.isin(columns_to_drop).any():
         compas_df = compas_df.drop(columns_to_drop, axis=1)
 
@@ -60,7 +60,6 @@ if compas_df.shape[1] == 47: #47
     compas_df['r_charge_degree'] = compas_df['r_charge_degree'].map(charge_degree_mape)
     compas_df['c_charge_degree'] = compas_df['c_charge_degree'].map(charge_degree_mape)
 
-    compas_df = compas_df.rename(columns={'decile_score.1': 'decile_score_2'})
     compas_df['is_violent_recid'].loc[compas_df['is_violent_recid'] == 0] = 'Low'
     compas_df['is_violent_recid'].loc[compas_df['is_violent_recid'] == 1] = 'High'
 
