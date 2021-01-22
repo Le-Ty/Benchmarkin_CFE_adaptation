@@ -1,6 +1,7 @@
 import lime
 import lime.lime_tabular
 import torch
+import copy
 
 import pandas as pd
 import numpy as np
@@ -79,7 +80,7 @@ def build_lime(data, cat_feat, cont_feat, label, dataset_name):
         X = processing.one_hot_encode_instance(X, X, cat_feat)
     elif dataset_name in ['adult_tf13', 'compas']:
         X = processing.robust_binarization(X, cat_feat, cont_feat)
-    X = processing.normalize(X)
+    # X = processing.normalize(X)
 
     lime_exp = lime.lime_tabular.LimeTabularExplainer(training_data=X.values,
                                                       training_labels=y,
@@ -112,7 +113,7 @@ def get_lime_coefficients(data, lime_expl, model, instance, categorical_features
     elif dataset_name in ['adult_tf13', 'compas']:
         inst_to_expl = pd.DataFrame(instance.values.reshape((1, -1)), columns=instance.index.values)
 
-    inst_to_expl = processing.normalize_instance(data, inst_to_expl, continuous_features)
+    # inst_to_expl = processing.normalize_instance(data, inst_to_expl, continuous_features)
     inst_to_expl = inst_to_expl.drop(label, axis=1)
 
     # Make model prediction an convert it for lime to prob class prediction
@@ -256,7 +257,7 @@ def get_counterfactuals(dataset_path, dataset_filename, dataset_name, model, con
                 else:
                     raise Exception('Model not yet implemented')
 
-                counterfactual['income'] = prediction
+                counterfactual[label] = prediction
                 instance = pd.DataFrame(instance.values.reshape((1, -1)), columns=instances.columns)
                 test_instances.append(instance)
 

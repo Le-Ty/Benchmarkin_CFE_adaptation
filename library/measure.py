@@ -23,17 +23,18 @@ def repeated_elements(x):
     return repeated
 
 
-def constraint_violation(counterfactual, instance, immutable_list):
+def constraint_violation(counterfactual, instance, immutable_list, separator='_'):
     """
     :param counterfactual:
     :param instance:
     :param immutable_list:
+    :param separator: String, determines the separator for one-hot-encoded columns
     :return: # number of constraint violations
     """
     names = counterfactual.columns.tolist()
     clean_names = []
     for i in names:
-        clean_names.append(i.split('_')[0])
+        clean_names.append(i.split(separator)[0])
 
     doubled_elements = repeated_elements(clean_names)  # if features are one-hot, names appear twice & we need to account
     accounting_factor = list(set(immutable_list) & set(doubled_elements))
