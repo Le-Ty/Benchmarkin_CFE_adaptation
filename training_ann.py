@@ -1,4 +1,4 @@
-import model_ann
+import ML_Model.ANN_TF.model_ann as model_ann
 import sys
 from sklearn.model_selection import train_test_split
 import pandas as pd
@@ -10,24 +10,24 @@ def __main__():
     # = 'C:/Users/fred0/Desktop/Benchmarkin_Counterfactual_Examples-main/'
 
     # ADULT PATH
-    # data_path = 'Datasets/Adult/'
-    # data_name = 'adult_full.csv'
-    # target_name = 'income'
+    data_path = 'Datasets/Adult/'
+    data_name = 'adult_full.csv'
+    target_name = 'income'
 
     # COMPAS PATH
-    data_path = 'Datasets/COMPAS/'
-    data_name = 'compas-scores.csv'
-    target_name = 'is_recid'
+    # data_path = 'Datasets/COMPAS/'
+    # data_name = 'compas-scores.csv'
+    # target_name = 'is_recid'
 
     small_model = False
     one_hot = True
 
     data = pd.read_csv(data_path + data_name)
     columns = data.columns
-    # continuous_features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'hours-per-week', 'capital-loss']
-    continuous_features = ['age', 'juv_fel_count', 'decile_score', 'juv_misd_count', 'juv_other_count', 'priors_count',
-                           'days_b_screening_arrest', 'c_days_from_compas', 'c_charge_degree', 'r_charge_degree',
-                           'v_decile_score', 'c_jail_time', 'r_jail_time']
+    continuous_features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'hours-per-week', 'capital-loss']
+    # continuous_features = ['age', 'juv_fel_count', 'decile_score', 'juv_misd_count', 'juv_other_count', 'priors_count',
+    #                        'days_b_screening_arrest', 'c_days_from_compas', 'c_charge_degree', 'r_charge_degree',
+    #                        'v_decile_score', 'c_jail_time', 'r_jail_time']
 
     if not small_model:
 

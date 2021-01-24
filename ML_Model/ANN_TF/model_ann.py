@@ -1,12 +1,14 @@
 import time
 
 import tensorflow as tf
-from keras.utils import to_categorical
-from keras.layers import Input, Dense, Lambda, Layer, Multiply, Activation
-from keras.models import Model, Sequential
-from keras import activations
-from keras import optimizers
-
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.layers import Input, Dense, Lambda, Layer, Multiply, Activation
+from tensorflow.keras import Model, Sequential
+from tensorflow.keras import activations
+from tensorflow.keras import optimizers
+import random
+import numpy as np
+import shutil
 
 class Train_ANN():
     def __init__(self, dim_input, dim_hidden_layer1, dim_hidden_layer2, dim_output_layer, num_of_classes, data_name,
@@ -34,35 +36,68 @@ class Train_ANN():
         self.data_name = data_name
 
     def Build_Train_Save_Model(self, xtrain, ytrain, xtest, ytest):
-        model = Sequential([Dense(self.dim_hidden_layer1, input_dim=self.dim_input, activation='relu'),
-                            Dense(self.dim_hidden_layer2, activation='relu'),
-                            Dense(self.dim_output_layer, activation='relu'),
-                            Dense(self.num_of_classes, activation='softmax')])
+        random.seed(121)
+        np.random.seed(1211)
+        tf.set_random_seed(12111)
+        # session = tf.Session()
+        session = tf.Session()
+        graph = tf.get_default_graph()
 
-        # sgd = optimizers.SGD(lr=self.learning_rate, momentum=0.9, decay=0, nesterov=False)
+        with session.as_default():
+            with graph.as_default():
+                model = Sequential([Dense(self.dim_hidden_layer1, input_dim=self.dim_input, activation='relu'),
+                                    Dense(self.dim_hidden_layer2, activation='relu'),
+                                    Dense(self.dim_output_layer, activation='relu'),
+                                    Dense(self.num_of_classes, activation='softmax')])
 
-        # Compile the model
-        model.compile(
-            optimizer='rmsprop',  # works better than sgd
-            loss='categorical_crossentropy',
-            metrics=['accuracy'])
+                # sgd = optimizers.SGD(lr=self.learning_rate, momentum=0.9, decay=0, nesterov=False)
 
-        # Train the model
-        model.fit(
-            xtrain,
-            to_categorical(ytrain),
-            epochs=self.epochs,
-            shuffle=True,
-            batch_size=self.batch_size,
-            validation_data=(xtest, to_categorical(ytest)))
+                # Compile the model
+                model.compile(
+                    optimizer='rmsprop',  # works better than sgd
+                    loss='categorical_crossentropy',
+                    metrics=['accuracy'])
 
-        hist = model
-        test_error = (1 - hist.history.history['val_acc'][-1])
+                # Train the model
+                model.fit(
+                    xtrain,
+                    to_categorical(ytrain),
+                    epochs=self.epochs,
+                    shuffle=True,
+                    batch_size=self.batch_size,
+                    validation_data=(xtest, to_categorical(ytest)))
 
-        # save model
-        timestamp = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
-        model_name = 'ann_tf'
-        model.save('ML_Model/Saved_Models/ANN_TF/{}_{}_input_{:.0f}'.format(model_name, self.data_name, self.dim_input))
+                hist = model
+                test_error = (1 - hist.history.history['val_acc'][-1])
+
+                # input_keys_placeholder = tf.placeholder(tf.float32, self.dim_input, 'input_keys_placeholder')
+                # output_keys = tf.placeholder(tf.float32, self.dim_output_layer, 'output_keys')
+
+                # save model
+                timestamp = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
+                model_name = 'ann_tf'
+                model.save('ML_Model/Saved_Models/ANN_TF/{}_{}_input_{:.0f}'.format(model_name, self.data_name, self.dim_input))
+
+
+
+
+
+                # if os.path.exists('tensorflow_model'):
+                #     shutil.rmtree('tensorflow_model')
+
+                self.model = model
+                # session = tf.Session()
+                input_keys_placeholder = tf.compat.v1.placeholder(tf.float32, self.dim_input, 'input_keys_placeholder')
+                output_keys = tf.compat.v1.placeholder(tf.float32, self.dim_output_layer, 'output_keys')
+                # with self.model.graph.as_default():
+
+                tf.compat.v1.saved_model.simple_save(session, 'tensorflow_model',
+                                    inputs={"x": input_keys_placeholder},
+                                    outputs={"z": output_keys})
+
+
+
+        # model
 
 
 class Model_Tabular:
@@ -99,10 +134,31 @@ class Model_Tabular:
             model.load_weights(restore)
             model.summary()
 
+
+        # tf.global_variables_initializer()
         self.model = model
+        session = tf.Session()
+        input_keys_placeholder = tf.compat.v1.placeholder(tf.float32, self.dim_input, 'input_keys_placeholder')
+        output_keys = tf.compat.v1.placeholder(tf.float32, self.dim_output_layer, 'output_keys')
+        # with self.model.graph.as_default():
+        # with model.graph.as_default():
+        tf.saved_model.simple_save(session, 'laal',
+                            inputs={"x": input_keys_placeholder},
+                            outputs={"z": output_keys})
 
     def __call__(self, data):
         return self.predict(data)
 
     def predict(self, data):
         return self.model(data)
+
+    # def save(self):
+        # random.seed(121)
+        # np.random.seed(1211)
+        # tf.set_random_seed(12111)
+
+
+    #     #in 20, out 3
+    #     input_keys_placeholder = tf.placeholder(tf.float32, self.dim_input, 'input_keys_placeholder')
+    #     output_keys = tf.placeholder(tf.float32, self.dim_output_layer, 'output_keys')
+    #     self.model.saved_model.simple_save(seesion, 'ANN', inputs={"keys": input_keys_placeholder},outputs={"keys": output_keys})

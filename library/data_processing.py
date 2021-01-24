@@ -144,19 +144,19 @@ def robust_binarization_2(instances, data, binary_cols=None, continuous_cols=Non
     :param data: pd df
     :return: returns robust binarized instances
     """
-    
+
     if binary_cols is not None:
         robust_names = continuous_cols + binary_cols
         robust_instances = instances.append(data, ignore_index=True)
         robust_instances = pd.get_dummies(robust_instances, drop_first=True)
         robust_instances = robust_instances.iloc[:instances.values.shape[0]]
         robust_instances.columns = robust_names
-        
+
     else:
         robust_instances = instances.append(data, ignore_index=True)
         robust_instances = pd.get_dummies(robust_instances, drop_first=True)
         robust_instances = robust_instances.iloc[:instances.values.shape[0]]
-    
+
     return robust_instances
 
 
@@ -195,25 +195,30 @@ def map_binary_backto_string(data, instances, binary_cols):
 	:param binary_cols: list
 	:return: returns
 	"""
-    
+
     def chunks(lst, n):
         """Yield successive n-sized chunks from lst."""
         for i in range(0, len(lst), n):
             yield lst[i:i + n]
-    
+
     temp = pd.get_dummies(data[binary_cols], prefix_sep="__")
+    print(temp)
     extended_binary_cols = list(temp.columns)
-    
+    print(extended_binary_cols)
+
     chunked_list = list(chunks(extended_binary_cols, 2))
-    
+    print(chunked_list)
+
     for i in range(len(binary_cols)):
         names = chunked_list[i]
         name1 = names[0].split('__')[1]
         name2 = names[1].split('__')[1]
+        print(name1)
+        print(name2)
         mapping = {
-            '0': name1,
-            '1': name2}
-        
+            '0.0': name1,
+            '1.0': name2}
+
         instances[binary_cols[i]] = instances[binary_cols[i]].map(mapping)
-    
+
     return instances

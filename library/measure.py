@@ -38,13 +38,13 @@ def constraint_violation(counterfactual, instance, immutable_list, separator='_'
 
     doubled_elements = repeated_elements(clean_names)  # if features are one-hot, names appear twice & we need to account
     accounting_factor = list(set(immutable_list) & set(doubled_elements))
-    
+
     counterfactual.columns = clean_names
     instance.columns = clean_names
 
     logical = np.round(counterfactual[immutable_list].values, decimals=2) != np.round(instance[immutable_list].values, decimals=2)
     violations = (1 * logical).sum()
-    
+
     if violations == 0:
         return violations
     else:
@@ -52,9 +52,9 @@ def constraint_violation(counterfactual, instance, immutable_list, separator='_'
             return violations
         else:
             return violations - len(accounting_factor)
-            
-    
-    
+
+
+
 
 
 def success_rate_and_indices(counterfactuals_df):
@@ -64,11 +64,11 @@ def success_rate_and_indices(counterfactuals_df):
     :param counterfactuals_df: pd df, where NaNs indicate 'no counterfactual found' [df should contain no object values)
     :return: success_rate, indices
     """
-    
+
     # Success rate & drop not successful counterfactuals & process remainder
     success_rate = (counterfactuals_df.dropna().shape[0]) / counterfactuals_df.shape[0]
     counterfactual_indeces = np.where(np.any(np.isnan(counterfactuals_df.values) == True, axis=1) == False)[0]
-    
+
     return success_rate, counterfactual_indeces
 
 def get_delta(instance, cf):
@@ -360,16 +360,20 @@ def redundancy(factual, counterfactual, ml_model):
     red = 0
 
     # get model prediction and cast it from tensor to float
-    if isinstance(ml_model, model_pytorch.ANN):
-        pred_f = round(ml_model(torch.from_numpy(factual).float()).detach().numpy().squeeze().reshape(1)[0])
-        pred_cf = round(ml_model(torch.from_numpy(counterfactual).float()).detach().numpy().squeeze().reshape(1)[0])
-    elif isinstance(ml_model, model_tf.Model_Tabular):
-        pred_f = ml_model.model.predict(factual)
-        pred_f = np.argmax(pred_f, axis=1)
-        pred_cf = ml_model.model.predict(counterfactual)
-        pred_cf = np.argmax(pred_cf, axis=1)
-    else:
-        raise NotImplementedError()
+    # if isinstance(ml_model, model_pytorch.ANN):
+    #     pred_f = round(ml_model(torch.from_numpy(factual).float()).detach().numpy().squeeze().reshape(1)[0])
+    #     pred_cf = round(ml_model(torch.from_numpy(counterfactual).float()).detach().numpy().squeeze().reshape(1)[0])
+    # elif isinstance(ml_model, model_tf.Model_Tabular):
+    #     pred_f = ml_model.model.predict(factual)
+    #     pred_f = np.argmax(pred_f, axis=1)
+    #     pred_cf = ml_model.model.predict(counterfactual)
+    #     pred_cf = np.argmax(pred_cf, axis=1)
+    # else:
+    #     raise NotImplementedError()
+    pred_f = ml_model.predict(factual)
+    pred_f = np.argmax(pred_f, axis=1)
+    pred_cf = ml_model.predict(counterfactual)
+    pred_cf = np.argmax(pred_cf, axis=1)
 
     if pred_f != pred_cf:
         for i in range(factual.shape[1]):
@@ -378,13 +382,15 @@ def redundancy(factual, counterfactual, ml_model):
 
                 # reverse change in counterfactual and predict new label
                 temp_cf[0][i] = factual[0][i]
-                if isinstance(ml_model, model_pytorch.ANN):
-                    pred_temp_cf = round(ml_model(torch.from_numpy(temp_cf).float()).detach().numpy().squeeze().reshape(1)[0])
-                elif isinstance(ml_model, model_tf.Model_Tabular):
-                    pred_temp_cf = ml_model.model.predict(temp_cf)
-                    pred_temp_cf = np.argmax(pred_temp_cf, axis=1)
-                else:
-                    raise NotImplementedError()
+                # if isinstance(ml_model, model_pytorch.ANN):
+                #     pred_temp_cf = round(ml_model(torch.from_numpy(temp_cf).float()).detach().numpy().squeeze().reshape(1)[0])
+                # elif isinstance(ml_model, model_tf.Model_Tabular):
+                #     pred_temp_cf = ml_model.model.predict(temp_cf)
+                #     pred_temp_cf = np.argmax(pred_temp_cf, axis=1)
+                # else:
+                #     raise NotImplementedError()
+                pred_temp_cf = ml_model.predict(temp_cf)
+                pred_temp_cf = np.argmax(pred_temp_cf, axis=1)
 
                 # if new prediction has the same label as the old prediction for cf, increase redundancy
                 if pred_temp_cf == pred_cf:
@@ -415,7 +421,7 @@ def yNN(counterfactuals, data, label, k, cat_features, cont_features, model, one
     N = len(counterfactuals)
     number_of_diff_labels = 0
     norm_data = processing.normalize_instance(data, data, cont_features)
-    
+
     if one_hot:
         enc_data = pd.get_dummies(norm_data, columns=cat_features)
     else:
@@ -424,7 +430,7 @@ def yNN(counterfactuals, data, label, k, cat_features, cont_features, model, one
     nbrs = NearestNeighbors(n_neighbors=k).fit(enc_data.values)
 
     for cf_df in counterfactuals:
-        
+
         if normalized:
             norm_cf = cf_df
             if not encoded:
@@ -459,13 +465,15 @@ def yNN(counterfactuals, data, label, k, cat_features, cont_features, model, one
             inst = enc_data.iloc[idx]
             inst = inst.drop(index=label)
             inst = inst.values
-            if isinstance(model, model_pytorch.ANN):
-                pred_inst = round(model(torch.from_numpy(inst).float()).detach().numpy().squeeze().reshape(1)[0])
-            elif isinstance(model, model_tf.Model_Tabular):
-                pred_inst = model.model.predict(inst.reshape((1, -1)))
-                pred_inst = np.argmax(pred_inst, axis=1)[0]
-            else:
-                raise NotImplementedError()
+            # if isinstance(model, model_pytorch.ANN):
+            #     pred_inst = round(model(torch.from_numpy(inst).float()).detach().numpy().squeeze().reshape(1)[0])
+            # elif isinstance(model, model_tf.Model_Tabular):
+            #     pred_inst = model.model.predict(inst.reshape((1, -1)))
+            #     pred_inst = np.argmax(pred_inst, axis=1)[0]
+            # else:
+            #     raise NotImplementedError()
+            pred_inst = model.predict(inst.reshape((1, -1)))
+            pred_inst = np.argmax(pred_inst, axis=1)[0]
 
             number_of_diff_labels += np.abs(cf_label - pred_inst)
 
