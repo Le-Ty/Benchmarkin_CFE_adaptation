@@ -16,15 +16,17 @@ runs the synthetic experiment. Results are saved in the outputs/synthetic_test d
 path = get_path()
 
 #read in query
-query_instances_a = pd.read_csv("CF_Input/Adult/query_instances.csv", index_col = False)
+query_instances_a = pd.read_csv("CF_Input/Adult/ANN/query_instances.csv", index_col = False)
+# query_instances_a = pd.read_csv("CF_Input/Adult/Linear/query_instances.csv", index_col = False)
+
 # query_instances_c = pd.read_csv("CF_Input/Adult/query_instances.csv", index_col = False).head(10)
 #Adult
-im_feata = ["age", "sex_Male"]
+im_feata = ["age", "sex"]
 
 # im_featg = ["NumberOfDependents"]
 
 #COMPAS
-im_featc = ["age", "sex_Male"]
+im_featc = ["age", "sex"]
 
 keras.backend.clear_session()
 

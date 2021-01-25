@@ -217,7 +217,9 @@ def map_binary_backto_string(data, instances, binary_cols):
         print(name2)
         mapping = {
             '0.0': name1,
-            '1.0': name2}
+            '1.0': name2,
+            '0' : name1,
+            '1' : name2}
 
         instances[binary_cols[i]] = instances[binary_cols[i]].map(mapping)
 

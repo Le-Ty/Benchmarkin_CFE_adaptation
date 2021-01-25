@@ -139,6 +139,8 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
             else:
                 data_no_target = data.drop(columns=target_name)
                 columns = data_no_target.columns.tolist()
+                print(data_no_target.head(10))
+                print(test_instances)
 
                 encoded_factual = pd.DataFrame([test_instance], columns=columns + [target_name])
                 encoded_factual = encoded_factual.drop(columns=target_name)
@@ -228,6 +230,9 @@ def compute_H_minus(data, enc_norm_data, ml_model, label):
     #     predictions = np.round(ml_model(torch.from_numpy(enc_data.values).float()).detach().numpy()).squeeze()
     # elif isinstance(ml_model, model_tf.Model_Tabular):
     predictions = ml_model.predict(enc_data.values)
+    with pd.option_context('display.max_rows', 20, 'display.max_columns', 20):
+        print(enc_data)
+
 
     #which index has the max
     predictions = np.argmax(predictions, axis=1)
@@ -245,47 +250,13 @@ def compute_H_minus(data, enc_norm_data, ml_model, label):
 
 
 def main():
-    # random.seed(121)
-    # np.random.seed(1211)
-    # tf.set_random_seed(12111)
 
     # Get DICE counterfactuals for Adult Dataset
     data_path = 'Datasets/Adult/'
     data_name = 'adult_full.csv'
     target_name = 'income'
 
-    # # Load ANNs
-    # model_path = 'ML_Model/Saved_Models/ANN/2020-12-13_20-43-50_input_20_lr_0.002_te_0.35.pt'
-    # ann = model.ANN(20, 18, 9, 3, 1)
-    # ann.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
-    #
-    # # Load TF ANN
-    # graph1 = Graph()
-    # with graph1.as_default():
-    #     ann_13_sess = Session()
-    #     with ann_13_sess.as_default():
-    #         model_path_tf_13 = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_13'
-    #         ann_tf_13 = model_tf.Model_Tabular(13, 18, 9, 3, 2, restore=model_path_tf_13, use_prob=True)
-    #         #save model
-    #         # ann_tf_13.
-    #
-    # # Load TF ANN: One hot encoded
-    # graph2 = Graph()
-    # with graph2.as_default():
-    #     ann_20_sess = Session()
-    #     with ann_20_sess.as_default():
-    #         model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_adult_full_input_20'
-    #         ann_tf = model_tf.Model_Tabular(20, 18, 9, 3, 2, restore=model_path_tf, use_prob=True)
-
-            # tf.saved_model.simple_save(session,export_dir,inputs={"keys": input_keys_placeholder},outputs={"keys": output_keys
-
-
-            #in 20, out 3
-            # input_keys_placeholder = tf.placeholder(tf.float32, [None, 20], 'input_keys_placeholder')
-            # output_keys = tf.placeholder(tf.float32, [None, 3], 'output_keys')
-            # ann_tf.saved_model.simple_save(ann_20_sess, 'ML_Model/Saved_Models/ANN_TF/ANN', inputs={"keys": input_keys_placeholder},outputs={"keys": output_keys})
-
-            # ann_tf.save()
+    #Load ANNs
     # classifier_name = 'Linear'
     #linear
     # ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/Linear_predictor.h5")
@@ -310,22 +281,13 @@ def main():
     oh_data = preprocessing.one_hot_encode_instance(norm_data, norm_data, cat_features)
     oh_data[target_name] = label_data
 
+    print(enc_data)
     # Instances we want to explain
-    # with graph1.as_default():
-    #     with ann_13_sess.as_default():
     querry_instances_tf_13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
     querry_instances_tf_13 = querry_instances_tf_13.head(100)
 
-    # with graph2.as_default():
-    #     with ann_20_sess.as_default():
-    # querry_instances_tf = compute_H_minus(data, oh_data, ann_tf, target_name)
-    # querry_instances_tf = querry_instances_tf.head(100)
 
-    # querry_instances = compute_H_minus(data, oh_data, ann, target_name)
-    # querry_instances = querry_instances.head(100)  # Only for testing because of the size of querry_instances
-
-
-    querry_instances_tf_13.to_csv("CF_Input/Adult/ANN/query_instances.csv",index = False)
+    # querry_instances_tf_13.to_csv("CF_Input/Adult/ANN/query_instances.csv",index = False)
 
 
 
@@ -511,7 +473,7 @@ def main():
 
     #
     path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Adult/ANN/'
-    model_name = "di_cfe"
+    model_name = "dicfe"
 
     file = open(path_cfe + "counterfactuals.pickle",'rb')
     counterfactuals = pickle.load(file)
@@ -529,6 +491,11 @@ def main():
     success_rate = pickle.load(file)
     file.close()
 
+    print(counterfactuals)
+
+
+
+    #TODO give own data cuz of predictor
     df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                             immutable, times, success_rate, normalized=True, one_hot=False)
 

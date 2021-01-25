@@ -2,21 +2,25 @@
 import torch
 import tensorflow as tf
 import pandas as pd
-from tensorflow import Session, Graph
+# from tensorflow import Session, Graph
 import ML_Model.ANN.model as model
-import ML_Model.ANN_TF.model_ann as model_tf
+# import ML_Model.ANN_TF.model_ann as model_tf
 from benchmarking import compute_measurements, compute_H_minus
+from tensorflow.keras.models import load_model
+
 
 # CE models
-import CF_Examples.DICE.dice_explainer as dice_explainer
-import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
-import CF_Examples.CEM.cem_explainer as cem_explainer
-import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
-import CF_Examples.FACE.face_explainer as face_explainer
-import CF_Examples.CLUE.clue_explainer as clue_explainer
-import CF_Examples.Action_Sequence.action_sequence_explainer as act_seq_examples
-from CF_Examples.Action_Sequence.compas_actions import actions as compas_actions
-from sklearn.neural_network import MLPClassifier
+# import CF_Examples.DICE.dice_explainer as dice_explainer
+# import CF_Examples.Actionable_Recourse.act_rec_explainer as ac_explainer
+# import CF_Examples.CEM.cem_explainer as cem_explainer
+# import CF_Examples.Growing_Spheres.gs_explainer as gs_explainer
+# import CF_Examples.FACE.face_explainer as face_explainer
+# import CF_Examples.CLUE.clue_explainer as clue_explainer
+# import CF_Examples.Action_Sequence.action_sequence_explainer as act_seq_examples
+# from CF_Examples.Action_Sequence.compas_actions import actions as compas_actions
+# from sklearn.neural_network import MLPClassifier
+import CF_Examples.counterfact_expl.CE.experiments.run_synthetic as ce_explainer
+
 
 # others
 import library.measure as measure
@@ -30,34 +34,13 @@ def main():
     data_path = 'Datasets/COMPAS/'
     data_name = 'compas-scores.csv'
     target_name = 'is_recid'
-    #
-    # # Load ANNs
-    # model_path = 'ML_Model/Saved_Models/ANN/2021-01-22_08-28-34_compas_input_19_lr_0.001_te_0.46.pt'
-    # ann = model.ANN(19, 18, 9, 3, 1)
-    #
-    # graph1 = Graph()
-    # with graph1.as_default():
-    #     ann_16_sess = Session()
-    #     with ann_16_sess.as_default():
-    #         model_path_tf_16 = 'ML_Model/Saved_Models/ANN_TF/ann_tf_compas-scores_input_16'
-    #         ann_tf_16 = model_tf.Model_Tabular(16, 18, 9, 3, 2, restore=model_path_tf_16, use_prob=True)
-    #
-    # # Load TF ANN: One-hot encoded
-    # graph2 = Graph()
-    # with graph2.as_default():
-    #     ann_19_sess = Session()
-    #     with ann_19_sess.as_default():
-    #         model_path_tf = 'ML_Model/Saved_Models/ANN_TF/ann_tf_compas-scores_input_19'
-    #         ann_tf = model_tf.Model_Tabular(19, 18, 9, 3, 2, restore=model_path_tf, use_prob=True)
-    #
-    # # Load Pytorch ANN
-    # ann.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
     #linear
     # ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/Linear_predictor.h5")
     #ann
-    ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Compas/ANN_predictor.h5")
+    ann_tf_16 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Compas/ANN_predictor.h5")
 
+    classifier_name = "ANN"
 
 
     # Define data with original values
@@ -79,21 +62,12 @@ def main():
 
     # Instances we want to explain
 
-    # with graph1.as_default():
-    #     with ann_16_sess.as_default():
     querry_instances_tf16 = compute_H_minus(data, enc_data, ann_tf_16, target_name)
-    querry_instances_tf16 = querry_instances_tf16.head(8)
+    querry_instances_tf16 = querry_instances_tf16.head(100)
+    print(querry_instances_tf16.head(10))
+    print(data)
 
-    # with graph2.as_default():
-    #     with ann_19_sess.as_default():
-    #         querry_instances_tf = compute_H_minus(data, oh_data, ann_tf, target_name)
-    #         querry_instances_tf = querry_instances_tf.head(5)
-
-    # querry_instances = compute_H_minus(data, oh_data, ann, target_name)
-    # querry_instances = querry_instances.head(10)  # Only for testing because of the size of querry_instances
-
-
-    querry_instances_tf_13.to_csv("CF_Input/Compas/query_instances.csv",index = False)
+    querry_instances_tf16.to_csv("CF_Input/Compas/ANN/query_instances.csv",index = False)
 
     """
         Below we can start to define counterfactual models and start benchmarking
@@ -238,6 +212,34 @@ def main():
     #         print('Measurement results for Action Sequence on Adult')
     #         compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
     #                              immutable, times, success_rate, normalized=True, one_hot=True, separator=':')
+
+
+    # path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Compas/ANN/'
+    # model_name = "di_cfe"
+    #
+    # file = open(path_cfe + "counterfactuals.pickle",'rb')
+    # counterfactuals = pickle.load(file)
+    # file.close()
+    #
+    # file = open(path_cfe + "test_instances.pickle",'rb')
+    # test_instances = pickle.load(file)
+    # file.close()
+    #
+    # file = open(path_cfe + "times_list.pickle",'rb')
+    # times = pickle.load(file)
+    # file.close()
+    #
+    # file = open(path_cfe + "success_rate.pickle",'rb')
+    # success_rate = pickle.load(file)
+    # file.close()
+    #
+    # df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+    #                         immutable, times, success_rate, normalized=True, one_hot=False)
+    #
+    # df_results.to_csv('Results/Compas/{}/{}.csv'.format(classifier_name, model_name))
+    #
+
+
 
 
 if __name__ == "__main__":
