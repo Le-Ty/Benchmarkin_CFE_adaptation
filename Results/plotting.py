@@ -19,11 +19,11 @@ def main():
     classifier_name = 'ANN'
     data_name = 'Adult'
     grouped = False
-    reading_names = ['ar', 'as', 'cem', 'clue', 'dice', 'dice_vae', 'face', 'gs', 'di_cfe']
+    reading_names = ['ar', 'as', 'cem', 'clue', 'dice', 'dice_vae', 'face', 'gs', 'dicfe']
     names = ['ar-lime', 'as', 'cem', 'clue', 'dice', 'dice-vae', 'face', 'gs', 'di cfe']
 
     reading_names_independence = ['ar', 'as', 'cem', 'dice']
-    reading_names_dependence = ['clue', 'dice_vae', 'face', 'di_cfe']
+    reading_names_dependence = ['clue', 'dice_vae', 'face', 'dicfe']
 
     names_independence = ['ar-lime', 'as', 'cem', 'dice']
     names_dependence = ['clue', 'dice-vae', 'face', 'di cfe']

@@ -15,15 +15,18 @@ runs the synthetic experiment. Results are saved in the outputs/synthetic_test d
 '''
 path = get_path()
 
+
+classifier_name = "ANN"
+
 #read in query
-query_instances_a = pd.read_csv("CF_Input/Adult/ANN/query_instances.csv", index_col = False)
+query_instances_a = pd.read_csv("CF_Input/Adult/" + classifier_name + "/query_instances.csv", index_col = False)
 # query_instances_a = pd.read_csv("CF_Input/Adult/Linear/query_instances.csv", index_col = False)
 
 # query_instances_c = pd.read_csv("CF_Input/Adult/query_instances.csv", index_col = False).head(10)
 #Adult
 im_feata = ["age", "sex"]
 
-# im_featg = ["NumberOfDependents"]
+im_featg = ["age, ""NumberOfDependents"]
 
 #COMPAS
 im_featc = ["age", "sex"]
@@ -31,7 +34,7 @@ im_featc = ["age", "sex"]
 keras.backend.clear_session()
 
 
-run_synthetic(im_feat = im_feata, query = query_instances_a, train_steps = 10000, model = "ANN", dataset = "Adult", number_cf = 100, train_AAE = True)
+run_synthetic(im_feat = im_feata, query = query_instances_a, train_steps = 10000, model = classifier_name, dataset = "Adult", train_AAE = False)
 # find_ce()
 
 #pred = sum_predictor()

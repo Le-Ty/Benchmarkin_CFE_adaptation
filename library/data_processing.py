@@ -150,6 +150,11 @@ def robust_binarization_2(instances, data, binary_cols=None, continuous_cols=Non
         robust_instances = instances.append(data, ignore_index=True)
         robust_instances = pd.get_dummies(robust_instances, drop_first=True)
         robust_instances = robust_instances.iloc[:instances.values.shape[0]]
+        print(robust_names)
+        print(instances)
+        print(robust_instances)
+        print(continuous_cols)
+        print(binary_cols)
         robust_instances.columns = robust_names
 
     else:

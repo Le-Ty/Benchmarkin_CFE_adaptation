@@ -139,16 +139,16 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
             else:
                 data_no_target = data.drop(columns=target_name)
                 columns = data_no_target.columns.tolist()
-                print(data_no_target.head(10))
-                print(test_instances)
+                # print(data_no_target.head(10))
+                # print(test_instances)
 
                 encoded_factual = pd.DataFrame([test_instance], columns=columns + [target_name])
                 encoded_factual = encoded_factual.drop(columns=target_name)
-                print(encoded_factual)
+                # print(encoded_factual)
                 encoded_factual = preprocessing.robust_binarization_2(encoded_factual, data_no_target,
                                                                       cat_features, continuous_features)
 
-                print(encoded_factual)
+                # print(encoded_factual)
                 encoded_counterfactual = pd.DataFrame([counterfactual], columns=columns + [target_name])
                 encoded_counterfactual = encoded_counterfactual.drop(columns=target_name)
                 encoded_counterfactual = preprocessing.robust_binarization_2(encoded_counterfactual, data_no_target,
@@ -255,15 +255,12 @@ def main():
     data_path = 'Datasets/Adult/'
     data_name = 'adult_full.csv'
     target_name = 'income'
-
-    #Load ANNs
-    # classifier_name = 'Linear'
-    #linear
-    # ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/Linear_predictor.h5")
-
     classifier_name = "ANN"
-    #ann
-    ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/ANN_predictor.h5")
+    save = False
+    benchmark = True
+
+    #Load model
+    ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/" + classifier_name + "_predictor.h5")
 
 
     # Define data with original values
@@ -281,13 +278,12 @@ def main():
     oh_data = preprocessing.one_hot_encode_instance(norm_data, norm_data, cat_features)
     oh_data[target_name] = label_data
 
-    print(enc_data)
     # Instances we want to explain
     querry_instances_tf_13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
     querry_instances_tf_13 = querry_instances_tf_13.head(100)
 
-
-    # querry_instances_tf_13.to_csv("CF_Input/Adult/ANN/query_instances.csv",index = False)
+    if save:
+        querry_instances_tf_13.to_csv("CF_Input/Adult/"+ classifier_name + "/query_instances.csv",index = False)
 
 
 
@@ -471,35 +467,36 @@ def main():
     #                                                         train_steps = 10000,
     #                                                         model = "ANN", dataset = "Adult", number_cf = 20, train_AAE = False)
 
-    #
-    path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Adult/ANN/'
-    model_name = "dicfe"
+    if benchmark:
+        path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Adult/' + classifier_name + "/"
+        model_name = "dicfe"
 
-    file = open(path_cfe + "counterfactuals.pickle",'rb')
-    counterfactuals = pickle.load(file)
-    file.close()
+        file = open(path_cfe + "counterfactuals.pickle",'rb')
+        counterfactuals = pickle.load(file)
+        file.close()
 
-    file = open(path_cfe + "test_instances.pickle",'rb')
-    test_instances = pickle.load(file)
-    file.close()
+        file = open(path_cfe + "test_instances.pickle",'rb')
+        test_instances = pickle.load(file)
+        file.close()
 
-    file = open(path_cfe + "times_list.pickle",'rb')
-    times = pickle.load(file)
-    file.close()
+        file = open(path_cfe + "times_list.pickle",'rb')
+        times = pickle.load(file)
+        file.close()
 
-    file = open(path_cfe + "success_rate.pickle",'rb')
-    success_rate = pickle.load(file)
-    file.close()
+        file = open(path_cfe + "success_rate.pickle",'rb')
+        success_rate = pickle.load(file)
+        file.close()
 
-    print(counterfactuals)
+        # print(counterfactuals)
+        # print(test_instances)
 
 
 
-    #TODO give own data cuz of predictor
-    df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                            immutable, times, success_rate, normalized=True, one_hot=False)
+        #TODO give own data cuz of predictor
+        df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
+                                immutable, times, success_rate, normalized=True, one_hot=False)
 
-    df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
+        df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
 
 
