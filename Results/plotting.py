@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import seaborn as sns; sns.set_style('white')
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 from matplotlib import rc
 
 ## for Palatino and other serif fonts use:
@@ -17,16 +16,16 @@ plt.rcParams['text.latex.preamble'] = [r'\boldmath']
 def main():
 
     classifier_name = 'ANN'
-    data_name = 'Adult'
-    grouped = False
-    reading_names = ['ar', 'as', 'cem', 'clue', 'dice', 'dice_vae', 'face', 'gs', 'dicfe']
-    names = ['ar-lime', 'as', 'cem', 'clue', 'dice', 'dice-vae', 'face', 'gs', 'di cfe']
+    data_name = 'GMC'
+    grouped = True
+    reading_names = ['ar', 'as', 'cem', 'cem-vae', 'clue', 'dice', 'dice_vae', 'face-eps', 'face-knn', 'gs', 'dicfe']
+    names = ['ar-lime', 'as', 'cem', 'clue', 'dice', 'dice-vae', 'face', 'gs', 'dicfe']
 
-    reading_names_independence = ['ar', 'as', 'cem', 'dice']
-    reading_names_dependence = ['clue', 'dice_vae', 'face', 'dicfe']
+    reading_names_independence = ['ar', 'as', 'cem', 'dice', 'gs', 'dicfe']
+    reading_names_dependence = ['clue', 'dice_vae', 'cem-vae', 'face-knn', 'face-eps']
 
-    names_independence = ['ar-lime', 'as', 'cem', 'dice']
-    names_dependence = ['clue', 'dice-vae', 'face', 'di cfe']
+    names_independence = ['ar-lime', 'as', 'cem', 'dice', 'gs', 'dicfe']
+    names_dependence = ['clue', 'dice-vae', 'cem-vae', 'face-knn', 'face-eps']
 
 
     # Independence Results to DF
@@ -80,14 +79,14 @@ def main():
         dfg = results.groupby('Methods')
 
         sns.violinplot(x=names_interest1[0], y="Methods", hue="Assumption", data=results, palette="Blues",
-                       cut=0, scale='count', inner='quartile', ax=axs[0])
+                       cut=0, scale='count', inner='quartile', ax=axs[0], legend_out=True)
         #axs[0].set_ylabel('Methods')
         axs[0].set_xlabel(r'$||\delta_x||_0$')
         #axs[0].set_yticklabels(['%s\n$n$=%d' % (k, len(v)) for k, v in dfg])  # add number elements 'n' to plot
 
 
         sns.violinplot(x=names_interest1[1], y="Methods", hue="Assumption", data=results, palette="Blues",
-                       cut=0, scale='count', inner='quartile', ax=axs[1])
+                       cut=0, scale='count', inner='quartile', ax=axs[1], legend_out=False)
         axs[1].set_xlabel('redundancy')
         #axs[1].set_yticklabels(['%s\n$n$=%d' % (k, len(v)) for k, v in dfg])  # add number elements to plot
         # Remove second y label
@@ -140,7 +139,7 @@ def main():
             fig.savefig('Results/{}/{}/Plots/{}_{}_{}_{}.pdf'.format(data_name, classifier_name, data_name, classifier_name,
                                                                   group, names_interest[i]))
 
-            #plt.show()
+            plt.show()
             ax.clear()
             fig.clear()
 

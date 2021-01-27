@@ -17,16 +17,17 @@ path = get_path()
 
 
 classifier_name = "ANN"
+dataset = "Compas"
 
 #read in query
-query_instances_a = pd.read_csv("CF_Input/Adult/" + classifier_name + "/query_instances.csv", index_col = False)
+query_instances = pd.read_csv("CF_Input/" + dataset + "/" + classifier_name + "/query_instances.csv", index_col = False)
 # query_instances_a = pd.read_csv("CF_Input/Adult/Linear/query_instances.csv", index_col = False)
 
 # query_instances_c = pd.read_csv("CF_Input/Adult/query_instances.csv", index_col = False).head(10)
 #Adult
 im_feata = ["age", "sex"]
 
-im_featg = ["age, ""NumberOfDependents"]
+im_featg = ["age", "NumberOfDependents"]
 
 #COMPAS
 im_featc = ["age", "sex"]
@@ -34,8 +35,8 @@ im_featc = ["age", "sex"]
 keras.backend.clear_session()
 
 
-run_synthetic(im_feat = im_feata, query = query_instances_a, train_steps = 10000, model = classifier_name, dataset = "Adult", train_AAE = False)
-# find_ce()
+run_synthetic(im_feat = im_featc, query = query_instances, train_steps = 10000, model = classifier_name, dataset = dataset, train_AAE = True)
+# find_ce()g
 
 #pred = sum_predictor()
 

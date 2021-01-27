@@ -33,22 +33,26 @@ def main():
     # Get COMPAS Dataset
     data_path = 'Datasets/COMPAS/'
     data_name = 'compas-scores.csv'
-    target_name = 'is_recid'
+    target_name = 'is-recid'
+
+    classifier_name = "ANN"
+    save = False
+    benchmark = True
 
     #linear
     # ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/Linear_predictor.h5")
     #ann
     ann_tf_16 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Compas/ANN_predictor.h5")
 
-    classifier_name = "ANN"
+
 
 
     # Define data with original values
     data = pd.read_csv(data_path + data_name)
     columns = data.columns
-    continuous_features = ['age', 'juv_fel_count', 'decile_score', 'juv_misd_count', 'juv_other_count', 'priors_count',
-                           'days_b_screening_arrest', 'c_days_from_compas', 'c_charge_degree', 'r_charge_degree',
-                           'v_decile_score', 'c_jail_time', 'r_jail_time']
+    continuous_features = ['age', 'juv-fel-count', 'decile-score', 'juv-misd-count', 'juv-other-count', 'priors-count',
+                           'days-b-screening-arrest', 'c-days-from-compas', 'c-charge-degree', 'r-charge-degree',
+                           'v-decile-score', 'c-jail-time', 'r-jail-time']
     immutable = ['age', 'sex']
     cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
 
@@ -67,11 +71,48 @@ def main():
     print(querry_instances_tf16.head(10))
     print(data)
 
-    querry_instances_tf16.to_csv("CF_Input/Compas/ANN/query_instances.csv",index = False)
+    if save:
+        querry_instances_tf16.to_csv("CF_Input/Compas/ANN/query_instances.csv",index = False)
 
     """
         Below we can start to define counterfactual models and start benchmarking
     """
+
+
+
+    if benchmark:
+        path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Compas/' + classifier_name + "/"
+        model_name = "dicfe"
+
+        file = open(path_cfe + "counterfactuals.pickle",'rb')
+        counterfactuals = pickle.load(file)
+        file.close()
+
+        file = open(path_cfe + "test_instances.pickle",'rb')
+        test_instances = pickle.load(file)
+        file.close()
+
+        file = open(path_cfe + "times_list.pickle",'rb')
+        times = pickle.load(file)
+        file.close()
+
+        file = open(path_cfe + "success_rate.pickle",'rb')
+        success_rate = pickle.load(file)
+        file.close()
+
+        # print(counterfactuals)
+        # print(test_instances)
+
+
+
+        #TODO give own data cuz of predictor
+        df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
+                                immutable, times, success_rate, normalized=True, one_hot=False)
+
+        df_results.to_csv('Results/Compas/{}/{}.csv'.format(classifier_name, model_name))
+
+
+
 
     # # Compute CLUE counterfactuals; This one requires the pytorch model
     # test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
