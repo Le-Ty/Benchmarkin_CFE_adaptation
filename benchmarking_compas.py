@@ -2,6 +2,7 @@
 import torch
 import tensorflow as tf
 import pandas as pd
+import pickle
 # from tensorflow import Session, Graph
 import ML_Model.ANN.model as model
 # import ML_Model.ANN_TF.model_ann as model_tf
@@ -106,7 +107,7 @@ def main():
 
 
         #TODO give own data cuz of predictor
-        df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
+        df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_16,
                                 immutable, times, success_rate, normalized=True, one_hot=False)
 
         df_results.to_csv('Results/Compas/{}/{}.csv'.format(classifier_name, model_name))

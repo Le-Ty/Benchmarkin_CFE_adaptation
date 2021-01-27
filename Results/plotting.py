@@ -21,11 +21,11 @@ def main():
     reading_names = ['ar', 'as', 'cem', 'cem-vae', 'clue', 'dice', 'dice_vae', 'face-eps', 'face-knn', 'gs', 'dicfe']
     names = ['ar-lime', 'as', 'cem', 'clue', 'dice', 'dice-vae', 'face', 'gs', 'dicfe']
 
-    reading_names_independence = ['ar', 'as', 'cem', 'dice', 'gs', 'dicfe']
-    reading_names_dependence = ['clue', 'dice_vae', 'cem-vae', 'face-knn', 'face-eps']
+    reading_names_independence = ['ar', 'as', 'cem', 'dice', 'gs']
+    reading_names_dependence = ['clue', 'dice_vae', 'cem-vae', 'face-knn', 'face-eps', 'dicfe']
 
-    names_independence = ['ar-lime', 'as', 'cem', 'dice', 'gs', 'dicfe']
-    names_dependence = ['clue', 'dice-vae', 'cem-vae', 'face-knn', 'face-eps']
+    names_independence = ['ar-lime', 'as', 'cem', 'dice', 'gs']
+    names_dependence = ['clue', 'dice-vae', 'cem-vae', 'face-knn', 'face-eps', 'dicfe']
 
 
     # Independence Results to DF
@@ -101,12 +101,12 @@ def main():
         fig, axs = plt.subplots(nrows=1, ncols=2, num=1)
         dfg = results.groupby('Methods')
 
-        sns.violinplot(x=names_interest1[0], y="Methods", hue="Assumption", data=results, palette="Blues",
+        sns.violinplot(x=names_interest2[0], y="Methods", hue="Assumption", data=results, palette="Blues",
                        cut=0, scale='count', inner='quartile', ax=axs[0])
         axs[0].set_xlabel(r'$||\delta_x||_1$')
         #axs[0].set_yticklabels(['%s\n$n$=%d' % (k, len(v)) for k, v in dfg])  # add number elements 'n' to plot
 
-        sns.violinplot(x=names_interest1[1], y="Methods", hue="Assumption", data=results, palette="Blues",
+        sns.violinplot(x=names_interest2[1], y="Methods", hue="Assumption", data=results, palette="Blues",
                        cut=0, scale='count', inner='quartile', ax=axs[1])
         axs[1].set_xlabel(r'$||\delta_x||_2$')
         #axs[1].set_yticklabels(['%s\n$n$=%d' % (k, len(v)) for k, v in dfg])  # add number elements to plot
