@@ -18,28 +18,22 @@ def main():
     classifier_name = 'ANN'
     data_name = 'GMC'
     grouped = True
-    reading_names = ['ar', 'as', 'cem', 'cem-vae', 'clue', 'dice', 'dice_vae', 'face-eps', 'face-knn', 'gs', 'dicfe']
-    names = ['ar-lime', 'as', 'cem', 'clue', 'dice', 'dice-vae', 'face', 'gs', 'dicfe']
 
-    reading_names_independence = ['ar', 'as', 'cem', 'dice', 'gs']
-    reading_names_dependence = ['clue', 'dice_vae', 'cem-vae', 'face-knn', 'face-eps', 'dicfe']
+    if data_name == 'Compas':
+        reading_names = ['clue', 'face-eps', 'face-knn', 'dicfe']
+        names = ['clue', 'face-eps', 'face-knn', 'dicfe']
 
-    names_independence = ['ar-lime', 'as', 'cem', 'dice', 'gs']
-    names_dependence = ['clue', 'dice-vae', 'cem-vae', 'face-knn', 'face-eps', 'dicfe']
+        reading_names_dependence = ['clue', 'face-eps', 'face-knn', 'dicfe']
 
+        names_dependence =['clue', 'face-eps', 'face-knn', 'dicfe']
+    else:
+        reading_names = ['ar', 'as', 'cem', 'cem-vae', 'clue', 'dice', 'dice_vae', 'face-eps', 'face-knn', 'gs', 'dicfe']
+        names = ['ar-lime', 'as', 'cem', 'clue', 'dice', 'dice-vae', 'face', 'gs', 'dicfe']
 
-    # Independence Results to DF
-    results_independence = pd.read_csv('Results/{}/{}/{}.csv'.format(data_name, classifier_name,
-                                                                     reading_names_independence[0]))
-    results_independence['Unnamed: 0'] = np.repeat(names_independence[0],
-                                                   results_independence.values.shape[0])
-    for i in range(1, len(names_independence)):
-        to_add = pd.read_csv('Results/Adult/{}/{}.csv'.format(classifier_name,
-                                                              reading_names_independence[i]))
-        to_add['Unnamed: 0'] = np.repeat(names_independence[i],
-                                         to_add.values.shape[0])
-        results_independence = results_independence.append(to_add)
-    results_independence = results_independence.rename(columns={'Unnamed: 0': 'Methods'})
+        reading_names_dependence = ['clue', 'dice_vae', 'face-knn', 'face-eps', 'dicfe']
+
+        names_dependence = ['clue', 'dice-vae', 'face-knn', 'face-eps', 'dicfe']
+
 
     # Dependence Results to DF
     results_dependence = pd.read_csv('Results/{}/{}/{}.csv'.format(data_name, classifier_name,
@@ -47,7 +41,7 @@ def main():
     results_dependence['Unnamed: 0'] = np.repeat(names_dependence[0],
                                                  results_dependence.values.shape[0])
     for i in range(1, len(names_dependence)):
-        to_add2 = pd.read_csv('Results/Adult/{}/{}.csv'.format(classifier_name,
+        to_add2 = pd.read_csv('Results/GMC/{}/{}.csv'.format(classifier_name,
                                                               reading_names_dependence[i]))
         to_add2['Unnamed: 0'] = np.repeat(names_dependence[i],
                                          to_add2.values.shape[0])
@@ -55,9 +49,8 @@ def main():
     results_dependence = results_dependence.rename(columns={'Unnamed: 0': 'Methods'})
 
     # Collect results & introduce 'Assumption' category
-    results_independence['Assumption'] = np.repeat('Independent', results_independence.values.shape[0])
     results_dependence['Assumption'] = np.repeat('Dependent', results_dependence.values.shape[0])
-    results = pd.concat([results_independence, results_dependence])
+    results = results_dependence
 
     # Print latex code to console
     results_table = results[['Methods', 'Assumption', 'ynn', 'success', 'avgtime']].dropna()
@@ -79,14 +72,14 @@ def main():
         dfg = results.groupby('Methods')
 
         sns.violinplot(x=names_interest1[0], y="Methods", hue="Assumption", data=results, palette="Blues",
-                       cut=0, scale='count', inner='quartile', ax=axs[0], legend_out=True)
+                       cut=0, scale='count', inner='box', ax=axs[0], legend_out=True)
         #axs[0].set_ylabel('Methods')
         axs[0].set_xlabel(r'$||\delta_x||_0$')
         #axs[0].set_yticklabels(['%s\n$n$=%d' % (k, len(v)) for k, v in dfg])  # add number elements 'n' to plot
 
 
         sns.violinplot(x=names_interest1[1], y="Methods", hue="Assumption", data=results, palette="Blues",
-                       cut=0, scale='count', inner='quartile', ax=axs[1], legend_out=False)
+                       cut=0, scale='count', inner='box', ax=axs[1], legend_out=False)
         axs[1].set_xlabel('redundancy')
         #axs[1].set_yticklabels(['%s\n$n$=%d' % (k, len(v)) for k, v in dfg])  # add number elements to plot
         # Remove second y label
@@ -102,12 +95,12 @@ def main():
         dfg = results.groupby('Methods')
 
         sns.violinplot(x=names_interest2[0], y="Methods", hue="Assumption", data=results, palette="Blues",
-                       cut=0, scale='count', inner='quartile', ax=axs[0])
+                       cut=0, scale='count', inner='box', ax=axs[0])
         axs[0].set_xlabel(r'$||\delta_x||_1$')
         #axs[0].set_yticklabels(['%s\n$n$=%d' % (k, len(v)) for k, v in dfg])  # add number elements 'n' to plot
 
         sns.violinplot(x=names_interest2[1], y="Methods", hue="Assumption", data=results, palette="Blues",
-                       cut=0, scale='count', inner='quartile', ax=axs[1])
+                       cut=0, scale='count', inner='box', ax=axs[1])
         axs[1].set_xlabel(r'$||\delta_x||_2$')
         #axs[1].set_yticklabels(['%s\n$n$=%d' % (k, len(v)) for k, v in dfg])  # add number elements to plot
         axs[1].set_ylabel('')

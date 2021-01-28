@@ -4,6 +4,8 @@ import pickle
 import tensorflow as tf
 import pandas as pd
 from tensorflow.keras.models import load_model
+import keras
+import numpy as np
 
 # from tensorflow import Session, Graph
 import ML_Model.ANN.model as model
@@ -39,17 +41,38 @@ def main():
     data_name = 'give_me_processed.csv'
     target_name = 'SeriousDlqin2yrs'
 
-    '''
-         Loading ANNs
-    '''
-    # Load ANN Pytorch
-    ann_tf= load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/GMC/ANN_predictor.h5")
-
     # Define data with original values
     data = pd.read_csv(data_path + data_name)
     classifier_name = 'ANN'
     save = False
     benchmark = True
+
+    count = 0
+    df = np.array(data['SeriousDlqin2yrs'])
+    print(df)
+    for i in range(len(df)):
+        if df[i] == 0:
+            count +=1
+
+    print(count)
+
+
+    '''
+         Loading ANNs
+    '''
+    # Load ANN
+    def weighted_binary_cross_entropy(t_true, y_pred):
+        loss = 0.7 * (t_true * tf.math.log(y_pred)) + \
+                0.3 * ((1 - t_true) * tf.math.log(1 - y_pred))
+        return tf.math.negative(tf.reduce_mean(loss, axis=-1))
+
+    ann_tf = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/GMC/ANN_predictor.h5", compile = False)
+    ann_tf.compile(
+        optimizer='rmsprop',  # works better than sgd
+        loss= weighted_binary_cross_entropy,
+        metrics=['accuracy'])
+
+
 
     columns = data.columns
     continuous_features = ['RevolvingUtilizationOfUnsecuredLines', 'age', 'NumberOfTime30-59DaysPastDueNotWorse',
@@ -72,11 +95,13 @@ def main():
     '''
     # Instances we want to explain
     querry_instances_tf = compute_H_minus(data, enc_data, ann_tf, target_name)
+    print(len(querry_instances_tf))
     querry_instances_tf = querry_instances_tf.head(100)
+
     if save:
         querry_instances_tf.to_csv("CF_Input/GMC/ANN/query_instances.csv",index = False)
 
-
+    print(len(querry_instances_tf))
 
     '''
         Querry instances for linear model
@@ -100,8 +125,6 @@ def main():
 
 
 
-
-
     if benchmark:
         path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/GMC/' + classifier_name + "/"
         model_name = "dicfe"
@@ -121,10 +144,6 @@ def main():
         file = open(path_cfe + "success_rate.pickle",'rb')
         success_rate = pickle.load(file)
         file.close()
-
-        # print(counterfactuals)
-        # print(test_instances)
-
 
 
         #TODO give own data cuz of predictor
