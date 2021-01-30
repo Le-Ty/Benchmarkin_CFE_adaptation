@@ -16,7 +16,7 @@ plt.rcParams['text.latex.preamble'] = [r'\boldmath']
 def main():
 
     classifier_name = 'ANN'
-    data_name = 'Adult'
+    data_name = 'Compas'
     grouped = True
 
     if data_name == 'Compas':
@@ -41,7 +41,7 @@ def main():
     results_dependence['Unnamed: 0'] = np.repeat(names_dependence[0],
                                                  results_dependence.values.shape[0])
     for i in range(1, len(names_dependence)):
-        to_add2 = pd.read_csv('Results/Adult/{}/{}.csv'.format(classifier_name,
+        to_add2 = pd.read_csv('Results/Compas/{}/{}.csv'.format(classifier_name,
                                                               reading_names_dependence[i]))
         to_add2['Unnamed: 0'] = np.repeat(names_dependence[i],
                                          to_add2.values.shape[0])
