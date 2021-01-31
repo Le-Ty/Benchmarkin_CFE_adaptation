@@ -260,7 +260,7 @@ def main():
     benchmark = True
 
     #Load model
-    ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/" + classifier_name + "_predictor.h5")
+    ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/ablation/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/" + classifier_name + "_predictor.h5")
 
 
     # Define data with original values
@@ -468,7 +468,7 @@ def main():
     #                                                         model = "ANN", dataset = "Adult", number_cf = 20, train_AAE = False)
 
     if benchmark:
-        path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Adult/' + classifier_name + "/"
+        path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/ablation/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Adult/' + classifier_name + "/"
         model_name = "dicfe"
 
         file = open(path_cfe + "counterfactuals.pickle",'rb')

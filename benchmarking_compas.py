@@ -43,7 +43,7 @@ def main():
     #linear
     # ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/Linear_predictor.h5")
     #ann
-    ann_tf_16 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Compas/ANN_predictor.h5")
+    ann_tf_16 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/ablation/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Compas/ANN_predictor.h5")
 
 
 
@@ -82,7 +82,7 @@ def main():
 
 
     if benchmark:
-        path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Compas/' + classifier_name + "/"
+        path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/ablation/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Compas/' + classifier_name + "/"
         model_name = "dicfe"
 
         file = open(path_cfe + "counterfactuals.pickle",'rb')

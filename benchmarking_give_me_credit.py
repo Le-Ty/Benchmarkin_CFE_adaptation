@@ -66,7 +66,7 @@ def main():
                 0.3 * ((1 - t_true) * tf.math.log(1 - y_pred))
         return tf.math.negative(tf.reduce_mean(loss, axis=-1))
 
-    ann_tf = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/GMC/ANN_predictor.h5", compile = False)
+    ann_tf = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/ablation/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/GMC/ANN_predictor.h5", compile = False)
     ann_tf.compile(
         optimizer='rmsprop',  # works better than sgd
         loss= weighted_binary_cross_entropy,
@@ -126,7 +126,7 @@ def main():
 
 
     if benchmark:
-        path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/GMC/' + classifier_name + "/"
+        path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/ablation/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/GMC/' + classifier_name + "/"
         model_name = "dicfe"
 
         file = open(path_cfe + "counterfactuals.pickle",'rb')
