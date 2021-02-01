@@ -72,6 +72,8 @@ def main():
     d_plot = d.get_figure()
 
     d_plot.savefig('DirIndir_error.pdf')
+
+    distance.to_csv('DirIndir_distance.csv')
     print(distance)
 
 
