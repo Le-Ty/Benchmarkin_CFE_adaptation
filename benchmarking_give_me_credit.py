@@ -145,20 +145,30 @@ def main():
         success_rate = pickle.load(file)
         file.close()
 
+        file = open(path_cfe + "Factual_rec.pickle",'rb')
+        factual_rec = pickle.load(file)
+        file.close()
+
+        # print(counterfactuals)
+        # print(test_instances)
+
+
 
         #TODO give own data cuz of predictor
         df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
                                 immutable, times, success_rate, normalized=True, one_hot=False)
 
+        df_direct = compute_measurements(data, factual_rec, counterfactuals, continuous_features, target_name, ann_tf,
+                                immutable, times, success_rate, normalized=True, one_hot=False)
+
+        df_indirect = compute_measurements(data, test_instances, factual_rec, continuous_features, target_name, ann_tf,
+                                immutable, times, success_rate, normalized=True, one_hot=False)
+
         df_results.to_csv('Results/GMC/{}/{}.csv'.format(classifier_name, model_name))
 
+        df_direct.to_csv('Results/GMC/{}/{}-dir.csv'.format(classifier_name, model_name))
 
-
-
-
-
-
-
+        df_indirect.to_csv('Results/GMC/{}/{}-indir.csv'.format(classifier_name, model_name))
 
 
 

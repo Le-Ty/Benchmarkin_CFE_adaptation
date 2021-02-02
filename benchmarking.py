@@ -227,10 +227,6 @@ def compute_H_minus(data, enc_norm_data, ml_model, label):
     # loose ground truth label
     enc_data = enc_norm_data.drop(label, axis=1)
 
-    # predict labels
-    # if isinstance(ml_model, model.ANN):
-    #     predictions = np.round(ml_model(torch.from_numpy(enc_data.values).float()).detach().numpy()).squeeze()
-    # elif isinstance(ml_model, model_tf.Model_Tabular):
     predictions = ml_model.predict(enc_data.values)
     with pd.option_context('display.max_rows', 20, 'display.max_columns', 20):
         print(enc_data)
@@ -288,187 +284,6 @@ def main():
         querry_instances_tf_13.to_csv("CF_Input/Adult/"+ classifier_name + "/query_instances.csv",index = False)
 
 
-
-    """
-        Below we can start to define counterfactual models and start benchmarking
-    """
-
-    '''
-    # Compute CLUE counterfactuals; This one requires the pytorch model
-    model_name = 'clue'
-    test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path, data_name,
-                                                                                             'adult', querry_instances,
-                                                                                             cat_features,
-                                                                                             continuous_features,
-                                                                                             target_name, ann,
-                                                                                             train_vae=False)
-
-    # Compute CLUE measurements
-    print('==============================================================================')
-    print('Measurement results for CLUE on Adult')
-    df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, times, success_rate, normalized=True, one_hot=True)
-    #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
-
-
-    # Compute FACE counterfactuals
-    model_name = 'face'
-    with graph1.as_default():
-        with ann_13_sess.as_default():
-            test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path, data_name,
-                                                                                                'adult',
-                                                                                                querry_instances_tf13,
-                                                                                                cat_features,
-                                                                                                continuous_features,
-                                                                                                target_name, ann_tf_13,
-                                                                                                'knn')
-
-            # Compute FACE measurements
-            print('==============================================================================')
-            print('Measurement results for FACE on Adult')
-            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                            immutable, times, success_rate, normalized=True, one_hot=False)
-            #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
-
-
-    # Compute GS counterfactuals
-    model_name = 'gs'
-    with graph1.as_default():
-        with ann_13_sess.as_default():
-            test_instances, counterfactuals, times, success_rate = gs_explainer.get_counterfactual(data_path, data_name,
-                                                                                            'adult',
-                                                                                            querry_instances_tf13,
-                                                                                            cat_features,
-                                                                                            continuous_features,
-                                                                                            target_name, ann_tf_13)
-
-        # Compute GS measurements
-            print('==============================================================================')
-            print('Measurement results for GS on Adult')
-            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                            immutable, times, success_rate, normalized=True, one_hot=False)
-            #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
-
-
-
-    # Compute CEM counterfactuals
-    model_name = 'cem'
-    ## TODO: as input: 'whether AE should be trained'
-    with graph1.as_default():
-        with ann_13_sess.as_default():
-            test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path, data_name,
-                                                                                                'adult',
-                                                                                                querry_instances_tf13,
-                                                                                                cat_features,
-                                                                                                continuous_features,
-                                                                                                target_name,
-                                                                                                ann_tf_13,
-                                                                                                ann_13_sess)
-
-        # Compute CEM measurements
-            print('==============================================================================')
-            print('Measurement results for CEM on Adult')
-            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-                            immutable, times, success_rate, normalized=True, one_hot=False)
-            #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
-
-
-    # Compute DICE counterfactuals
-    model_name = 'dice'
-    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
-                                                                                             querry_instances,
-                                                                                             target_name, ann,
-                                                                                             continuous_features,
-                                                                                             1,
-                                                                                             'PYT')
-
-    # THIS MODEL DOES NOT WORK YET! WEIRD 'GRAPH NOT FOUND ISSUE'
-    # test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
-    #                                                                           querry_instances,
-    #                                                                           target_name, ann_tf, continuous_features,
-    #                                                                           1, 'TF1', model_path_tf)
-
-    # Compute DICE measurements
-    print('==============================================================================')
-    print('Measurement results for DICE on Adult')
-    df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, times, success_rate, one_hot=True)
-    #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
-
-    '''
-    # # Compute DICE with VAE
-    # model_name = 'dice_vae'
-    # test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual_VAE(data_path, data_name,
-    #                                                                                querry_instances,
-    #                                                                                target_name, ann,
-    #                                                                                continuous_features,
-    #                                                                                1, pretrained=1,
-    #                                                                                backend='PYT')
-    #
-    # # Compute DICE VAE measurements
-    # print('==============================================================================')
-    # print('Measurement results for DICE with VAE on Adult')
-    # df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-    #                      immutable, times, success_rate, one_hot=True)
-    # #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
-    #
-    #
-    # # Compute Actionable Recourse Counterfactuals
-    # model_name = 'ar'
-    # with graph1.as_default():
-    #     with ann_13_sess.as_default():
-    #         test_instances, counterfactuals, times, success_rate = ac_explainer.get_counterfactuals(data_path, data_name,
-    #                                                                                             'adult_tf13',
-    #                                                                                             ann_tf_13,
-    #                                                                                             continuous_features,
-    #                                                                                             target_name, False,
-    #                                                                                             querry_instances_tf13)
-    #         # Compute AR measurements
-    #         print('==============================================================================')
-    #         print('Measurement results for Actionable Recourse')
-    #         df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
-    #                         immutable, times, success_rate, normalized=False, one_hot=False, encoded=True)
-    #         #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
-
-
-    # Compute Action Sequence counterfactuals
-    # model_name = 'as'
-    # with graph2.as_default():
-    #     with ann_20_sess.as_default():
-    #
-    #         # Declare options for Action Sequence
-    #         options = {
-    #             'model_name': 'adult',
-    #             'mode': 'vanilla',
-    #             'length': 4,
-    #             'actions': adult_actions
-    #         }
-    #         test_instances, counterfactuals, times, success_rate = act_seq_examples.get_counterfactual(data_path, data_name,
-    #                                                                                                querry_instances_tf,
-    #                                                                                                target_name,
-    #                                                                                                ann_tf,
-    #                                                                                                ann_20_sess,
-    #                                                                                                continuous_features,
-    #                                                                                                options,
-    #                                                                                                [0., 1.])
-    #
-    #         # Compute AS measurements
-    #         print('==============================================================================')
-    #         print('Measurement results for Action Sequence on Adult')
-    #         df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
-    #                         immutable, times, success_rate, normalized=True, one_hot=True)
-    #         #df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
-    #
-
-
-    # im_feata = ["age", "sex_Male"]
-    # #
-    # # # Compute Actionable Recourse Counterfactuals
-    # test_instances, counterfactuals, times, success_rate = ce_explainer.run_synthetic(query = querry_instances_tf_13,
-    #                                                         im_feat = im_feata,
-    #                                                         train_steps = 10000,
-    #                                                         model = "ANN", dataset = "Adult", number_cf = 20, train_AAE = False)
-
     if benchmark:
         path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Adult/' + classifier_name + "/"
         model_name = "dicfe"
@@ -489,18 +304,26 @@ def main():
         success_rate = pickle.load(file)
         file.close()
 
-        # print(counterfactuals)
-        # print(test_instances)
-
+        file = open(path_cfe + "Factual_rec.pickle",'rb')
+        factual_rec = pickle.load(file)
+        file.close()
 
 
         #TODO give own data cuz of predictor
         df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                                 immutable, times, success_rate, normalized=True, one_hot=False)
 
+        df_direct = compute_measurements(data, factual_rec, counterfactuals, continuous_features, target_name, ann_tf_13,
+                                immutable, times, success_rate, normalized=True, one_hot=False)
+
+        df_indirect = compute_measurements(data, test_instances, factual_rec, continuous_features, target_name, ann_tf_13,
+                                immutable, times, success_rate, normalized=True, one_hot=False)
+
         df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))
 
+        df_direct.to_csv('Results/Adult/{}/{}-dir.csv'.format(classifier_name, model_name))
 
+        df_indirect.to_csv('Results/Adult/{}/{}-indir.csv'.format(classifier_name, model_name))
 
 
 if __name__ == "__main__":

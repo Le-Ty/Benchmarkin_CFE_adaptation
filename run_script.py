@@ -17,7 +17,7 @@ path = get_path()
 
 
 classifier_name = "Linear"
-dataset = "Compas"
+dataset = "Adult"
 
 #read in query
 query_instances = pd.read_csv("CF_Input/" + dataset + "/" + classifier_name + "/query_instances.csv", index_col = False)

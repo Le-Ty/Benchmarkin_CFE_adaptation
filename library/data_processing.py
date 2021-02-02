@@ -215,6 +215,7 @@ def map_binary_backto_string(data, instances, binary_cols):
     print(chunked_list)
 
     for i in range(len(binary_cols)):
+        print(i)
         names = chunked_list[i]
         name1 = names[0].split('__')[1]
         name2 = names[1].split('__')[1]
@@ -222,10 +223,14 @@ def map_binary_backto_string(data, instances, binary_cols):
         print(name2)
         mapping = {
             '0.0': name1,
+            0.0 : name1,
+            1.0 : name2,
             '1.0': name2,
             '0' : name1,
             '1' : name2}
+        print(instances[binary_cols[i]])
 
         instances[binary_cols[i]] = instances[binary_cols[i]].map(mapping)
+        print(instances[binary_cols[i]])
 
     return instances
