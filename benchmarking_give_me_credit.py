@@ -43,7 +43,7 @@ def main():
 
     # Define data with original values
     data = pd.read_csv(data_path + data_name)
-    classifier_name = 'ANN'
+    classifier_name = 'Linear'
     save = False
     benchmark = True
 
@@ -66,7 +66,7 @@ def main():
                 0.3 * ((1 - t_true) * tf.math.log(1 - y_pred))
         return tf.math.negative(tf.reduce_mean(loss, axis=-1))
 
-    ann_tf = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/GMC/ANN_predictor.h5", compile = False)
+    ann_tf = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/GMC/"+ classifier_name +"_predictor.h5", compile = False)
     ann_tf.compile(
         optimizer='rmsprop',  # works better than sgd
         loss= weighted_binary_cross_entropy,
@@ -99,7 +99,7 @@ def main():
     querry_instances_tf = querry_instances_tf.head(100)
 
     if save:
-        querry_instances_tf.to_csv("CF_Input/GMC/ANN/query_instances.csv",index = False)
+        querry_instances_tf.to_csv("CF_Input/GMC/"+ classifier_name +"/query_instances.csv",index = False)
 
     print(len(querry_instances_tf))
 

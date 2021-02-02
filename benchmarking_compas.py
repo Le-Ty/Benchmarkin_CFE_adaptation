@@ -36,14 +36,14 @@ def main():
     data_name = 'compas-scores.csv'
     target_name = 'is-recid'
 
-    classifier_name = "ANN"
+    classifier_name = "Linear"
     save = False
     benchmark = True
 
     #linear
     # ann_tf_13 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Adult/Linear_predictor.h5")
     #ann
-    ann_tf_16 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Compas/ANN_predictor.h5")
+    ann_tf_16 = load_model("/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/outputs/models/Compas/"+ classifier_name+"_predictor.h5")
 
 
 
@@ -73,7 +73,7 @@ def main():
     print(data)
 
     if save:
-        querry_instances_tf16.to_csv("CF_Input/Compas/ANN/query_instances.csv",index = False)
+        querry_instances_tf16.to_csv("CF_Input/Compas/" + classifier_name +"/query_instances.csv",index = False)
 
     """
         Below we can start to define counterfactual models and start benchmarking

@@ -40,6 +40,8 @@ def get_distances(data, factual, counterfactual):
     d2 = measure.distance_d2(factual, counterfactual, data)
     d3 = measure.distance_d3(factual, counterfactual, data)
     d4 = measure.distance_d4(factual, counterfactual)
+    # print(factual)
+    # print(countefactual)
 
     return np.array([d1, d2, d3, d4])
 
@@ -255,7 +257,7 @@ def main():
     data_path = 'Datasets/Adult/'
     data_name = 'adult_full.csv'
     target_name = 'income'
-    classifier_name = "ANN"
+    classifier_name = "Linear"
     save = False
     benchmark = True
 

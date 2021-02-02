@@ -28,46 +28,59 @@ def main():
     reading_names = ['sum_per_row_f_rec', 'sum_per_row_cf', 'sum_per_row_f_orig']
 
     fact_rec = pd.read_csv('Results/{}/{}/fact_rec.csv'.format(data_name, model_name), index_col = False)
-    cfs = pd.read_csv('Results/{}/{}/_CF.csv'.format(data_name, model_name), index_col = False)
+    cfs = pd.read_csv('Results/{}/{}/CF.csv'.format(data_name, model_name), index_col = False)
     data =  pd.read_csv("CF_Examples/counterfact_expl/CE/Datasets/data_processed/" + data_name + "/X_train.csv", index_col = False)
     fact_orig = pd.read_csv("CF_Examples/counterfact_expl/CE/Datasets/data_processed/" + data_name + "/X_query.csv", index_col = False)
-    # print(results)
+    print(fact_rec.head(5))
+    print(cfs.head(5))
+    print(fact_orig.head(5))
+
 
     range = measure.get_range(data)
-    delta_dir = (fact_rec - cfs.head(10)).values
-    delta_indir = (fact_rec - fact_orig.head(10)).values
-    print(delta_dir)
+    delta_dir = (cfs.iloc[:,1:] - fact_rec.iloc[:,1:]).values
+    delta_indir = (fact_orig.iloc[:,1:].head(50) - fact_rec.iloc[:,1:]).values
+    delta_total = (cfs.iloc[:,1:] - fact_orig.iloc[:,1:].head(50)).values
+    print(range)
+    print(delta_dir[0])
 
+    l1_total = np.abs(delta_total)
+    l1_total = np.sum(l1_total, axis = 1)
 
-
-    l1_dir = abs(delta_dir) #[np.abs(x[0] / x[1]) for x in zip(delta_dir, range)]
+    l1_dir = np.abs(delta_dir) #[np.abs(x[0] / x[1]) for x in zip(delta_dir, range)]
+    print(l1_dir)
     l1_dir = np.sum(l1_dir, axis = 1)
     print(l1_dir)
     # print(delta_indir)
 
-    l1_indir = abs(delta_indir) #[np.abs(x[0] / x[1]) for x in zip(delta_indir, range)]
+    l1_indir = np.abs(delta_indir) #[np.abs(x[0] / x[1]) for x in zip(delta_indir, range)]
     l1_indir = np.sum(l1_indir, axis = 1)
 
+    l2_total = delta_total**2
+    l2_total = np.sum(l2_total, axis = 1)
+
+
     l2_dir = delta_dir**2 #[(x[0] / x[1])**2 for x in zip(delta_dir, range)]
-    l2_dir = np.sqrt(np.sum(l2_dir, axis = 1))
+    # print(l2_dir[:10])
+    l2_dir = np.sum(l2_dir, axis = 1)
 
     l2_indir = delta_indir**2 #[(x[0] / x[1])**2 for x in zip(delta_indir, range)]
-    l2_indir = np.sqrt(np.sum(l2_indir, axis = 1))
+    l2_indir = np.sum(l2_indir, axis = 1)
 
-    print(l1_indir)
-    print(l2_dir)
-    print(l2_indir)
+    # print(l1_indir)
+    # print(l2_dir)
+    # print(l2_indir)
 
     distance = pd.DataFrame(l1_dir, columns = ['l1-dir'])
     distance = distance.assign(l1indir =  l1_indir)
     distance = distance.assign(l2dir =  l2_dir)
     distance = distance.assign(l2indir =  l2_indir)
-
+    distance = distance.assign(totall1 = l1_total)
+    distance = distance.assign(totall2 = l2_total)
 
     dist_melt = distance.melt(var_name = "feature", value_name = "values")
     # sns.set(font_scale=2)  # crazy big
 
-    d = sns.violinplot(data = dist_melt, x = "values", y = "feature", scale = "count", palette = "Blues").set_title(" Direct vs. Indirect Cost")
+    d = sns.violinplot(data = dist_melt, x = "values", y = "feature", scale = "width", palette = "Blues", inner = 'box', cut = 0).set_title(" Direct vs. Indirect Cost")
 
     d_plot = d.get_figure()
 

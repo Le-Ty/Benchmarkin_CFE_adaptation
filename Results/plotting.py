@@ -15,11 +15,11 @@ plt.rcParams['text.latex.preamble'] = [r'\boldmath']
 
 def main():
 
-    classifier_name = 'ANN'
-    data_name = 'Adult'
+    classifier_name = 'Linear'
+    data_name = 'Compas'
     grouped = True
 
-    if data_name == 'Compas':
+    if data_name == 'X':
         reading_names = ['clue', 'face-eps', 'face-knn', 'dicfe']
         names = ['clue', 'face-eps', 'face-knn', 'dicfe']
 
@@ -27,12 +27,12 @@ def main():
 
         names_dependence =['clue', 'face-eps', 'face-knn', 'dicfe']
     else:
-        reading_names = ['ar', 'as', 'cem', 'cem-vae', 'clue', 'dice', 'dice_vae', 'face-eps', 'face-knn', 'gs', 'dicfe', 'dicfe_indep']
-        names = ['ar-lime', 'as', 'cem', 'clue', 'dice', 'dice-vae', 'face', 'gs', 'dicfe', 'indep']
+        reading_names = ['ar', 'as', 'cem', 'cem-vae', 'dice', 'face-eps', 'face-knn', 'gs', 'dicfe'] #, 'dicfe_indep']
+        names = ['ar-lime', 'as', 'cem', 'dice',  'face', 'gs', 'dicfe'] #, 'indep']
 
-        reading_names_dependence = ['clue', 'dice_vae', 'face-knn', 'face-eps', 'dicfe', 'dicfe_indep']
+        reading_names_dependence = [ 'face-knn', 'face-eps', 'dicfe'] #, 'dicfe_indep']
 
-        names_dependence = ['clue', 'dice-vae', 'face-knn', 'face-eps', 'dicfe', 'indep']
+        names_dependence = [ 'face-knn', 'face-eps', 'dicfe'] #, 'indep']
 
 
     # Dependence Results to DF
@@ -41,7 +41,7 @@ def main():
     results_dependence['Unnamed: 0'] = np.repeat(names_dependence[0],
                                                  results_dependence.values.shape[0])
     for i in range(1, len(names_dependence)):
-        to_add2 = pd.read_csv('Results/Adult/{}/{}.csv'.format(classifier_name,
+        to_add2 = pd.read_csv('Results/Compas/{}/{}.csv'.format(classifier_name,
                                                               reading_names_dependence[i]))
         to_add2['Unnamed: 0'] = np.repeat(names_dependence[i],
                                          to_add2.values.shape[0])
