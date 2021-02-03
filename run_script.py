@@ -35,7 +35,7 @@ im_featc = ["age", "sex"]
 keras.backend.clear_session()
 
 
-run_synthetic(im_feat = im_feata, query = query_instances, train_steps = 8000, model = classifier_name, dataset = dataset, train_AAE = False)
+run_synthetic(im_feat = im_feata, query = query_instances.head(5), train_steps = 8000, model = classifier_name, dataset = dataset, train_AAE = False)
 # find_ce()g
 
 #pred = sum_predictor()

@@ -44,8 +44,8 @@ def main():
     # Define data with original values
     data = pd.read_csv(data_path + data_name)
     classifier_name = 'ANN'
-    save = True
-    benchmark = False
+    save = False
+    benchmark = True
 
     count = 0
     df = np.array(data['SeriousDlqin2yrs'])
