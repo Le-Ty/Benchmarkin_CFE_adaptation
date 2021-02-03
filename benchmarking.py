@@ -105,6 +105,8 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
         test_instance = test_instances[i]
         counterfactuals = list_of_cfs[i]  # Each list entry could be a Dataframe with more than 1 entry
 
+
+
         # Normalize factual and counterfactual to normalize measurements
         if not normalized:
             test_instance = preprocessing.normalize_instance(data, test_instance, continuous_features).values.tolist()[
@@ -112,9 +114,11 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
             counterfactuals = preprocessing.normalize_instance(data, counterfactuals,
                                                                continuous_features).values.tolist()
             counterfactual = counterfactuals[0]  # First compute measurements for only one instance with one cf
+
         else:
             test_instance = test_instance.values.tolist()[0]
             counterfactual = counterfactuals.values.tolist()[0]
+
 
         distances_temp = get_distances(norm_data, test_instance, counterfactual).reshape((-1, 1))
         distances += distances_temp
@@ -253,7 +257,7 @@ def main():
     data_path = 'Datasets/Adult/'
     data_name = 'adult_full.csv'
     target_name = 'income'
-    classifier_name = "Linear"
+    classifier_name = "ANN"
     save = False
     benchmark = True
 
@@ -304,19 +308,18 @@ def main():
         success_rate = pickle.load(file)
         file.close()
 
-        file = open(path_cfe + "Factual_rec.pickle",'rb')
-        factual_rec = pickle.load(file)
+        file = open(path_cfe + "direct_change.pickle",'rb')
+        direct_change = pickle.load(file)
         file.close()
 
 
-        #TODO give own data cuz of predictor
         df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                                 immutable, times, success_rate, normalized=True, one_hot=False)
 
-        df_direct = compute_measurements(data, factual_rec, counterfactuals, continuous_features, target_name, ann_tf_13,
+        df_direct = compute_measurements(data, test_instances, direct_change, continuous_features, target_name, ann_tf_13,
                                 immutable, times, success_rate, normalized=True, one_hot=False)
 
-        df_indirect = compute_measurements(data, test_instances, factual_rec, continuous_features, target_name, ann_tf_13,
+        df_indirect = compute_measurements(data, direct_change, counterfactuals, continuous_features, target_name, ann_tf_13,
                                 immutable, times, success_rate, normalized=True, one_hot=False)
 
         df_results.to_csv('Results/Adult/{}/{}.csv'.format(classifier_name, model_name))

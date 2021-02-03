@@ -43,9 +43,9 @@ def main():
 
     # Define data with original values
     data = pd.read_csv(data_path + data_name)
-    classifier_name = 'Linear'
-    save = False
-    benchmark = True
+    classifier_name = 'ANN'
+    save = True
+    benchmark = False
 
     count = 0
     df = np.array(data['SeriousDlqin2yrs'])
@@ -145,23 +145,19 @@ def main():
         success_rate = pickle.load(file)
         file.close()
 
-        file = open(path_cfe + "Factual_rec.pickle",'rb')
-        factual_rec = pickle.load(file)
+        file = open(path_cfe + "direct_change.pickle",'rb')
+        direct_change = pickle.load(file)
         file.close()
-
-        # print(counterfactuals)
-        # print(test_instances)
-
 
 
         #TODO give own data cuz of predictor
         df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
                                 immutable, times, success_rate, normalized=True, one_hot=False)
 
-        df_direct = compute_measurements(data, factual_rec, counterfactuals, continuous_features, target_name, ann_tf,
+        df_direct = compute_measurements(data, test_instances, direct_change, continuous_features, target_name, ann_tf,
                                 immutable, times, success_rate, normalized=True, one_hot=False)
 
-        df_indirect = compute_measurements(data, test_instances, factual_rec, continuous_features, target_name, ann_tf,
+        df_indirect = compute_measurements(data, direct_change, counterfactuals, continuous_features, target_name, ann_tf,
                                 immutable, times, success_rate, normalized=True, one_hot=False)
 
         df_results.to_csv('Results/GMC/{}/{}.csv'.format(classifier_name, model_name))
@@ -171,206 +167,6 @@ def main():
         df_indirect.to_csv('Results/GMC/{}/{}-indir.csv'.format(classifier_name, model_name))
 
 
-
-
-
-
-    '''
-    # Compute CLUE counterfactuals; This one requires the pytorch model
-    model_name = 'clue'
-    test_instances, counterfactuals, times, success_rate = clue_explainer.get_counterfactual(data_path,
-                                                                                             data_name,
-                                                                                             'give-me',
-                                                                                             querry_instances,
-                                                                                             cat_features,
-                                                                                             continuous_features,
-                                                                                             target_name,
-                                                                                             ann,
-                                                                                             train_vae=False)
-
-
-    # Compute CLUE measurements
-    print('==============================================================================')
-    print('Measurement results for CLUE on Adult')
-    df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                         immutable, times, success_rate, normalized=True, one_hot=True)
-    #df_results.to_csv('Results/Give_Me_Some_Credit/{}/{}.csv'.format(classifier_name, model_name))
-
-    #
-    # '''
-    # # Compute FACE counterfactuals
-    # model_name = 'face-eps'
-    # with graph1.as_default():
-    #     with ann_sess.as_default():
-    #         test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path,
-    #                                                                                                  data_name,
-    #                                                                                                  'give-me',
-    #                                                                                                   querry_instances_tf,
-    #                                                                                                   cat_features,
-    #                                                                                                   continuous_features,
-    #                                                                                                   target_name,
-    #                                                                                                   ann_tf,
-    #                                                                                                   'epsilon')
-    #         # Compute FACE-EPS measurements
-    #         print('==============================================================================')
-    #         print('Measurement results for FACE-EPS on Adult')
-    #         df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
-    #                         immutable, times, success_rate, normalized=True, one_hot=False)
-    #         #df_results.to_csv('Results/Give_Me_Some_Credit/{}/{}.csv'.format(classifier_name, model_name))
-    #
-    #
-    # model_name = 'face-knn'
-    # with graph1.as_default():
-    #     with ann_sess.as_default():
-    #         test_instances, counterfactuals, times, success_rate = face_explainer.get_counterfactual(data_path,
-    #                                                                                                  data_name,
-    #                                                                                                  'give-me',
-    #                                                                                                   querry_instances_tf,
-    #                                                                                                   cat_features,
-    #                                                                                                   continuous_features,
-    #                                                                                                   target_name,
-    #                                                                                                   ann_tf,
-    #                                                                                                   'knn')
-    #
-    #         # Compute FACE measurements
-    #         print('==============================================================================')
-    #         print('Measurement results for FACE-knn on Adult')
-    #         df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
-    #                         immutable, times, success_rate, normalized=True, one_hot=False)
-    #         #df_results.to_csv('Results/Give_Me_Some_Credit/{}/{}.csv'.format(classifier_name, model_name))
-
-
-    '''
-    # Compute GS counterfactuals
-    model_name = 'gs'
-    with graph1.as_default():
-        with ann_sess.as_default():
-            test_instances, counterfactuals, times, success_rate = gs_explainer.get_counterfactual(data_path,
-                                                                                            data_name,
-                                                                                            'give-me',
-                                                                                            querry_instances_tf,
-                                                                                            cat_features,
-                                                                                            continuous_features,
-                                                                                            target_name,
-                                                                                            ann_tf)
-
-        # Compute GS measurements
-            print('==============================================================================')
-            print('Measurement results for GS on Adult')
-            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
-                            immutable, times, success_rate, normalized=True, one_hot=False)
-            #df_results.to_csv('Results/Give_Me_Some_Credit/{}/{}.csv'.format(classifier_name, model_name))
-
-
-
-    # Compute CEM counterfactuals
-    model_name = 'cem'
-    ## TODO: as input: 'whether AE should be trained'
-    with graph1.as_default():
-        with ann_sess.as_default():
-            test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path, data_name,
-                                                                                                'give-me',
-                                                                                                querry_instances_tf,
-                                                                                                cat_features,
-                                                                                                continuous_features,
-                                                                                                target_name,
-                                                                                                ann_tf,
-                                                                                                ann_sess,
-                                                                                                kappa=0.1, beta=0.9, gamma=0.0)
-
-        # Compute CEM measurements
-            print('==============================================================================')
-            print('Measurement results for CEM on Adult')
-            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf,
-                            immutable, times, success_rate, normalized=True, one_hot=False)
-            #df_results.to_csv('Results/Give_Me_Some_Credit/{}/{}.csv'.format(classifier_name, model_name))
-
-
-        model_name = 'cem-vae'
-        ## TODO: as input: 'whether AE should be trained'
-        with graph1.as_default():
-            with ann_sess.as_default():
-                test_instances, counterfactuals, times, success_rate = cem_explainer.get_counterfactual(data_path,
-                                                                                                        data_name,
-                                                                                                        'give-me',
-                                                                                                        querry_instances_tf,
-                                                                                                        cat_features,
-                                                                                                        continuous_features,
-                                                                                                        target_name,
-                                                                                                        ann_tf,
-                                                                                                        ann_sess,
-                                                                                                        kappa=0.1, beta=0.0, gamma=6.0)
-
-                # Compute CEM measurements
-                print('==============================================================================')
-                print('Measurement results for CEM VAE on Adult')
-                df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features,
-                                                  target_name, ann_tf,
-                                                  immutable, times, success_rate, normalized=True, one_hot=False)
-                #df_results.to_csv('Results/Give_Me_Some_Credit/{}/{}.csv'.format(classifier_name, model_name))
-
-
-
-
-    # Compute DICE counterfactuals
-    model_name = 'dice'
-    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual(data_path, data_name,
-                                                                                             querry_instances,
-                                                                                             target_name, ann,
-                                                                                             continuous_features,
-                                                                                             1,
-                                                                                             'PYT')
-
-    # Compute DICE measurements
-    print('==============================================================================')
-    print('Measurement results for DICE on Adult')
-    df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                                      immutable, times, success_rate, one_hot=True)
-    # df_results.to_csv('Results/Give_Me_Some_Credit/{}/{}.csv'.format(classifier_name, model_name))
-
-
-    # Compute DICE with VAE
-    model_name = 'dice_vae'
-    test_instances, counterfactuals, times, success_rate = dice_explainer.get_counterfactual_VAE(data_path, data_name,
-                                                                                                 querry_instances,
-                                                                                                 target_name, ann,
-                                                                                                 continuous_features,
-                                                                                                 1, pretrained=1,
-                                                                                                 backend='PYT')
-
-    # Compute DICE VAE measurements
-    print('==============================================================================')
-    print('Measurement results for DICE with VAE on Adult')
-    df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann,
-                                      immutable, times, success_rate, one_hot=True)
-    # df_results.to_csv('Results/Give_Me_Some_Credit/{}/{}.csv'.format(classifier_name, model_name))
-
-
-
-    # Compute Actionable Recourse Counterfactuals
-    model_name = 'ar'
-    with graph1.as_default():
-        with ann_sess.as_default():
-            test_instances, counterfactuals, times, success_rate = ac_explainer.get_counterfactuals(data_path,
-                                                                                                    data_name,
-                                                                                                    'give-me',
-                                                                                                    ann_tf,
-                                                                                                    continuous_features,
-                                                                                                    target_name,
-                                                                                                    False,
-                                                                                                    querry_instances_tf)
-
-            # Compute AR measurements
-            print('==============================================================================')
-            print('Measurement results for Actionable Recourse')
-            df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name,
-                                              ann_tf,
-                                              immutable, times, success_rate, normalized=False, one_hot=False,
-                                              encoded=True)
-            # df_results.to_csv('Results/Give_Me_Some_Credit/{}/{}.csv'.format(classifier_name, model_name))
-
-
-    '''
 if __name__ == "__main__":
     # execute only if run as a script
     main()

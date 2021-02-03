@@ -81,6 +81,8 @@ def get_delta(instance, cf):
     delta = []
     for i, original in enumerate(instance):
         counterfactual = cf[i]
+        # print(counterfactual)
+        # print(original)
 
         if type(original) == str:
             if original == counterfactual:
