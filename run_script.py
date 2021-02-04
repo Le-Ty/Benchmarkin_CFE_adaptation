@@ -16,8 +16,8 @@ runs the synthetic experiment. Results are saved in the outputs/synthetic_test d
 path = get_path()
 
 
-classifier_name = "ANN"
-dataset = "Adult"
+classifier_name = "Linear"
+dataset = "Compas"
 
 #read in query
 query_instances = pd.read_csv("CF_Input/" + dataset + "/" + classifier_name + "/query_instances.csv", index_col = False)
@@ -35,7 +35,7 @@ im_featc = ["age", "sex"]
 keras.backend.clear_session()
 
 
-run_synthetic(im_feat = im_feata, query = query_instances.head(5), train_steps = 8000, model = classifier_name, dataset = dataset, train_AAE = False)
+run_synthetic(im_feat = im_feata, query = query_instances, train_steps = 8000, model = classifier_name, dataset = dataset, train_AAE = False)
 # find_ce()g
 
 #pred = sum_predictor()

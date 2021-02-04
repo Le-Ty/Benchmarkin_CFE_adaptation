@@ -15,8 +15,8 @@ plt.rcParams['text.latex.preamble'] = [r'\boldmath']
 
 def main():
 
-    classifier_name = 'ANN'
-    data_name = 'GMC'
+    classifier_name = 'Linear'
+    data_name = 'Adult'
     grouped = True
 
     # if data_name == 'X':
@@ -27,12 +27,12 @@ def main():
         #
         # names_dependence =['clue', 'face-eps', 'face-knn', 'dicfe']
     # else:
-    reading_names = ['ar', 'as', 'cem', 'cem-vae', 'dice', 'face-eps', 'face-knn', 'gs', 'dicfe', 'dicfe-dir', 'dice-indir'] #, 'dicfe_indep']
-    names = ['ar-lime', 'as', 'cem', 'dice',  'face', 'gs', 'dicfe', 'dicfe-dir', 'dice-indir'] #, 'indep']
+    reading_names = ['ar', 'as', 'cem', 'cem-vae', 'dice', 'face-eps', 'face-knn', 'gs', 'dicfe', 'dicfe-dir', 'dicfe-indir', 'dicfe_rnds', 'dicfe-dir_rnds', 'dicfe-indir_rnds'] #, 'dicfe_indep']
+    names = ['ar-lime', 'as', 'cem', 'dice',  'face', 'gs', 'dicfe', 'dicfe-dir', 'dicfe-indir', 'dicfe-rnds', 'dicfe-dir-rnds', 'dicfe-indir-rnds'] #, 'indep']
 
-    reading_names_dependence = [ 'face-knn', 'face-eps', 'dicfe', 'dicfe-dir', 'dicfe-indir'] #, 'dicfe_indep']
+    reading_names_dependence = [ 'face-knn', 'face-eps', 'dicfe', 'dicfe-dir', 'dicfe-indir', 'dicfe_rnds', 'dicfe-dir_rnds', 'dicfe-indir_rnds'] #, 'dicfe_indep']
 
-    names_dependence = [ 'face-knn', 'face-eps', 'dicfe','dicfe-dir', 'dicfe-indir'] #, 'indep']
+    names_dependence = [ 'face-knn', 'face-eps', 'dicfe','dicfe-dir', 'dicfe-indir', 'dicfe-rnds', 'dicfe-dir-rnds', 'dicfe-indir-rnds'] #, 'indep']
 
 
     # Dependence Results to DF
@@ -41,7 +41,7 @@ def main():
     results_dependence['Unnamed: 0'] = np.repeat(names_dependence[0],
                                                  results_dependence.values.shape[0])
     for i in range(1, len(names_dependence)):
-        to_add2 = pd.read_csv('Results/GMC/{}/{}.csv'.format(classifier_name,
+        to_add2 = pd.read_csv('Results/Adult/{}/{}.csv'.format(classifier_name,
                                                               reading_names_dependence[i]))
         to_add2['Unnamed: 0'] = np.repeat(names_dependence[i],
                                          to_add2.values.shape[0])

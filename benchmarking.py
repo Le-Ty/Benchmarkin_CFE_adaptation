@@ -257,7 +257,7 @@ def main():
     data_path = 'Datasets/Adult/'
     data_name = 'adult_full.csv'
     target_name = 'income'
-    classifier_name = "ANN"
+    classifier_name = "Linear"
     save = False
     benchmark = True
 
