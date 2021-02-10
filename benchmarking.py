@@ -18,7 +18,11 @@ import pickle
 # import CF_Examples.Action_Sequence.action_sequence_explainer as act_seq_examples
 # from CF_Examples.Action_Sequence.adult_actions import actions as adult_actions
 # from sklearn.neural_network import MLPClassifier
-import CF_Examples.counterfact_expl.CE.experiments.run_synthetic as ce_explainer
+import CF_Examples.counterfact_expl.CE.experiments.run_experiments as ce_explainer
+
+from CF_Examples.counterfact_expl.CE.experiments.run_experiments import run_experiments
+from CF_Examples.counterfact_expl.CE.path import get_path
+import keras
 
 # others
 import library.measure as measure
@@ -90,6 +94,7 @@ def compute_measurements(data, test_instances, list_of_cfs, continuous_features,
     violation = 0
 
     # Columns of Dataframe for later usage
+    col_name = data.columns
     columns = data.columns.values
     cat_features = preprocessing.get_categorical_features(columns, continuous_features, target_name)
 
@@ -232,8 +237,8 @@ def compute_H_minus(data, enc_norm_data, ml_model, label):
     enc_data = enc_norm_data.drop(label, axis=1)
 
     predictions = ml_model.predict(enc_data.values)
-    with pd.option_context('display.max_rows', 20, 'display.max_columns', 20):
-        print(enc_data)
+    # with pd.option_context('display.max_rows', 20, 'display.max_columns', 20):
+        # print(enc_data)
 
 
     #which index has the max
@@ -257,7 +262,7 @@ def main():
     data_path = 'Datasets/Adult/'
     data_name = 'adult_full.csv'
     target_name = 'income'
-    classifier_name = "Linear"
+    classifier_name = "ANN"
     save = False
     benchmark = True
 
@@ -283,35 +288,59 @@ def main():
     # Instances we want to explain
     querry_instances_tf_13 = compute_H_minus(data, enc_data, ann_tf_13, target_name)
     querry_instances_tf_13 = querry_instances_tf_13.head(100)
+    print(querry_instances_tf_13.head(5))
 
     if save:
         querry_instances_tf_13.to_csv("CF_Input/Adult/"+ classifier_name + "/query_instances.csv",index = False)
 
 
     if benchmark:
-        path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/out_for_ben/Adult/' + classifier_name + "/"
+        # #load data and model
+        # path_cfe = '/home/uni/TresoritDrive/XY/uni/WS2021/BA/Benchmarkin_Counterfactual_Examples/CF_Examples/counterfact_expl/CE/output_benchmarking/Adult/' + classifier_name + "/"
         model_name = "dicfe"
+        #
+        # file = open(path_cfe + "counterfactuals.pickle",'rb')
+        # counterfactuals = pickle.load(file)
+        # file.close()
+        #
+        # file = open(path_cfe + "test_instances.pickle",'rb')
+        # test_instances = pickle.load(file)
+        # file.close()
+        #
+        # file = open(path_cfe + "times_list.pickle",'rb')
+        # times = pickle.load(file)
+        # file.close()
+        #
+        # file = open(path_cfe + "success_rate.pickle",'rb')
+        # success_rate = pickle.load(file)
+        # file.close()
+        #
+        # file = open(path_cfe + "direct_change.pickle",'rb')
+        # direct_change = pickle.load(file)
+        # file.close()
 
-        file = open(path_cfe + "counterfactuals.pickle",'rb')
-        counterfactuals = pickle.load(file)
-        file.close()
+        #initializing
+        classifier_name = "ANN"
+        dataset = "Adult"
+        #read in query
+        # query_instances = pd.read_csv("CF_Input/" + dataset + "/" + classifier_name + "/query_instances.csv", index_col = False)
 
-        file = open(path_cfe + "test_instances.pickle",'rb')
-        test_instances = pickle.load(file)
-        file.close()
+        #immutable features for each dataset
+        im_feat_adult = ["age", "sex"]
+        im_feat_gmc = ["age", "NumberOfDependents"]
+        im_feat_compas = ["age", "sex"]
 
-        file = open(path_cfe + "times_list.pickle",'rb')
-        times = pickle.load(file)
-        file.close()
+        # keras.backend.clear_session()
 
-        file = open(path_cfe + "success_rate.pickle",'rb')
-        success_rate = pickle.load(file)
-        file.close()
+        test_instances, counterfactuals, direct_change, times, success_rate = run_experiments(
+        			im_feat = im_feat_adult, query = querry_instances_tf_13.head(6),
+        			train_steps = 8000, model = classifier_name, dataset = dataset,
+        			train_AAE = False
+        			)
 
-        file = open(path_cfe + "direct_change.pickle",'rb')
-        direct_change = pickle.load(file)
-        file.close()
 
+        #reindex data to match loaded data
+        data = data.reindex(columns = counterfactuals[0].columns)
 
         df_results = compute_measurements(data, test_instances, counterfactuals, continuous_features, target_name, ann_tf_13,
                                 immutable, times, success_rate, normalized=True, one_hot=False)

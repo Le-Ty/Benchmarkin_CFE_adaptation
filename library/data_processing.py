@@ -207,20 +207,20 @@ def map_binary_backto_string(data, instances, binary_cols):
             yield lst[i:i + n]
 
     temp = pd.get_dummies(data[binary_cols], prefix_sep="__")
-    print(temp)
+    # print(temp)
     extended_binary_cols = list(temp.columns)
-    print(extended_binary_cols)
+    # print(extended_binary_cols)
 
     chunked_list = list(chunks(extended_binary_cols, 2))
-    print(chunked_list)
+    # print(chunked_list)
 
     for i in range(len(binary_cols)):
         print(i)
         names = chunked_list[i]
         name1 = names[0].split('__')[1]
         name2 = names[1].split('__')[1]
-        print(name1)
-        print(name2)
+        # print(name1)
+        # print(name2)
         mapping = {
             '0.0': name1,
             0.0 : name1,
@@ -228,9 +228,9 @@ def map_binary_backto_string(data, instances, binary_cols):
             '1.0': name2,
             '0' : name1,
             '1' : name2}
-        print(instances[binary_cols[i]])
+        # print(instances[binary_cols[i]])
 
         instances[binary_cols[i]] = instances[binary_cols[i]].map(mapping)
-        print(instances[binary_cols[i]])
+        # print(instances[binary_cols[i]])
 
     return instances

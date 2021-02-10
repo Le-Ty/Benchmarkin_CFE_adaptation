@@ -25,7 +25,7 @@ def main():
     data_name = 'compas-scores.csv'
     target_name = 'is-recid'
 
-    classifier_name = "ANN"
+    classifier_name = "Linear"
     save = False
     benchmark = True
 
