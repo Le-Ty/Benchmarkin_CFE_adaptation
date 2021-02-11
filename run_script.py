@@ -8,7 +8,7 @@ from CF_Examples.counterfact_expl.CE.path import get_path
 import keras
 
 '''
-runs the synthetic experiment. Results are saved in the outputs/synthetic_test directory.
+Script, that runs the synthetic experiment. Results are saved in outputs directory.
 '''
 #initializing
 path = get_path()
