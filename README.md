@@ -8,7 +8,7 @@ This project is intended to run on Windows or Linux.
 
 ### Clone Repository
 ````
-https://github.com/Philoso-Fish/Benchmarkin_Counterfactual_Examples.git
+https://github.com/Le-Ty/Benchmarkin_CFE_adaptation.git
 ````
 
 ### Install required Packages
