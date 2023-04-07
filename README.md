@@ -21,8 +21,7 @@ make requirements
 To reproduce one of our experiments, we recommend the following steps.
 - Choose one of our benchmarking script
   - ``benchmarking.py`` for Adult
-  - ``benchmarking_compas.py`` for COMPAS
-  - ``benchmarking_give_me_credit.py`` for Give Me Some Credit
+
   
 - Comment all counterfactual methods that should not be evaluated.
 - Results are saved to ``csv`` with call of ``df_results.to_csv(Path/to/save/result)``
